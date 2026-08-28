@@ -1,5 +1,10 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -119,7 +124,18 @@ app.post('/api/emergency-sos', (req, res) => {
   });
 });
 
-const PORT = 5000;
+// Serve built static files from Vite
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback to index.html for client-side routing
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`⚡ CARE NAVIGATOR REST API Backend running on http://localhost:${PORT}`);
+  console.log(`⚡ CARE NAVIGATOR Web App & API running on port ${PORT}`);
 });
