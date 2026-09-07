@@ -52,9 +52,7 @@ export const Header = () => {
           </button>
         ) : (
           <div className="brand-logo" onClick={() => navigateTo('dashboard')}>
-            <div className="logo-icon">
-              <Activity size={22} color="#10b981" />
-            </div>
+            <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
           </div>
         )}
         <div className="header-title-container">
@@ -156,15 +154,25 @@ export const Header = () => {
         }
 
         .brand-logo {
-          width: 42px;
-          height: 42px;
+          width: 46px;
+          height: 46px;
           border-radius: 14px;
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.3);
+          background: #ffffff;
+          border: 1.5px solid #0284c7;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          overflow: hidden;
+          padding: 3px;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+        }
+
+        .header-logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          border-radius: 10px;
         }
 
         .header-title {

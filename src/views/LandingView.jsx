@@ -106,7 +106,7 @@ export const LandingView = () => {
         <div className="landing-nav-inner">
           <div className="landing-brand" onClick={() => navigateTo('landing')}>
             <div className="brand-icon-box">
-              <Activity size={24} color="#10b981" />
+              <img src="/Logo.jpeg" alt="Care Navigator Logo" className="brand-logo-img" />
             </div>
             <div className="brand-text">
               <span className="brand-name">Care Navigator</span>
@@ -128,11 +128,6 @@ export const LandingView = () => {
       {/* Hero Section */}
       <section className="landing-hero">
         <div className="hero-content">
-          <div className="hero-badge animate-pulse-glow">
-            <Sparkles size={15} color="#0284c7" />
-            <span>UIDAI Integrated • Real-Time Health Telemetry & 108 SOS</span>
-          </div>
-
           <h1 className="hero-headline">
             Universal Aadhaar Healthcare <br />
             <span className="text-gradient">& Real-Time Emergency SOS</span>
@@ -477,7 +472,7 @@ export const LandingView = () => {
         <div className="footer-inner">
           <div className="footer-brand">
             <div className="brand-icon-box">
-              <Activity size={20} color="#10b981" />
+              <img src="/Logo.jpeg" alt="Care Navigator Logo" className="brand-logo-img" />
             </div>
             <span className="brand-name">Care Navigator</span>
           </div>
@@ -694,14 +689,47 @@ export const LandingView = () => {
         }
 
         .brand-icon-box {
-          width: 38px;
-          height: 38px;
-          border-radius: 12px;
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.3);
+          width: 46px;
+          height: 46px;
+          border-radius: 14px;
+          background: #ffffff;
+          border: 1.5px solid #0284c7;
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: hidden;
+          padding: 3px;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+        }
+
+        .brand-logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          border-radius: 10px;
+        }
+
+        .hero-cover-logo-wrapper {
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .hero-cover-logo {
+          height: 76px;
+          width: auto;
+          max-width: 260px;
+          object-fit: contain;
+          border-radius: 18px;
+          box-shadow: 0 12px 30px -6px rgba(2, 132, 199, 0.3), 0 0 20px rgba(16, 185, 129, 0.25);
+          border: 2px solid #ffffff;
+          background: #ffffff;
+          padding: 6px 14px;
+          transition: transform 0.3s ease;
+        }
+
+        .hero-cover-logo:hover {
+          transform: scale(1.04);
         }
 
         .brand-name {
