@@ -128,7 +128,7 @@ app.post('/api/emergency-sos', (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Fallback to index.html for client-side routing
-app.get('*', (req, res) => {
+app.use((req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'API route not found' });
   }

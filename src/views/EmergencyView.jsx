@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { AmbulanceRouteMap } from '../components/AmbulanceRouteMap';
 import { ShieldAlert, PhoneCall, MapPin, Navigation as NavIcon, Users, CheckCircle2, AlertOctagon, HeartPulse, Stethoscope, ChevronDown, HelpCircle, XCircle } from 'lucide-react';
 
 const FIRST_AID_GUIDES = [
@@ -36,7 +37,7 @@ const FIRST_AID_GUIDES = [
 ];
 
 export const EmergencyView = () => {
-  const { sosState, triggerSOS, cancelSOS, user } = useApp();
+  const { sosState, triggerSOS, cancelSOS, setSosSimulationSpeed, user } = useApp();
   const [openGuide, setOpenGuide] = useState(0);
 
   return (
@@ -75,8 +76,13 @@ export const EmergencyView = () => {
                 <span className="eta-num">{sosState.ambulanceEta}</span>
                 <span className="eta-unit">MINS</span>
               </div>
-              <span className="eta-status">En-route via Fast Corridor</span>
+              <span className="eta-status">
+                {sosState.ambulanceProgress >= 100 ? 'Arrived at Destination' : `En-route via ${sosState.currentStreet || 'Fast Corridor'}`}
+              </span>
             </div>
+
+            {/* Live GPS Route Map & Dynamic Distance Tracker */}
+            <AmbulanceRouteMap sosState={sosState} onSpeedChange={setSosSimulationSpeed} />
 
             <div className="dispatch-info-grid">
               <div className="info-block">
@@ -104,12 +110,15 @@ export const EmergencyView = () => {
               </div>
             </div>
 
-            {/* Nearby ER Hospitals Telemetry Badge */}
-            <div className="notified-hospitals-box glass-card" style={{ padding: '14px', borderRadius: '12px', marginTop: '14px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#059669', fontWeight: '800', fontSize: '0.85rem', marginBottom: '8px' }}>
+            {/* Simultaneous Notification & Telemetry Badge */}
+            <div className="notified-hospitals-box glass-card" style={{ padding: '14px', borderRadius: '12px', marginTop: '14px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626', fontWeight: '800', fontSize: '0.85rem', marginBottom: '8px' }}>
                 <CheckCircle2 size={18} />
-                <span>Nearby ER Hospitals Telemetry Transmitted & Standby Ready</span>
+                <span>Simultaneous Emergency Intimation Activated</span>
               </div>
+              <p style={{ fontSize: '0.78rem', color: '#475569', marginBottom: '8px', lineHeight: '1.4' }}>
+                Live GPS location continuously transmitted simultaneously to <strong>108 Ambulance Dispatcher</strong> and <strong>{sosState.notifiedNearbyUsersCount || 14} Nearby Registered Citizens/Responders</strong>. Registered Phone: <strong>{sosState.phone || '+91 9876543210'}</strong>
+              </p>
               <ul style={{ listStyle: 'none', paddingLeft: '0', fontSize: '0.78rem', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {(sosState.notifiedHospitals || [
                   'Government General Hospital (GGH)',
@@ -510,6 +519,196 @@ export const EmergencyView = () => {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+        }
+
+        /* Ambulance Route Map Styles */
+        .ambulance-map-wrapper {
+          width: 100%;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #090d16;
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+          margin: 16px 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .map-hud-header {
+          padding: 16px 20px;
+          background: rgba(15, 23, 42, 0.85);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .hud-left {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .hud-status-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .hud-status-badge .live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ef4444;
+        }
+
+        .hud-status-badge .live-dot.green {
+          background: #10b981;
+        }
+
+        .hud-status-text {
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          color: #94a3b8;
+        }
+
+        .hud-street-name {
+          font-size: 0.92rem;
+          font-weight: 600;
+          color: #f8fafc;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin: 0;
+        }
+
+        .hud-metrics {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .metric-box {
+          background: rgba(30, 41, 59, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 8px 14px;
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .metric-box.highlighted {
+          background: rgba(239, 68, 68, 0.12);
+          border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .metric-box .m-label {
+          font-size: 0.65rem;
+          font-weight: 800;
+          color: #94a3b8;
+          letter-spacing: 0.05em;
+        }
+
+        .metric-box .m-val {
+          font-size: 1.25rem;
+          font-weight: 900;
+        }
+
+        .map-canvas-container {
+          position: relative;
+          width: 100%;
+          background: #020617;
+          overflow: hidden;
+          transition: transform 0.2s ease-out;
+        }
+
+        .map-svg {
+          width: 100%;
+          height: auto;
+          min-height: 280px;
+          display: block;
+        }
+
+        .map-controls-bar {
+          position: absolute;
+          bottom: 16px;
+          right: 16px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(8px);
+          padding: 6px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          z-index: 10;
+        }
+
+        .map-ctrl-btn {
+          background: rgba(30, 41, 59, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #cbd5e1;
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .map-ctrl-btn:hover {
+          background: #0284c7;
+          color: #ffffff;
+        }
+
+        .map-ctrl-btn.speed-btn {
+          width: auto;
+          padding: 0 10px;
+          gap: 6px;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+
+        .map-ctrl-btn.speed-btn.active {
+          background: rgba(245, 158, 11, 0.2);
+          border-color: rgba(245, 158, 11, 0.5);
+          color: #fbbf24;
+        }
+
+        .map-route-progress {
+          padding: 14px 20px;
+          background: rgba(15, 23, 42, 0.95);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .progress-label-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.8rem;
+          color: #cbd5e1;
+          margin-bottom: 8px;
+        }
+
+        .progress-track {
+          width: 100%;
+          height: 8px;
+          background: rgba(51, 65, 85, 0.8);
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #0284c7, #10b981, #ef4444);
+          border-radius: 999px;
+          transition: width 0.4s ease-out;
         }
       `}</style>
     </div>

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
@@ -18,6 +18,27 @@ const TITLE_MAP = {
 
 export const Header = () => {
   const { currentScreen, screenHistory, goBack, user, switchRole, sosState, navigateTo } = useApp();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFSChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFSChange);
+    return () => document.removeEventListener('fullscreenchange', handleFSChange);
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const title = TITLE_MAP[currentScreen] || 'Care Navigator';
   const showBack = screenHistory.length > 0 && currentScreen !== 'dashboard' && currentScreen !== 'onboarding';
@@ -45,6 +66,16 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
+        {/* Fullscreen Toggle Button */}
+        <button 
+          className="btn-icon fullscreen-toggle-btn"
+          onClick={toggleFullScreen}
+          title={isFullscreen ? "Exit Fullscreen" : "Make App Full Screen"}
+          style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f1f5f9', border: '1px solid #cbd5e1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a' }}
+        >
+          {isFullscreen ? <Minimize2 size={18} color="#0284c7" /> : <Maximize2 size={18} color="#0284c7" />}
+        </button>
+
         {/* Active Emergency SOS Pill if triggered */}
         {sosState.active && (
           <div 
@@ -65,7 +96,7 @@ export const Header = () => {
             <ChevronDown size={14} />
           </button>
           <div className="role-menu glass-panel">
-            <div className="role-option" onClick={() => switchRole('Patient')}>Patient View</div>
+            <div className="role-option" onClick={() => switchRole('User')}>User View</div>
             <div className="role-option" onClick={() => switchRole('Doctor')}>Doctor Portal</div>
             <div className="role-option" onClick={() => switchRole('Receptionist')}>Receptionist Desk</div>
             <div className="role-option" onClick={() => switchRole('Responder')}>Ambulance / Responder</div>

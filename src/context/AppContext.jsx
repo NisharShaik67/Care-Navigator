@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AppContext = createContext();
 
@@ -61,11 +61,18 @@ export const AppProvider = ({ children }) => {
 
   const [sosState, setSosState] = useState({
     active: false,
-    ambulanceEta: 6,
+    ambulanceEta: 5,
+    distanceKm: 3.5,
+    ambulanceProgress: 0,
+    currentStreet: 'Hospital Express Highway',
+    simulationMultiplier: 1,
     ambulanceVehicle: 'AP 07 AP 1082',
     ambulanceDriver: 'Ramesh Kumar (+91 98765 10810)',
-    location: 'Narasaraopet Main Rd',
-    ambulancePhone: '108'
+    location: 'Narasaraopet Main Rd, AP',
+    ambulancePhone: '108',
+    phone: '+91 9876543210',
+    locationPermissionGranted: true,
+    notifiedNearbyUsersCount: 14
   });
 
   const [appointments, setAppointments] = useState([
@@ -248,21 +255,72 @@ export const AppProvider = ({ children }) => {
     setCurrentScreenState('landing');
   };
 
+  // Live Ambulance Telemetry & Route Progress Simulation
+  useEffect(() => {
+    let interval;
+    if (sosState.active) {
+      interval = setInterval(() => {
+        setSosState(prev => {
+          if (!prev.active) return prev;
+          if (prev.ambulanceProgress >= 100) {
+            return {
+              ...prev,
+              ambulanceProgress: 100,
+              distanceKm: 0,
+              ambulanceEta: 0,
+              currentStreet: 'Arrived at Patient Home'
+            };
+          }
+
+          const increment = 1.2 * (prev.simulationMultiplier || 1);
+          const newProgress = Math.min(100, prev.ambulanceProgress + increment);
+          const totalDistance = 3.5;
+          const newDistance = Math.max(0, totalDistance * (1 - newProgress / 100));
+          const newEta = Math.max(0, Math.ceil((newDistance / totalDistance) * 5));
+
+          let street = 'Hospital Express Highway';
+          if (newProgress >= 25 && newProgress < 50) street = 'Prakasham Main Corridor';
+          else if (newProgress >= 50 && newProgress < 75) street = 'Bypass Junction';
+          else if (newProgress >= 75 && newProgress < 100) street = 'Narasaraopet Main Rd';
+          else if (newProgress >= 100) street = 'Arrived at Patient Home';
+
+          return {
+            ...prev,
+            ambulanceProgress: newProgress,
+            distanceKm: newDistance,
+            ambulanceEta: newEta,
+            currentStreet: street
+          };
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [sosState.active]);
+
   const triggerSOS = (details = {}) => {
-    setSosState({
+    const userPhone = details.phone || user.phone || '+91 9876543210';
+    setSosState(prev => ({
+      ...prev,
       active: true,
       ambulanceEta: 5,
+      distanceKm: 3.5,
+      ambulanceProgress: 0,
+      currentStreet: 'Hospital Express Highway',
+      simulationMultiplier: 1,
       ambulanceVehicle: 'AP 07 AP 1082',
       ambulanceDriver: 'Ramesh Kumar (+91 98765 10810)',
-      location: user.location || 'Narasaraopet Main Rd, AP',
+      location: details.location || user.location || 'Narasaraopet Main Rd, AP',
       ambulancePhone: '108',
+      phone: userPhone,
+      locationPermissionGranted: details.locationPermission !== undefined ? details.locationPermission : true,
+      notifiedNearbyUsersCount: details.notifiedNearbyUsersCount || 14,
       notifiedHospitals: [
         'Government General Hospital (GGH)',
         'Narasaraopet Area Hospital',
         'Ramesh Hospitals & Cardiac Center'
       ],
       ...details
-    });
+    }));
 
     // Send HTTP telemetry payload to backend API
     try {
@@ -273,26 +331,37 @@ export const AppProvider = ({ children }) => {
           patientName: user.name,
           aadhaar: user.aadhaar || user.aadharNumber,
           bloodGroup: user.bloodGroup,
-          location: user.location,
+          location: details.location || user.location,
           allergies: user.allergies,
-          phone: user.phone
+          phone: userPhone
         })
       }).catch(err => console.log('Telemetry sent local', err));
     } catch (e) {
       // ignore offline fetch error
     }
 
-    // Connect directly to 108 Helpline
-    window.location.href = 'tel:108';
+    if (details.autoDial) {
+      window.location.href = 'tel:108';
+    }
 
-    // Navigate to live tracking screen
-    navigateTo('emergency');
+    if (details.navigate !== false) {
+      navigateTo('emergency');
+    }
   };
 
   const cancelSOS = () => {
     setSosState(prev => ({
       ...prev,
-      active: false
+      active: false,
+      ambulanceProgress: 0,
+      distanceKm: 3.5
+    }));
+  };
+
+  const setSosSimulationSpeed = (multiplier) => {
+    setSosState(prev => ({
+      ...prev,
+      simulationMultiplier: multiplier
     }));
   };
 
@@ -338,6 +407,7 @@ export const AppProvider = ({ children }) => {
         sosState,
         triggerSOS,
         cancelSOS,
+        setSosSimulationSpeed,
         appointments,
         bookOPToken,
         cancelAppointment,

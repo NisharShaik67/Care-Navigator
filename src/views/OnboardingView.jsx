@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useApp, AADHAAR_DATABASE } from '../context/AppContext';
-import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload } from 'lucide-react';
+import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall } from 'lucide-react';
 
 export const OnboardingView = () => {
   const { navigateTo, switchRole, updateUserProfile } = useApp();
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'profile'
-  const [selectedRole, setSelectedRole] = useState('Patient');
+  const [selectedRole, setSelectedRole] = useState('User');
 
-  // Aadhaar & Patient Form State
+  // Aadhaar & Doctor / Patient Form State
   const [aadharNumber, setAadharNumber] = useState('5892 4103 7621');
+  const [doctorPhone, setDoctorPhone] = useState('98765 43210');
   const [otp, setOtp] = useState(['4', '8', '1', '9']);
   
   // Auto-filled from Aadhaar
@@ -49,7 +50,7 @@ export const OnboardingView = () => {
       // Step 2 -> Step 3 (Profile Completion Form)
       if (selectedRole === 'Doctor' || selectedRole === 'Receptionist' || selectedRole === 'Responder') {
         switchRole(selectedRole);
-        updateUserProfile({ aadharNumber });
+        updateUserProfile({ phone: selectedRole === 'Doctor' ? doctorPhone : phoneNumber, doctorPhone, aadharNumber });
         navigateTo('doctor-dashboard', true);
       } else {
         setAuthMode('profile');
@@ -82,13 +83,13 @@ export const OnboardingView = () => {
     <div className="onboarding-container fade-in">
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
-          {authMode === 'login' ? 'Care Navigator Universal Login' : authMode === 'otp' ? 'Aadhaar Mobile OTP Verification' : 'Complete Aadhaar User Health Profile'}
+          {authMode === 'login' ? 'Care Navigator Universal Login' : authMode === 'otp' ? 'Mobile OTP Verification' : 'Complete Aadhaar User Health Profile'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
-            ? 'Select your role and enter 12-digit Aadhaar Card Number to proceed.'
+            ? (selectedRole === 'Doctor' ? 'Select your role and enter Doctor\'s Phone Number to proceed.' : 'Select your role and enter 12-digit Aadhaar Card Number to proceed.')
             : authMode === 'otp'
-            ? `Enter 4-digit OTP sent to mobile linked with Aadhaar (${aadharNumber})`
+            ? (selectedRole === 'Doctor' ? `Enter 4-digit OTP sent to Doctor's Phone Number (${doctorPhone})` : `Enter 4-digit OTP sent to mobile linked with Aadhaar (${aadharNumber})`)
             : 'Aadhaar identity verified! Complete medical details for universal EHR access.'}
         </p>
 
@@ -98,11 +99,11 @@ export const OnboardingView = () => {
               <label className="form-label">Select Login Role</label>
               <div className="role-selector-cards role-selector-4">
                 <div
-                  className={`role-card ${selectedRole === 'Patient' ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole('Patient')}
+                  className={`role-card ${selectedRole === 'User' || selectedRole === 'Patient' ? 'selected' : ''}`}
+                  onClick={() => setSelectedRole('User')}
                 >
                   <UserCheck size={22} color="#10b981" />
-                  <span>Patient</span>
+                  <span>User</span>
                 </div>
                 <div
                   className={`role-card ${selectedRole === 'Doctor' ? 'selected' : ''}`}
@@ -127,20 +128,41 @@ export const OnboardingView = () => {
                 </div>
               </div>
 
-              <label className="form-label">Aadhaar Card Number (12 Digits)</label>
-              <div className="input-group">
-                <CreditCard size={18} color="#059669" />
-                <input
-                  type="text"
-                  value={aadharNumber}
-                  onChange={e => handleAadhaarNumberChange(e.target.value)}
-                  placeholder="5892 4103 7621"
-                  required
-                />
-              </div>
-              <span className="aadhar-help-text">
-                <ShieldCheck size={13} color="#059669" /> UIDAI Health ID Linked • Real-time Name & Address Retrieval
-              </span>
+              {selectedRole === 'Doctor' ? (
+                <>
+                  <label className="form-label">Doctor's Phone Number (10 Digits)</label>
+                  <div className="input-group">
+                    <PhoneCall size={18} color="#0284c7" />
+                    <input
+                      type="tel"
+                      value={doctorPhone}
+                      onChange={e => setDoctorPhone(e.target.value)}
+                      placeholder="98765 43210"
+                      required
+                    />
+                  </div>
+                  <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
+                    <ShieldCheck size={13} color="#0284c7" /> Verified Medical Practitioner • Direct Portal Authentication
+                  </span>
+                </>
+              ) : (
+                <>
+                  <label className="form-label">Aadhaar Card Number (12 Digits)</label>
+                  <div className="input-group">
+                    <CreditCard size={18} color="#059669" />
+                    <input
+                      type="text"
+                      value={aadharNumber}
+                      onChange={e => handleAadhaarNumberChange(e.target.value)}
+                      placeholder="5892 4103 7621"
+                      required
+                    />
+                  </div>
+                  <span className="aadhar-help-text">
+                    <ShieldCheck size={13} color="#059669" /> UIDAI Health ID Linked • Real-time Name & Address Retrieval
+                  </span>
+                </>
+              )}
             </>
           )}
 

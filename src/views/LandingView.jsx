@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   ShieldAlert, 
@@ -26,10 +26,76 @@ import {
 
 export const LandingView = () => {
   const { navigateTo, triggerSOS, switchRole, user } = useApp();
-  const [activeRoleTab, setActiveRoleTab] = useState('Patient');
+  const [activeRoleTab, setActiveRoleTab] = useState('User');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFSChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFSChange);
+    return () => document.removeEventListener('fullscreenchange', handleFSChange);
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const handleLaunchPortal = (role = 'Patient') => {
     switchRole(role);
+    navigateTo('onboarding');
+  };
+
+  // Emergency & Portal Modal State for Starting Page Options
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [modalAction, setModalAction] = useState('sos'); // 'sos' or 'portal'
+  const [pendingRole, setPendingRole] = useState('Patient');
+  const [mobileNumber, setMobileNumber] = useState(user?.phone || '+91 9876543210');
+  const [locationAllowed, setLocationAllowed] = useState(true);
+  const [dispatchConfirmed, setDispatchConfirmed] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const openOptionModal = (actionType = 'sos', role = 'Patient') => {
+    setModalAction(actionType);
+    setPendingRole(role);
+    setDispatchConfirmed(false);
+    setShowEmergencyModal(true);
+  };
+
+  const handleGrantLocationAndDispatch = (e) => {
+    e.preventDefault();
+    if (!mobileNumber || mobileNumber.trim().length < 5) {
+      alert('Please enter a valid mobile number.');
+      return;
+    }
+    
+    setIsLocating(true);
+    setTimeout(() => {
+      setIsLocating(false);
+      setDispatchConfirmed(true);
+      
+      triggerSOS({
+        phone: mobileNumber,
+        locationPermission: locationAllowed,
+        location: '16.2359° N, 80.0496° E • Narasaraopet Main Rd, AP',
+        notifiedNearbyUsersCount: 14,
+        autoDial: false,
+        navigate: false
+      });
+    }, 600);
+  };
+
+  const handleProceedToPortal = () => {
+    switchRole(pendingRole);
+    setShowEmergencyModal(false);
     navigateTo('onboarding');
   };
 
@@ -55,16 +121,7 @@ export const LandingView = () => {
             <a href="#impact" className="nav-link">Live Impact</a>
           </div>
 
-          <div className="landing-nav-actions">
-            <button className="btn btn-secondary btn-sm" onClick={() => triggerSOS()}>
-              <ShieldAlert size={16} color="#ef4444" />
-              <span>108 Emergency</span>
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={() => handleLaunchPortal('Patient')}>
-              <span>Launch Portal</span>
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          {/* Removed Full Screen button */}
         </div>
       </nav>
 
@@ -92,7 +149,7 @@ export const LandingView = () => {
               <ArrowRight size={18} />
             </button>
 
-            <button className="btn btn-sos-hero" onClick={() => triggerSOS()}>
+            <button className="btn btn-sos-hero" onClick={() => openOptionModal('sos')}>
               <ShieldAlert size={20} />
               <span>1-Tap Emergency SOS (108)</span>
             </button>
@@ -235,11 +292,11 @@ export const LandingView = () => {
         <div className="role-tabs-container">
           <div className="role-tabs-header">
             <button 
-              className={`role-tab-btn ${activeRoleTab === 'Patient' ? 'active' : ''}`}
-              onClick={() => setActiveRoleTab('Patient')}
+              className={`role-tab-btn ${activeRoleTab === 'User' || activeRoleTab === 'Patient' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('User')}
             >
               <UserCheck size={18} />
-              <span>Patient</span>
+              <span>User</span>
             </button>
             <button 
               className={`role-tab-btn ${activeRoleTab === 'Doctor' ? 'active' : ''}`}
@@ -265,10 +322,10 @@ export const LandingView = () => {
           </div>
 
           <div className="role-tab-content glass-card fade-in">
-            {activeRoleTab === 'Patient' && (
+            {(activeRoleTab === 'User' || activeRoleTab === 'Patient') && (
               <div className="role-content-body">
                 <div className="role-text">
-                  <span className="role-badge green">Patient Portal</span>
+                  <span className="role-badge green">User Portal</span>
                   <h3>Complete Control Over Your Personal Health Journey</h3>
                   <ul>
                     <li><CheckCircle2 size={16} color="#10b981" /> 1-Tap Aadhaar Login with auto-filled profile and health ID.</li>
@@ -276,8 +333,8 @@ export const LandingView = () => {
                     <li><CheckCircle2 size={16} color="#10b981" /> Store lifetime medical records, prescriptions, and allergy alerts.</li>
                     <li><CheckCircle2 size={16} color="#10b981" /> Instant 108 Emergency SOS button with live ambulance arrival tracking.</li>
                   </ul>
-                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Patient')}>
-                    <span>Enter Patient Portal</span>
+                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('User')}>
+                    <span>Enter User Portal</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -407,7 +464,7 @@ export const LandingView = () => {
               <span>Get Started with Aadhaar Login</span>
               <ArrowRight size={18} />
             </button>
-            <button className="btn btn-secondary btn-hero" onClick={() => triggerSOS()}>
+            <button className="btn btn-secondary btn-hero" onClick={() => openOptionModal('sos')}>
               <ShieldAlert size={20} color="#ef4444" />
               <span>Test Emergency SOS (108)</span>
             </button>
@@ -425,7 +482,7 @@ export const LandingView = () => {
             <span className="brand-name">Care Navigator</span>
           </div>
           <p className="footer-copy">
-            © 2026 Care Navigator RBS-RI-01. Linked with UIDAI Aadhaar Health Architecture.
+            © 2026 Ranbidge Solutions Private Limited. Linked with UIDAI Aadhaar Health Architecture.
           </p>
           <div className="footer-emergency">
             <PhoneCall size={14} color="#ef4444" />
@@ -433,6 +490,172 @@ export const LandingView = () => {
           </div>
         </div>
       </footer>
+
+      {/* Emergency Mobile & Live Location Permission Dispatch Modal */}
+      {showEmergencyModal && (
+        <div className="modal-backdrop fade-in" onClick={() => setShowEmergencyModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="modal-content glass-panel emergency-dispatch-modal fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', width: '100%', padding: '28px', borderRadius: '24px', position: 'relative', background: '#ffffff', color: '#0f172a', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0' }}>
+            
+            <button 
+              className="modal-close-btn" 
+              onClick={() => setShowEmergencyModal(false)}
+              style={{ position: 'absolute', top: '18px', right: '18px', background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 'bold', color: '#64748b' }}
+            >
+              ✕
+            </button>
+
+            {!dispatchConfirmed ? (
+              <form onSubmit={handleGrantLocationAndDispatch}>
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                    <ShieldAlert size={32} color="#ef4444" />
+                  </div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>
+                    {modalAction === 'sos' ? '108 Emergency Dispatch & Citizen Alert' : 'Launch Portal & Live Location Access'}
+                  </h3>
+                  <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5' }}>
+                    Enter your mobile number and allow location permission. This will intimate the nearest 108 Emergency Ambulance and nearby citizens simultaneously with your live location.
+                  </p>
+                </div>
+
+                {/* Mobile Number Input */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>
+                    Mobile Number (Required for Emergency Intimation)
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <PhoneCall size={18} color="#0284c7" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="tel"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      placeholder="Enter 10-digit mobile number"
+                      style={{ width: '100%', padding: '12px 14px 12px 42px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '0.95rem', fontWeight: '600', outline: 'none' }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Location Permission Request Box */}
+                <div style={{ background: locationAllowed ? 'rgba(16, 185, 129, 0.08)' : 'rgba(241, 245, 249, 0.8)', border: locationAllowed ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid #cbd5e1', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <MapPin size={22} color={locationAllowed ? '#10b981' : '#64748b'} style={{ marginTop: '2px', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ fontSize: '0.92rem', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
+                        Allow Care Navigator to access live location while using the app?
+                      </h4>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4', marginBottom: '10px' }}>
+                        By granting location permission while using the app, your live GPS location will be broadcasted simultaneously to the <strong>nearest 108 Ambulance</strong> and <strong>14 nearby registered citizens/responders</strong>.
+                      </p>
+
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #cbd5e1', fontSize: '0.82rem', fontWeight: '700', color: locationAllowed ? '#059669' : '#475569' }}>
+                        <input
+                          type="checkbox"
+                          checked={locationAllowed}
+                          onChange={(e) => setLocationAllowed(e.target.checked)}
+                          style={{ width: '16px', height: '16px', accentColor: '#10b981', cursor: 'pointer' }}
+                        />
+                        <span>{locationAllowed ? '✓ Live Location Access Allowed' : 'Allow Live Location Access'}</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {locationAllowed && (
+                    <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: '#059669', fontWeight: '600' }}>
+                      <span>📍 Live Coordinates: 16.2359° N, 80.0496° E</span>
+                      <span className="badge badge-emerald" style={{ fontSize: '0.68rem', padding: '2px 8px', background: '#dcfce7', color: '#166534', borderRadius: '10px' }}>READY TO BROADCAST</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Action Buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    className="btn btn-emergency btn-block"
+                    disabled={isLocating}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#ef4444', color: '#ffffff', fontWeight: '700', fontSize: '0.95rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 14px rgba(239,68,68,0.35)' }}
+                  >
+                    <ShieldAlert size={20} />
+                    <span>{isLocating ? 'Acquiring GPS & Dispatching...' : 'Intimate Nearby Ambulance & Citizens Now'}</span>
+                  </button>
+
+                  {modalAction === 'portal' && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleProceedToPortal}
+                      style={{ width: '100%', padding: '12px', borderRadius: '12px', background: '#f8fafc', color: '#334155', fontWeight: '600', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                    >
+                      Proceed to Portal Sign In with Aadhaar
+                    </button>
+                  )}
+                </div>
+              </form>
+            ) : (
+              /* Confirmed Intimation Active View */
+              <div className="fade-in" style={{ textAlign: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
+                  <CheckCircle2 size={36} color="#10b981" />
+                </div>
+
+                <div style={{ background: '#dcfce7', color: '#166534', padding: '6px 14px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', marginBottom: '14px', display: 'inline-block' }}>
+                  ⚡ SIMULTANEOUS DISPATCH & CITIZEN ALERT SENT
+                </div>
+
+                <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
+                  Ambulance & Nearby Users Intimated!
+                </h3>
+
+                <p style={{ fontSize: '0.86rem', color: '#475569', marginBottom: '20px', lineHeight: '1.5' }}>
+                  Your live GPS location and mobile number (<strong>{mobileNumber}</strong>) have been broadcasted simultaneously to nearby response teams:
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left', marginBottom: '24px' }}>
+                  <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Ambulance size={26} color="#ef4444" style={{ flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: '800', color: '#991b1b' }}>Nearest 108 Ambulance Unit AP 07 AP 1082</div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569' }}>Paramedic Ramesh Kumar • Arrival ETA: 4 Mins</div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(2,132,199,0.06)', border: '1px solid rgba(2,132,199,0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <UserCheck size={26} color="#0284c7" style={{ flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: '800', color: '#075985' }}>14 Nearby Registered Citizens & Responders</div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569' }}>Alerted within 2 km radius with live victim GPS coordinates</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <a
+                    href="tel:108"
+                    className="btn btn-primary"
+                    style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#0284c7', color: '#ffffff', textDecoration: 'none', fontWeight: '700', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    <PhoneCall size={18} />
+                    <span>Call 108 Helpline</span>
+                  </a>
+
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowEmergencyModal(false);
+                      navigateTo('emergency');
+                    }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#0f172a', color: '#ffffff', fontWeight: '700', fontSize: '0.88rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    <MapPin size={18} />
+                    <span>Open Live GPS Map</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Embedded CSS */}
       <style>{`

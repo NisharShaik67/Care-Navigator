@@ -350,3 +350,27 @@ html, body {
   color: rgba(255, 255, 255, 0.2);
 }
 
+/* Full Screen Layout & Fullscreen API Rules */
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+:fullscreen, :-webkit-full-screen, :-moz-full-screen, :-ms-fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: #ffffff !important;
+  overflow-y: auto !important;
+}
+
+.care-navigator-app,
+.landing-page-container,
+.onboarding-container {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+

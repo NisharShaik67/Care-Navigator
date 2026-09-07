@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const DashboardView = () => {
-  const { user, navigateTo, sosState, triggerSOS, appointments, hospitals, records } = useApp();
+  const { user, navigateTo, triggerSOS, appointments, hospitals, records } = useApp();
 
   const activeAppointments = appointments.filter(a => a.status === 'ACTIVE');
 
@@ -58,17 +58,6 @@ export const DashboardView = () => {
           </button>
         </div>
       </div>
-
-      {/* Emergency Active Warning Banner */}
-      {sosState.active && (
-        <div className="emergency-alert-bar pulse-red" onClick={() => navigateTo('emergency')}>
-          <ShieldAlert size={20} />
-          <div className="txt">
-            <strong>EMERGENCY SOS ACTIVE:</strong> Ambulance {sosState.ambulanceVehicle} is en route. ETA: {sosState.ambulanceEta} mins.
-          </div>
-          <ChevronRight size={18} />
-        </div>
-      )}
 
       {/* Primary Action Grid */}
       <div className="section-title">

@@ -3,27 +3,18 @@ import { useApp } from '../context/AppContext';
 import { 
   Building2, 
   Stethoscope, 
-  Calendar, 
   Clock, 
-  User, 
-  CheckCircle2, 
-  QrCode, 
   ArrowRight, 
-  ArrowLeft, 
   Camera, 
   UserCheck, 
   Sparkles, 
   Star,
   CreditCard,
-  Phone,
-  HelpCircle,
-  XCircle,
-  ShieldCheck,
-  Check
+  XCircle
 } from 'lucide-react';
 
 export const OPBookingView = () => {
-  const { hospitals, user, bookOPToken, updateDoctorAvatar, navigateTo } = useApp();
+  const { hospitals, user, bookOPToken, updateDoctorAvatar } = useApp();
 
   const [selectedHospital, setSelectedHospital] = useState(hospitals[0]);
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
@@ -39,8 +30,6 @@ export const OPBookingView = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('11:00 AM');
   const [symptomsReason, setSymptomsReason] = useState('General health checkup & medical consultation');
   const [paymentMode, setPaymentMode] = useState('upi'); // 'upi' | 'abha' | 'cash'
-  
-  const [showSuccessPassModal, setShowSuccessPassModal] = useState(null);
 
   const TIME_SLOTS = ['09:30 AM', '11:00 AM', '02:15 PM', '04:30 PM', '05:45 PM', '07:00 PM'];
 
