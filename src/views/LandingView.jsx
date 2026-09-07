@@ -21,12 +21,15 @@ import {
   HeartPulse, 
   Zap, 
   Lock,
-  FileText
+  FileText,
+  Menu,
+  X
 } from 'lucide-react';
 
 export const LandingView = () => {
   const { navigateTo, triggerSOS, switchRole, user } = useApp();
   const [activeRoleTab, setActiveRoleTab] = useState('User');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -114,14 +117,23 @@ export const LandingView = () => {
             </div>
           </div>
 
-          <div className="landing-nav-links">
-            <a href="#features" className="nav-link">Features</a>
-            <a href="#roles" className="nav-link">Role Portals</a>
-            <a href="#how-it-works" className="nav-link">How It Works</a>
-            <a href="#impact" className="nav-link">Live Impact</a>
+          <div className={`landing-nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Features</a>
+            <a href="#roles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Role Portals</a>
+            <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+            <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
+            <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('User'); }}>
+              <span>Sign In with Aadhaar</span>
+            </button>
           </div>
 
-          {/* Removed Full Screen button */}
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={22} color="#0f172a" /> : <Menu size={22} color="#0f172a" />}
+          </button>
         </div>
       </nav>
 
@@ -749,12 +761,56 @@ export const LandingView = () => {
 
         .landing-nav-links {
           display: flex;
+          align-items: center;
           gap: 28px;
         }
 
+        .mobile-menu-toggle {
+          display: none;
+          background: #f1f5f9;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          width: 40px;
+          height: 40px;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .mobile-nav-signin {
+          display: none;
+        }
+
         @media (max-width: 860px) {
+          .mobile-menu-toggle {
+            display: flex;
+          }
+
           .landing-nav-links {
             display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 24px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+          }
+
+          .landing-nav-links.mobile-open {
+            display: flex;
+          }
+
+          .mobile-nav-signin {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+            margin-top: 8px;
           }
         }
 

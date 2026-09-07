@@ -288,6 +288,37 @@ export const Header = () => {
           justify-content: center;
           border: 2px solid rgba(255, 255, 255, 0.2);
         }
+
+        @media (max-width: 640px) {
+          .app-header {
+            padding: 0 12px;
+          }
+
+          .header-left {
+            gap: 8px;
+          }
+
+          .brand-logo {
+            width: 38px;
+            height: 38px;
+          }
+
+          .header-title {
+            font-size: 0.95rem;
+          }
+
+          .header-subtitle {
+            display: none;
+          }
+
+          .role-btn span {
+            display: none;
+          }
+
+          .role-btn {
+            padding: 7px 10px;
+          }
+        }
       `}</style>
     </header>
   );
