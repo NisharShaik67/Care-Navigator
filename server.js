@@ -112,18 +112,6 @@ app.post('/api/verify-aadhaar', (req, res) => {
   res.json({ success: true, user: data });
 });
 
-app.post('/api/emergency-sos', (req, res) => {
-  const { location, patientName } = req.body;
-  res.json({
-    success: true,
-    dispatchId: 'SOS-' + Date.now(),
-    ambulanceEtaMinutes: 6,
-    ambulanceVehicle: 'AP 07 AP 1082',
-    driver: 'Ramesh Kumar (+91 98765 10810)',
-    dispatchedHospital: HOSPITALS[0].name
-  });
-});
-
 // Serve built static files from Vite
 app.use(express.static(path.join(__dirname, 'dist')));
 

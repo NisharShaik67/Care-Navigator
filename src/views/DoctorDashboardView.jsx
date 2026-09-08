@@ -100,9 +100,12 @@ export const DoctorDashboardView = () => {
             <Search size={18} color="#94a3b8" />
             <input
               type="text"
+              inputMode="numeric"
+              maxLength={12}
+              pattern="[0-9]*"
               value={searchAadhar}
-              onChange={e => setSearchAadhar(e.target.value)}
-              placeholder="Enter Patient 12-Digit Aadhaar No (e.g. 5892 4103 7621)"
+              onChange={e => setSearchAadhar(e.target.value.replace(/\D/g, '').slice(0, 12))}
+              placeholder="Enter Patient 12-Digit Aadhaar No"
               className="form-input"
             />
           </div>

@@ -23,15 +23,24 @@ export const AADHAAR_DATABASE = {
   }
 };
 
+export const calculateProfileCompletion = (user) => {
+  if (!user) return 60;
+  let score = 60; // Base Aadhaar Details (Name, Aadhaar Number, Address, Gender)
+  if (user.age && String(user.age).trim() !== '') score += 15;
+  if (user.bloodGroup && String(user.bloodGroup).trim() !== '') score += 15;
+  if (user.prescriptionReport || (user.uploadedReports && user.uploadedReports.length > 0)) score += 10;
+  return Math.min(100, score);
+};
+
 export const AppProvider = ({ children }) => {
   const [currentScreen, setCurrentScreenState] = useState('landing'); // 'landing' | 'onboarding' | 'dashboard' | 'emergency' | 'symptom-checker' | 'hospitals' | 'op-booking' | 'appointments' | 'records' | 'profile' | 'doctor-dashboard'
   const [screenHistory, setScreenHistory] = useState([]);
 
   const [user, setUser] = useState({
     name: 'Alex Johnson',
-    age: '28',
-    gender: 'MALE',
-    bloodGroup: 'O+',
+    age: '',
+    gender: 'MALE', // Auto-filled from Aadhaar Base
+    bloodGroup: '',
     role: 'Patient', // 'Patient' | 'Doctor' | 'Receptionist' | 'Responder'
     location: 'Narasaraopet, Palnadu Dist, AP',
     cityVillage: 'Narasaraopet',
@@ -40,6 +49,8 @@ export const AppProvider = ({ children }) => {
     aadhaar: '5892 4103 7621',
     aadharNumber: '5892 4103 7621',
     phone: '+91 9876543210',
+    prescriptionReport: null,
+    uploadedReports: [],
     emergencyContact: '+91 9123456789',
     allergies: ['Penicillin', 'Dust', 'Sulfa drugs'],
     healthId: 'ABHA-9102-4821-9012',
@@ -57,22 +68,6 @@ export const AppProvider = ({ children }) => {
       { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
       { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
     ]
-  });
-
-  const [sosState, setSosState] = useState({
-    active: false,
-    ambulanceEta: 5,
-    distanceKm: 3.5,
-    ambulanceProgress: 0,
-    currentStreet: 'Hospital Express Highway',
-    simulationMultiplier: 1,
-    ambulanceVehicle: 'AP 07 AP 1082',
-    ambulanceDriver: 'Ramesh Kumar (+91 98765 10810)',
-    location: 'Narasaraopet Main Rd, AP',
-    ambulancePhone: '108',
-    phone: '+91 9876543210',
-    locationPermissionGranted: true,
-    notifiedNearbyUsersCount: 14
   });
 
   const [appointments, setAppointments] = useState([
@@ -490,116 +485,6 @@ export const AppProvider = ({ children }) => {
     setCurrentScreenState('landing');
   };
 
-  // Live Ambulance Telemetry & Route Progress Simulation
-  useEffect(() => {
-    let interval;
-    if (sosState.active) {
-      interval = setInterval(() => {
-        setSosState(prev => {
-          if (!prev.active) return prev;
-          if (prev.ambulanceProgress >= 100) {
-            return {
-              ...prev,
-              ambulanceProgress: 100,
-              distanceKm: 0,
-              ambulanceEta: 0,
-              currentStreet: 'Arrived at Patient Home'
-            };
-          }
-
-          const increment = 1.2 * (prev.simulationMultiplier || 1);
-          const newProgress = Math.min(100, prev.ambulanceProgress + increment);
-          const totalDistance = 3.5;
-          const newDistance = Math.max(0, totalDistance * (1 - newProgress / 100));
-          const newEta = Math.max(0, Math.ceil((newDistance / totalDistance) * 5));
-
-          let street = 'Hospital Express Highway';
-          if (newProgress >= 25 && newProgress < 50) street = 'Prakasham Main Corridor';
-          else if (newProgress >= 50 && newProgress < 75) street = 'Bypass Junction';
-          else if (newProgress >= 75 && newProgress < 100) street = 'Narasaraopet Main Rd';
-          else if (newProgress >= 100) street = 'Arrived at Patient Home';
-
-          return {
-            ...prev,
-            ambulanceProgress: newProgress,
-            distanceKm: newDistance,
-            ambulanceEta: newEta,
-            currentStreet: street
-          };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [sosState.active]);
-
-  const triggerSOS = (details = {}) => {
-    const userPhone = details.phone || user.phone || '+91 9876543210';
-    setSosState(prev => ({
-      ...prev,
-      active: true,
-      ambulanceEta: 5,
-      distanceKm: 3.5,
-      ambulanceProgress: 0,
-      currentStreet: 'Hospital Express Highway',
-      simulationMultiplier: 1,
-      ambulanceVehicle: 'AP 07 AP 1082',
-      ambulanceDriver: 'Ramesh Kumar (+91 98765 10810)',
-      location: details.location || user.location || 'Narasaraopet Main Rd, AP',
-      ambulancePhone: '108',
-      phone: userPhone,
-      locationPermissionGranted: details.locationPermission !== undefined ? details.locationPermission : true,
-      notifiedNearbyUsersCount: details.notifiedNearbyUsersCount || 14,
-      notifiedHospitals: [
-        'Government General Hospital (GGH)',
-        'Narasaraopet Area Hospital',
-        'Ramesh Hospitals & Cardiac Center'
-      ],
-      ...details
-    }));
-
-    // Send HTTP telemetry payload to backend API
-    try {
-      fetch('http://localhost:5000/api/emergency-sos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientName: user.name,
-          aadhaar: user.aadhaar || user.aadharNumber,
-          bloodGroup: user.bloodGroup,
-          location: details.location || user.location,
-          allergies: user.allergies,
-          phone: userPhone
-        })
-      }).catch(err => console.log('Telemetry sent local', err));
-    } catch (e) {
-      // ignore offline fetch error
-    }
-
-    if (details.autoDial) {
-      window.location.href = 'tel:108';
-    }
-
-    if (details.navigate !== false) {
-      navigateTo('emergency');
-    }
-  };
-
-  const cancelSOS = () => {
-    setSosState(prev => ({
-      ...prev,
-      active: false,
-      ambulanceProgress: 0,
-      distanceKm: 3.5
-    }));
-  };
-
-  const setSosSimulationSpeed = (multiplier) => {
-    setSosState(prev => ({
-      ...prev,
-      simulationMultiplier: multiplier
-    }));
-  };
-
   const bookOPToken = (tokenData) => {
     const newToken = {
       id: 'op-' + Date.now(),
@@ -639,10 +524,6 @@ export const AppProvider = ({ children }) => {
         updateUserProfile,
         switchRole,
         logout,
-        sosState,
-        triggerSOS,
-        cancelSOS,
-        setSosSimulationSpeed,
         appointments,
         bookOPToken,
         cancelAppointment,

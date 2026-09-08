@@ -3,14 +3,13 @@ import { useApp } from '../context/AppContext';
 import { Home, ShieldAlert, Bot, CalendarCheck, FolderHeart } from 'lucide-react';
 
 export const Navigation = () => {
-  const { currentScreen, navigateTo, sosState, appointments } = useApp();
+  const { currentScreen, navigateTo, appointments } = useApp();
 
   const activeAppointmentsCount = appointments.filter(a => a.status === 'ACTIVE').length;
 
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
     { id: 'symptom-checker', label: 'AI Symptom', icon: Bot },
-    { id: 'emergency', label: 'SOS Emergency', icon: ShieldAlert, badge: sosState.active ? 'SOS' : null, isEmergency: true },
     { id: 'op-booking', label: 'Book OP', icon: CalendarCheck, badge: activeAppointmentsCount > 0 ? activeAppointmentsCount : null },
     { id: 'records', label: 'Health Vault', icon: FolderHeart }
   ];
@@ -22,17 +21,16 @@ export const Navigation = () => {
       {navItems.map(item => {
         const Icon = item.icon;
         const isActive = currentScreen === item.id;
-        const isMiddleSOS = item.isEmergency;
 
         return (
           <button
             key={item.id}
-            className={`nav-tab ${isActive ? 'active' : ''} ${isMiddleSOS ? 'middle-sos-tab' : ''} ${item.isEmergency && sosState.active ? 'emergency-active' : ''}`}
+            className={`nav-tab ${isActive ? 'active' : ''}`}
             onClick={() => navigateTo(item.id)}
           >
             <div className="icon-wrapper">
-              <Icon size={isMiddleSOS ? 22 : 20} />
-              {item.badge && <span className={`nav-badge ${item.isEmergency ? 'badge-red' : ''}`}>{item.badge}</span>}
+              <Icon size={20} />
+              {item.badge && <span className="nav-badge">{item.badge}</span>}
             </div>
             <span className="tab-label">{item.label}</span>
           </button>

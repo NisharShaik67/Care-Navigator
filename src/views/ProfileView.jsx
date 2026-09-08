@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
-import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut } from 'lucide-react';
+import { useApp, calculateProfileCompletion } from '../context/AppContext';
+import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut, Upload, AlertCircle } from 'lucide-react';
 
 export const ProfileView = () => {
   const { user, updateUserProfile, logout } = useApp();
@@ -8,18 +8,33 @@ export const ProfileView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
-  const [age, setAge] = useState(user.age);
-  const [bloodGroup, setBloodGroup] = useState(user.bloodGroup);
-  const [location, setLocation] = useState(user.location);
+  const [age, setAge] = useState(user.age || '');
+  const [bloodGroup, setBloodGroup] = useState(user.bloodGroup || '');
+  const [reportName, setReportName] = useState(
+    user.prescriptionReport?.name || (user.uploadedReports?.[0]?.name || '')
+  );
 
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [cName, setCName] = useState('');
   const [cRel, setCRel] = useState('Family');
   const [cPhone, setCPhone] = useState('');
 
+  const completionScore = calculateProfileCompletion(user);
+  const isComplete = completionScore === 100;
+
   const handleSaveProfile = (e) => {
     e.preventDefault();
-    updateUserProfile({ name, phone, age, bloodGroup, location });
+    const finalReportName = reportName || 'Doctor_Prescription_Report.pdf';
+    updateUserProfile({
+      name,
+      phone,
+      age,
+      bloodGroup,
+      prescriptionReport: { name: finalReportName, date: 'Today' },
+      uploadedReports: [
+        { id: Date.now(), name: finalReportName, date: 'Today', size: '1.8 MB' }
+      ]
+    });
     setIsEditing(false);
   };
 
@@ -35,8 +50,60 @@ export const ProfileView = () => {
     setCPhone('');
   };
 
+  const missingRequirements = [];
+  if (!user.age || String(user.age).trim() === '') missingRequirements.push('Age');
+  if (!user.bloodGroup || String(user.bloodGroup).trim() === '') missingRequirements.push('Blood Group');
+  if (!user.prescriptionReport && (!user.uploadedReports || user.uploadedReports.length === 0)) {
+    missingRequirements.push("Doctor's Prescription / Medical Report");
+  }
+
   return (
     <div className="profile-view-container fade-in">
+      {/* 100% Profile Completion Status Banner */}
+      <div 
+        className="completion-banner-card glass-panel"
+        style={{
+          padding: '20px 24px',
+          borderRadius: '18px',
+          border: isComplete ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(245, 158, 11, 0.45)',
+          background: isComplete ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.09)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {isComplete ? <CheckCircle2 size={28} color="#10b981" /> : <AlertTriangle size={28} color="#f59e0b" />}
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: isComplete ? '#065f46' : '#92400e' }}>
+                {isComplete ? '✓ Profile 100% Completed (EHR Verified)' : `Health Profile Status: ${completionScore}% (Action Required)`}
+              </h3>
+              <p style={{ fontSize: '0.84rem', margin: '4px 0 0 0', color: '#475569' }}>
+                {isComplete
+                  ? 'All required parameters (Aadhaar Base, Age, Blood Group & Prescription Report) are verified.'
+                  : `Please update your ${missingRequirements.join(', ')} below to achieve 100% verification.`}
+              </p>
+            </div>
+          </div>
+          <span 
+            className={`badge ${isComplete ? 'badge-emerald' : 'badge-amber'}`} 
+            style={{ fontSize: '0.9rem', fontWeight: '900', padding: '6px 14px', borderRadius: '20px' }}
+          >
+            {completionScore}% COMPLETE
+          </span>
+        </div>
+
+        {/* Visual Progress Bar */}
+        <div style={{ width: '100%', height: '10px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+          <div 
+            style={{ 
+              width: `${completionScore}%`, 
+              height: '100%', 
+              background: isComplete ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #d97706)',
+              transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' 
+            }}
+          ></div>
+        </div>
+      </div>
+
       {/* Patient Emergency ID Card */}
       <div className="profile-card glass-panel">
         <div className="profile-top">
@@ -46,7 +113,7 @@ export const ProfileView = () => {
           <div className="p-header-info">
             <span className="badge badge-emerald">DIGITAL MEDICAL ID</span>
             <h2>{user.name}</h2>
-            <p>{user.gender}, {user.age} yrs • {user.cityVillage || user.location} ({user.pincode || '522601'})</p>
+            <p>{user.gender} {user.age ? `• ${user.age} yrs` : ''} • {user.cityVillage || user.location} ({user.pincode || '522601'})</p>
             <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || '5892 4103 7621'}</strong> • ID: <strong>{user.medicalId}</strong></p>
             <p className="med-id-tag text-muted" style={{ fontSize: '0.78rem', marginTop: '2px' }}>
               Aadhaar Address: {user.address || 'Door No 4-12, Main Road, Palnadu District, Narasaraopet'}
@@ -54,9 +121,9 @@ export const ProfileView = () => {
           </div>
 
           <div className="profile-header-btns">
-            <button className="btn btn-secondary btn-sm" onClick={() => setIsEditing(!isEditing)}>
+            <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(!isEditing)}>
               <Edit3 size={16} />
-              <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
+              <span>{isEditing ? 'Cancel Edit' : 'Complete / Update Profile'}</span>
             </button>
             <button className="btn btn-danger-soft btn-sm" onClick={logout} title="Logout Account">
               <LogOut size={16} />
@@ -65,44 +132,108 @@ export const ProfileView = () => {
           </div>
         </div>
 
-        {isEditing && (
-          <form onSubmit={handleSaveProfile} className="edit-profile-form fade-in">
+        {/* Profile Details Edit / Completion Form */}
+        {(!isComplete || isEditing) && (
+          <form onSubmit={handleSaveProfile} className="edit-profile-form fade-in" style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', border: '1px solid #cbd5e1' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#0f172a', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} color="#0284c7" />
+              <span>Complete Health Details for 100% Profile Verification</span>
+            </h4>
+
+            {/* Readonly Aadhaar Details Box */}
+            <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
+              <span className="badge badge-emerald" style={{ marginBottom: '8px', fontSize: '0.72rem' }}>
+                <ShieldCheck size={12} /> Auto-Filled From UIDAI Aadhaar
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.84rem', marginTop: '6px' }}>
+                <div><strong>Full Name:</strong> {user.name}</div>
+                <div><strong>Aadhaar Card No:</strong> {user.aadharNumber}</div>
+                <div><strong>Gender:</strong> {user.gender}</div>
+                <div><strong>Aadhaar Address:</strong> {user.address}</div>
+              </div>
+            </div>
+
             <div className="form-grid">
               <div>
-                <label className="form-label">Full Name</label>
+                <label className="form-label">User Full Name</label>
                 <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required />
               </div>
               <div>
-                <label className="form-label">Aadhaar Card Number</label>
-                <input type="text" className="form-input" value={user.aadharNumber || '5892 4103 7621'} disabled readOnly />
-              </div>
-              <div>
-                <label className="form-label">Phone Number</label>
+                <label className="form-label">Aadhaar-Linked Phone Number</label>
                 <input type="text" className="form-input" value={phone} onChange={e => setPhone(e.target.value)} required />
               </div>
               <div>
-                <label className="form-label">Age</label>
-                <input type="number" className="form-input" value={age} onChange={e => setAge(e.target.value)} required />
+                <label className="form-label">
+                  Age <span style={{ color: '#ef4444' }}>* (Required)</span>
+                </label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={age} 
+                  onChange={e => setAge(e.target.value)} 
+                  placeholder="Enter your age (e.g. 28)"
+                  required 
+                />
               </div>
               <div>
-                <label className="form-label">Blood Group</label>
-                <select className="form-input" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}>
+                <label className="form-label">
+                  Blood Group <span style={{ color: '#ef4444' }}>* (Required)</span>
+                </label>
+                <select className="form-input" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} required>
+                  <option value="">-- Select Blood Group --</option>
                   <option value="O+">O+</option>
                   <option value="O-">O-</option>
                   <option value="A+">A+</option>
+                  <option value="A-">A-</option>
                   <option value="B+">B+</option>
+                  <option value="B-">B-</option>
                   <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
                 </select>
               </div>
             </div>
+
+            {/* Doctor Prescription Upload Box */}
+            <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+              <label className="form-label">
+                Present / Previous Doctor Prescription or Medical Report <span style={{ color: '#ef4444' }}>* (Required for 100%)</span>
+              </label>
+              <div 
+                className="file-upload-dropzone" 
+                style={{ 
+                  padding: '16px', 
+                  border: '2px dashed #0284c7', 
+                  borderRadius: '14px', 
+                  background: 'rgba(2, 132, 199, 0.04)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '14px',
+                  cursor: 'pointer' 
+                }}
+              >
+                <Upload size={24} color="#0284c7" />
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>
+                    {reportName ? `📎 Attached: ${reportName}` : 'Click to Upload Doctor Prescription or Medical Report (PDF/JPG)'}
+                  </strong>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '2px 0 0 0' }}>Supports prescription files up to 10MB</p>
+                </div>
+                <input
+                  type="file"
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      setReportName(e.target.files[0].name);
+                    }
+                  }}
+                  style={{ opacity: 0, position: 'absolute', width: '100%', height: '100%', cursor: 'pointer', left: 0, top: 0 }}
+                />
+              </div>
+            </div>
+
             <div className="edit-form-action-row">
-              <button type="submit" className="btn btn-primary">
-                <CheckCircle2 size={16} />
-                <span>Save Profile Changes</span>
-              </button>
-              <button type="button" className="btn btn-danger-soft" onClick={logout}>
-                <LogOut size={16} />
-                <span>Logout Account</span>
+              <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px' }}>
+                <CheckCircle2 size={18} />
+                <span>Save & Complete Profile (Reach 100%)</span>
               </button>
             </div>
           </form>
@@ -216,7 +347,7 @@ export const ProfileView = () => {
         <div className="modal-overlay" onClick={() => setShowAddContactModal(false)}>
           <div className="modal-content glass-panel fade-in" onClick={e => e.stopPropagation()}>
             <h3>Add Emergency Contact</h3>
-            <p className="modal-subtitle">Will receive automated SMS alerts during Emergency SOS activations.</p>
+            <p className="modal-subtitle">Will receive automated SMS alerts during emergency activations.</p>
 
             <form onSubmit={handleAddContactSubmit} className="add-contact-form">
               <label className="form-label">Full Name</label>

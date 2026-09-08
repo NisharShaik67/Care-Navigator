@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { AmbulanceRouteMap } from '../components/AmbulanceRouteMap';
 import { ShieldAlert, PhoneCall, MapPin, Navigation as NavIcon, Users, CheckCircle2, AlertOctagon, HeartPulse, Stethoscope, ChevronDown, HelpCircle, XCircle } from 'lucide-react';
 
 const FIRST_AID_GUIDES = [
@@ -37,115 +36,36 @@ const FIRST_AID_GUIDES = [
 ];
 
 export const EmergencyView = () => {
-  const { sosState, triggerSOS, cancelSOS, setSosSimulationSpeed, user } = useApp();
+  const { user } = useApp();
   const [openGuide, setOpenGuide] = useState(0);
 
   return (
     <div className="emergency-view-container fade-in">
-      {/* SOS Status Hero Header */}
-      <div className={`sos-status-card glass-panel ${sosState.active ? 'active-sos' : ''}`}>
+      {/* Emergency Helpline Header */}
+      <div className="sos-status-card glass-panel">
         <div className="sos-status-top">
           <div className="status-indicator">
-            <div className={`status-dot ${sosState.active ? 'dot-red pulse-red' : 'dot-green'}`}></div>
-            <span>{sosState.active ? 'EMERGENCY SOS DISPATCHED' : 'EMERGENCY DISPATCH READY 24/7'}</span>
+            <div className="status-dot dot-green"></div>
+            <span>EMERGENCY AMBULANCE DISPATCH • DIAL 108</span>
           </div>
-          {sosState.active && (
-            <button className="btn btn-secondary btn-sm" onClick={cancelSOS}>
-              <XCircle size={16} color="#f87171" />
-              <span>Cancel Alert</span>
-            </button>
-          )}
         </div>
 
-        {!sosState.active ? (
-          <div className="sos-trigger-box">
-            <button className="sos-pulse-button" onClick={triggerSOS}>
-              <ShieldAlert size={56} />
-              <span className="sos-btn-text">PRESS FOR SOS</span>
-              <span className="sos-btn-sub">1-Tap Emergency Ambulance</span>
-            </button>
-            <p className="sos-disclaimer">
-              Pressing SOS will broadcast your live GPS location to nearest emergency response units and send SMS alerts to your emergency contacts.
-            </p>
-          </div>
-        ) : (
-          <div className="active-dispatch-details">
-            <div className="eta-badge-box">
-              <span className="eta-title">AMBULANCE ARRIVAL ETA</span>
-              <div className="eta-countdown">
-                <span className="eta-num">{sosState.ambulanceEta}</span>
-                <span className="eta-unit">MINS</span>
-              </div>
-              <span className="eta-status">
-                {sosState.ambulanceProgress >= 100 ? 'Arrived at Destination' : `En-route via ${sosState.currentStreet || 'Fast Corridor'}`}
-              </span>
-            </div>
-
-            {/* Live GPS Route Map & Dynamic Distance Tracker */}
-            <AmbulanceRouteMap sosState={sosState} onSpeedChange={setSosSimulationSpeed} />
-
-            <div className="dispatch-info-grid">
-              <div className="info-block">
-                <NavIcon size={20} color="#38bdf8" />
-                <div>
-                  <span className="lbl">Vehicle ID</span>
-                  <span className="val">{sosState.ambulanceVehicle}</span>
-                </div>
-              </div>
-
-              <div className="info-block">
-                <HeartPulse size={20} color="#10b981" />
-                <div>
-                  <span className="lbl">Lead Paramedic</span>
-                  <span className="val">{sosState.ambulanceDriver}</span>
-                </div>
-              </div>
-
-              <div className="info-block">
-                <MapPin size={20} color="#f59e0b" />
-                <div>
-                  <span className="lbl">GPS Broadcast</span>
-                  <span className="val">{sosState.location}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Simultaneous Notification & Telemetry Badge */}
-            <div className="notified-hospitals-box glass-card" style={{ padding: '14px', borderRadius: '12px', marginTop: '14px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626', fontWeight: '800', fontSize: '0.85rem', marginBottom: '8px' }}>
-                <CheckCircle2 size={18} />
-                <span>Simultaneous Emergency Intimation Activated</span>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: '#475569', marginBottom: '8px', lineHeight: '1.4' }}>
-                Live GPS location continuously transmitted simultaneously to <strong>108 Ambulance Dispatcher</strong> and <strong>{sosState.notifiedNearbyUsersCount || 14} Nearby Registered Citizens/Responders</strong>. Registered Phone: <strong>{sosState.phone || '+91 9876543210'}</strong>
-              </p>
-              <ul style={{ listStyle: 'none', paddingLeft: '0', fontSize: '0.78rem', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {(sosState.notifiedHospitals || [
-                  'Government General Hospital (GGH)',
-                  'Narasaraopet Area Hospital',
-                  'Ramesh Hospitals & Cardiac Center'
-                ]).map((h, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>🏥 {h}</span>
-                    <span className="badge badge-emerald" style={{ fontSize: '0.68rem' }}>ER STANDBY</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <a href="tel:108" className="btn btn-emergency btn-block call-driver-btn" style={{ marginTop: '16px' }}>
-              <PhoneCall size={20} />
-              <span>Call 108 Emergency Ambulance Dispatcher</span>
-            </a>
-          </div>
-        )}
+        <div className="sos-trigger-box">
+          <a href="tel:108" className="btn btn-emergency btn-block" style={{ textDecoration: 'none', padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <PhoneCall size={24} />
+            <span style={{ fontSize: '1.1rem', fontWeight: '800' }}>CALL 108 AMBULANCE HELPLINE</span>
+          </a>
+          <p className="sos-disclaimer">
+            24/7 National Emergency Medical Response Service. Direct helpline for immediate medical assistance and hospital ambulance dispatch.
+          </p>
+        </div>
       </div>
 
-      {/* Emergency Contacts Notification Log */}
+      {/* Emergency Contacts Directory */}
       <div className="contacts-notif-card glass-panel">
         <div className="card-title-row">
           <Users size={20} color="#0284c7" />
-          <h3>Emergency Contacts Alert Log</h3>
+          <h3>Emergency Contacts Directory</h3>
         </div>
 
         <div className="contacts-list">
@@ -156,13 +76,7 @@ export const EmergencyView = () => {
                 <span className="c-rel">{contact.relation} • {contact.phone}</span>
               </div>
               <div className="c-status">
-                {sosState.active ? (
-                  <span className="status-tag tag-sent">
-                    <CheckCircle2 size={14} /> SMS Sent
-                  </span>
-                ) : (
-                  <span className="status-tag tag-ready">Ready</span>
-                )}
+                <span className="status-tag tag-ready">Ready</span>
               </div>
             </div>
           ))}

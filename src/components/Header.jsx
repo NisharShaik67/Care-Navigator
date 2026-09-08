@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { useApp, calculateProfileCompletion } from '../context/AppContext';
+import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2 } from 'lucide-react';
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
   'onboarding': 'Welcome to Care Navigator',
   'dashboard': 'Care Navigator Home',
-  'emergency': 'Emergency SOS & Ambulance Tracker',
+  'emergency': 'Emergency Ambulance & Hospitals',
   'symptom-checker': 'AI Health Symptom Triage',
   'hospitals': 'Nearby Hospitals & Emergency Beds',
   'op-booking': 'Book OP Token Appointment',
@@ -17,8 +17,9 @@ const TITLE_MAP = {
 };
 
 export const Header = () => {
-  const { currentScreen, screenHistory, goBack, user, switchRole, sosState, navigateTo } = useApp();
+  const { currentScreen, screenHistory, goBack, user, switchRole, navigateTo } = useApp();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   useEffect(() => {
     const handleFSChange = () => {
@@ -43,6 +44,9 @@ export const Header = () => {
   const title = TITLE_MAP[currentScreen] || 'Care Navigator';
   const showBack = screenHistory.length > 0 && currentScreen !== 'landing';
 
+  const completionScore = calculateProfileCompletion(user);
+  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -58,17 +62,80 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
-        {/* Active Emergency SOS Pill if triggered */}
-        {sosState.active && (
-          <div 
-            className="sos-active-badge pulse-red" 
-            onClick={() => navigateTo('emergency')}
-            title="Emergency SOS Active! Click to open tracker."
+        {/* Notification Bell Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            className="btn-icon"
+            onClick={() => setShowNotifMenu(!showNotifMenu)}
+            title="App Notifications"
+            style={{ position: 'relative' }}
           >
-            <ShieldAlert size={16} />
-            <span>SOS ACTIVE ({sosState.ambulanceEta}m)</span>
-          </div>
-        )}
+            <Bell size={20} color="#0f172a" />
+            {isProfileIncomplete && (
+              <span 
+                style={{ 
+                  position: 'absolute', 
+                  top: '4px', 
+                  right: '4px', 
+                  width: '10px', 
+                  height: '10px', 
+                  background: '#ef4444', 
+                  borderRadius: '50%',
+                  border: '2px solid #ffffff' 
+                }} 
+              />
+            )}
+          </button>
+
+          {showNotifMenu && (
+            <div 
+              className="glass-panel fade-in"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 10px)',
+                right: 0,
+                width: '320px',
+                padding: '16px',
+                borderRadius: '16px',
+                background: '#ffffff',
+                boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
+                border: '1px solid #e2e8f0',
+                zIndex: 250
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>Notifications</strong>
+                <span className="badge badge-emerald" style={{ fontSize: '0.72rem' }}>
+                  {isProfileIncomplete ? '1 Unread' : 'All Clear'}
+                </span>
+              </div>
+
+              {isProfileIncomplete ? (
+                <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#b45309', fontWeight: '800', fontSize: '0.85rem', marginBottom: '4px' }}>
+                    <AlertTriangle size={16} />
+                    <span>Complete Your Health Profile</span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                    Your profile is {completionScore}% complete. Please update your <strong>Age, Blood Group, and Doctor Prescription</strong> to reach 100% EHR verification.
+                  </p>
+                  <button 
+                    className="btn btn-primary btn-sm" 
+                    onClick={() => { setShowNotifMenu(false); navigateTo('profile'); }}
+                    style={{ width: '100%', justifyContent: 'center' }}
+                  >
+                    <span>Complete Profile Now</span>
+                  </button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#64748b', fontSize: '0.84rem' }}>
+                  <CheckCircle2 size={24} color="#10b981" style={{ marginBottom: '6px' }} />
+                  <p style={{ margin: 0 }}>Your profile is 100% complete and verified!</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Role Selector Pill */}
         <div className="role-selector-dropdown">

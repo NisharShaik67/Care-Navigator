@@ -1,5 +1,5 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, calculateProfileCompletion } from '../context/AppContext';
 import { 
   ShieldAlert, 
   Bot, 
@@ -16,13 +16,16 @@ import {
   AlertTriangle,
   Sparkles,
   PhoneCall,
-  Stethoscope
+  Stethoscope,
+  Bell
 } from 'lucide-react';
 
 export const DashboardView = () => {
-  const { user, navigateTo, triggerSOS, appointments, hospitals, records } = useApp();
+  const { user, navigateTo, appointments, hospitals, records } = useApp();
 
   const activeAppointments = appointments.filter(a => a.status === 'ACTIVE');
+  const completionScore = calculateProfileCompletion(user);
+  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -46,18 +49,47 @@ export const DashboardView = () => {
             ABHA Health ID: <span className="mono text-sky">{user.healthId}</span> • {user.location}
           </p>
         </div>
+      </div>
 
-        <div className="hero-right">
+      {/* Incomplete Profile Notification Alert Banner */}
+      {isProfileIncomplete && (
+        <div 
+          className="glass-card fade-in"
+          style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.08) 100%)',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '240px' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bell size={22} color="#b45309" />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.96rem', fontWeight: '800', color: '#92400e', margin: 0 }}>
+                Profile Completion Required ({completionScore}%)
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: '#475569', margin: '2px 0 0 0', lineHeight: '1.4' }}>
+                Your Aadhaar details are verified. Please update your <strong>Age, Blood Group, and Doctor Prescription</strong> to reach 100% EHR verification.
+              </p>
+            </div>
+          </div>
           <button 
-            className="btn-sos-hero-circle pulse-red"
-            onClick={() => triggerSOS()}
-            title="Trigger Emergency SOS"
+            className="btn btn-primary" 
+            onClick={() => navigateTo('profile')}
+            style={{ whiteSpace: 'nowrap', padding: '10px 18px', background: '#d97706', borderColor: '#b45309' }}
           >
-            <ShieldAlert size={28} />
-            <span className="sos-circle-lbl">EMERGENCY SOS</span>
+            <span>Complete Profile Now</span>
+            <ChevronRight size={16} />
           </button>
         </div>
-      </div>
+      )}
 
       {/* Primary Action Grid */}
       <div className="section-title">
@@ -65,16 +97,6 @@ export const DashboardView = () => {
       </div>
       
       <div className="services-grid">
-        <div className="service-card card-sos" onClick={() => navigateTo('emergency')}>
-          <div className="card-icon icon-red">
-            <ShieldAlert size={28} />
-          </div>
-          <div className="card-info">
-            <h4>Emergency SOS & Ambulance</h4>
-            <p>GPS dispatch to nearest ER hospital, 108 integration & live tracker.</p>
-          </div>
-          <ChevronRight size={20} className="arrow" />
-        </div>
 
         <div className="service-card card-symptom" onClick={() => navigateTo('symptom-checker')}>
           <div className="card-icon icon-emerald">

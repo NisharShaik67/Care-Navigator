@@ -13,8 +13,29 @@ export const OnboardingView = () => {
   const [doctorId, setDoctorId] = useState('DOC-9082-AP');
   const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
   const [responderPhone, setResponderPhone] = useState('+91 98765 10800');
-  const [otp, setOtp] = useState(['4', '8', '1', '9']);
-  
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otpTimer, setOtpTimer] = useState(10);
+  const [otpAutoFilled, setOtpAutoFilled] = useState(false);
+
+  React.useEffect(() => {
+    let interval;
+    if (authMode === 'otp' && !otpAutoFilled) {
+      setOtpTimer(10);
+      interval = setInterval(() => {
+        setOtpTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setOtp(['4', '8', '1', '9']);
+            setOtpAutoFilled(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [authMode, otpAutoFilled]);
+
   // Auto-filled from Aadhaar
   const [fullName, setFullName] = useState('Alex Johnson');
   const [aadhaarAddress, setAadhaarAddress] = useState('Door No 4-12, Main Road, Palnadu District, Narasaraopet');
@@ -32,9 +53,10 @@ export const OnboardingView = () => {
   const [allergiesText, setAllergiesText] = useState('Penicillin, Dust, Sulfa drugs');
 
   const handleAadhaarNumberChange = (val) => {
-    setAadharNumber(val);
+    const digitsOnly = val.replace(/\D/g, '').slice(0, 12);
+    setAadharNumber(digitsOnly);
     // Real-time Aadhaar Auto-Fill
-    const cleanNo = val.replace(/\s+/g, '');
+    const cleanNo = digitsOnly;
     const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE[val];
     if (found) {
       setFullName(found.name);
@@ -45,21 +67,26 @@ export const OnboardingView = () => {
   };
 
   const handleUniqueIdChange = (val) => {
-    setUniqueId(val);
-    const clean = val.trim();
+    const isSpecialRole = val.toLowerCase().includes('doc') || val.includes('@');
+    let processed = val;
+    if (!isSpecialRole) {
+      processed = val.replace(/\D/g, '').slice(0, 12);
+    }
+    setUniqueId(processed);
+    const clean = processed.trim();
     if (clean.toLowerCase().includes('doc')) {
       setSelectedRole('Doctor');
-      setDoctorId(val);
+      setDoctorId(clean);
     } else if (clean.includes('@')) {
       setSelectedRole('Receptionist');
-      setReceptionistGmail(val);
-    } else if (clean.replace(/\s+/g, '').length === 10 && !clean.startsWith('5') && !clean.startsWith('1')) {
+      setReceptionistGmail(clean);
+    } else if (clean.length === 10 && !clean.startsWith('5') && !clean.startsWith('1')) {
       setSelectedRole('Responder');
-      setResponderPhone(val);
+      setResponderPhone(clean);
     } else {
       setSelectedRole('User');
-      setAadharNumber(val);
-      handleAadhaarNumberChange(val);
+      setAadharNumber(clean);
+      handleAadhaarNumberChange(clean);
     }
   };
 
@@ -76,9 +103,11 @@ export const OnboardingView = () => {
         setAadharNumber(clean || aadharNumber);
       }
 
+      setOtp(['', '', '', '']);
+      setOtpAutoFilled(false);
+      setOtpTimer(10);
       setAuthMode('otp');
     } else if (authMode === 'otp') {
-      // Step 2 -> Step 3 (Profile Completion Form)
       if (selectedRole === 'Doctor' || selectedRole === 'Receptionist' || selectedRole === 'Responder') {
         switchRole(selectedRole);
         updateUserProfile({ 
@@ -90,29 +119,25 @@ export const OnboardingView = () => {
         });
         navigateTo('doctor-dashboard', true);
       } else {
-        setAuthMode('profile');
+        const cleanNo = (uniqueId || aadharNumber).replace(/\D/g, '');
+        const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE['589241037621'];
+        updateUserProfile({
+          name: found ? found.name : fullName,
+          aadharNumber: uniqueId || aadharNumber,
+          gender: found ? found.gender : 'MALE',
+          address: found ? found.address : aadhaarAddress,
+          cityVillage: found ? found.city : cityVillage,
+          pincode: found ? found.pincode : pinCode,
+          location: found ? `${found.city}, AP` : `${cityVillage}, AP`,
+          phone: phoneNumber,
+          age: '', // Keep empty for user to fill in Profile page
+          bloodGroup: '', // Keep empty for user to fill in Profile page
+          prescriptionReport: null,
+          uploadedReports: []
+        });
+        switchRole('User');
+        navigateTo('dashboard', true);
       }
-    } else {
-      // Step 3 -> Launch Portal
-      const allergiesList = allergiesText ? allergiesText.split(',').map(a => a.trim()).filter(Boolean) : [];
-      updateUserProfile({
-        name: fullName,
-        aadharNumber: uniqueId || aadharNumber,
-        phone: phoneNumber,
-        age: parseInt(age, 10) || 28,
-        bloodGroup,
-        gender,
-        cityVillage,
-        pincode: pinCode,
-        address: aadhaarAddress,
-        location: `${cityVillage}, AP`,
-        allergies: allergiesList,
-        uploadedReports: [
-          { id: Date.now(), name: medicalReportName || 'Patient_Prescription.pdf', date: 'Today', size: '1.8 MB' }
-        ]
-      });
-      switchRole(selectedRole);
-      navigateTo('dashboard', true);
     }
   };
 
@@ -120,14 +145,12 @@ export const OnboardingView = () => {
     <div className="onboarding-container fade-in">
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
-          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : authMode === 'otp' ? 'Aadhaar Phone OTP Verification' : 'Complete Aadhaar User Health Profile'}
+          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : 'Aadhaar Phone OTP Verification'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
             ? 'Enter your 12-digit Aadhaar Card Number to send verification OTP to registered mobile phone.'
-            : authMode === 'otp'
-            ? `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`
-            : 'Aadhaar ID & Phone Number verified via OTP! Complete medical details for universal EHR access.'}
+            : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
         </p>
 
         <form onSubmit={handleAuthSubmit} className="auth-form">
@@ -138,9 +161,10 @@ export const OnboardingView = () => {
                 <CreditCard size={18} color="#0284c7" />
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={uniqueId}
                   onChange={e => handleUniqueIdChange(e.target.value)}
-                  placeholder="Enter 12-Digit Aadhaar Card Number (e.g. 5892 4103 7621)"
+                  placeholder="Enter 12-Digit Aadhaar Card Number"
                   required
                 />
               </div>
@@ -151,112 +175,33 @@ export const OnboardingView = () => {
           )}
 
           {authMode === 'otp' && (
-            <div className="otp-container">
-              {otp.map((digit, idx) => (
-                <input
-                  key={idx}
-                  type="text"
-                  maxLength="1"
-                  className="otp-input"
-                  value={digit}
-                  onChange={e => {
-                    const val = e.target.value;
-                    const newOtp = [...otp];
-                    newOtp[idx] = val;
-                    setOtp(newOtp);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          {authMode === 'profile' && (
-            <div className="profile-completion-grid fade-in">
-              <div className="auto-fill-box glass-card">
-                <span className="badge badge-emerald"><ShieldCheck size={12} /> Auto-Filled From UIDAI Aadhaar</span>
-                <div className="auto-field">
-                  <label>User Full Name (From Aadhaar)</label>
-                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="form-input readonly-input" />
-                </div>
-                <div className="auto-field">
-                  <label>Permanent Address (From Aadhaar)</label>
-                  <input type="text" value={aadhaarAddress} onChange={e => setAadhaarAddress(e.target.value)} className="form-input readonly-input" />
-                </div>
-              </div>
-
-              <div className="form-grid-2col">
-                <div>
-                  <label className="form-label">Aadhaar-Linked Phone Number</label>
-                  <input type="tel" className="form-input" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="form-label">Age</label>
-                  <input type="number" className="form-input" value={age} onChange={e => setAge(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="form-label">Blood Group</label>
-                  <select className="form-input" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} required>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Gender</label>
-                  <select className="form-input" value={gender} onChange={e => setGender(e.target.value)} required>
-                    <option value="MALE">MALE</option>
-                    <option value="FEMALE">FEMALE</option>
-                    <option value="OTHERS">OTHERS</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">City / Village</label>
-                  <input type="text" className="form-input" value={cityVillage} onChange={e => setCityVillage(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="form-label">Pin Code</label>
-                  <input type="text" className="form-input" value={pinCode} onChange={e => setPinCode(e.target.value)} required />
-                </div>
-              </div>
-
-              {/* Previous Medical Report & Prescription */}
-              <div className="upload-section-box">
-                <label className="form-label">Previous Medical Report / Doctor Prescription</label>
-                <div className="file-upload-dropzone">
-                  <Upload size={20} color="#0284c7" />
-                  <div>
-                    <strong>{medicalReportName || 'Click or drag file to attach report'}</strong>
-                    <p>PDF, JPG, PNG up to 10MB</p>
-                  </div>
+            <>
+              <div className="otp-container">
+                {otp.map((digit, idx) => (
                   <input
-                    type="file"
-                    className="file-input-hidden"
+                    key={idx}
+                    type="text"
+                    maxLength="1"
+                    inputMode="numeric"
+                    className="otp-input"
+                    value={digit}
                     onChange={e => {
-                      if (e.target.files && e.target.files[0]) {
-                        setMedicalReportName(e.target.files[0].name);
-                      }
+                      const val = e.target.value;
+                      const newOtp = [...otp];
+                      newOtp[idx] = val;
+                      setOtp(newOtp);
                     }}
                   />
-                </div>
+                ))}
               </div>
-
-              {/* Optional Allergies */}
-              <div>
-                <label className="form-label">Known Allergies (Optional)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={allergiesText}
-                  onChange={e => setAllergiesText(e.target.value)}
-                  placeholder="e.g. Penicillin, Dust, Sulfa drugs"
-                />
+              <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#64748b' }}>
+                {!otpAutoFilled ? (
+                  <span>📱 Waiting for SMS OTP... Auto-displaying code in <strong>{otpTimer}s</strong></span>
+                ) : (
+                  <span style={{ color: '#059669', fontWeight: '700' }}>✓ SMS OTP Code Received & Auto-Filled</span>
+                )}
               </div>
-            </div>
+            </>
           )}
 
           <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '20px' }}>
@@ -264,9 +209,7 @@ export const OnboardingView = () => {
             <span>
               {authMode === 'login'
                 ? 'Send OTP to Linked Phone Number'
-                : authMode === 'otp'
-                ? 'Verify OTP & Fill Details'
-                : 'Save and Submit'}
+                : 'Verify OTP & Launch Home Page'}
             </span>
           </button>
         </form>

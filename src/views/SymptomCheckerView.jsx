@@ -52,7 +52,7 @@ export const SymptomCheckerView = () => {
         specialist = 'Cardiologist / Emergency';
         summary = 'CRITICAL WARNING: Symptoms indicate potential cardiac or severe pulmonary stress.';
         recommendations = [
-          'IMMEDIATE ACTION REQUIRED: Press Emergency SOS for 1-tap ambulance dispatch.',
+          'IMMEDIATE ACTION REQUIRED: Call 108 Emergency Ambulance helpline.',
           'Do not drive yourself to hospital.',
           'Sit in a comfortable upright position while waiting for emergency responders.'
         ];
@@ -159,10 +159,10 @@ export const SymptomCheckerView = () => {
 
             <div className="assessment-actions">
               {assessment.riskLevel === 'EMERGENCY' ? (
-                <button className="btn btn-emergency btn-block" onClick={() => navigateTo('emergency')}>
-                  <ShieldAlert size={18} />
-                  <span>TRIGGER EMERGENCY SOS DISPATCH</span>
-                </button>
+                <a href="tel:108" className="btn btn-emergency btn-block" style={{ textDecoration: 'none' }}>
+                  <PhoneCall size={18} />
+                  <span>CALL 108 EMERGENCY AMBULANCE</span>
+                </a>
               ) : (
                 <button className="btn btn-primary btn-block" onClick={handleBookFromAssessment}>
                   <Stethoscope size={18} />
