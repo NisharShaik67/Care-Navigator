@@ -189,40 +189,6 @@ export const DashboardView = () => {
         </div>
       )}
 
-      {/* Live Hospital Bed Status Overview */}
-      <div className="section-title margin-top">
-        <h3>Nearby Hospital Availability</h3>
-        <button className="link-btn" onClick={() => navigateTo('hospitals')}>Explore All Hospitals →</button>
-      </div>
-
-      <div className="hospitals-mini-grid">
-        {hospitals.map(hosp => (
-          <div key={hosp.id} className="hosp-mini-card glass-panel" onClick={() => navigateTo('hospitals')}>
-            <div className="hosp-top">
-              <div>
-                <h4>{hosp.name}</h4>
-                <p className="addr"><MapPin size={13} /> {hosp.location} ({hosp.distance})</p>
-              </div>
-              <span className="rating-pill">★ {hosp.rating}</span>
-            </div>
-
-            <div className="bed-counters">
-              <div className="bed-chip chip-emerald">
-                <span className="count">{hosp.emergencyBeds}</span>
-                <span className="lbl">Emergency Beds</span>
-              </div>
-              <div className="bed-chip chip-sky">
-                <span className="count">{hosp.icuBeds}</span>
-                <span className="lbl">ICU Beds</span>
-              </div>
-              <div className="bed-chip chip-amber">
-                <span className="count">{hosp.opQueueCount}</span>
-                <span className="lbl">Queue Count</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
       <style>{`
         .care-dashboard-container {

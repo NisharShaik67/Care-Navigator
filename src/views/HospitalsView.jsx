@@ -167,7 +167,7 @@ export const HospitalsView = () => {
 
         .hospitals-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
           gap: 20px;
         }
 
@@ -177,12 +177,24 @@ export const HospitalsView = () => {
           flex-direction: column;
           justify-content: space-between;
           gap: 16px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+          transition: all 0.25s ease;
+        }
+
+        .hospital-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+          border-color: #cbd5e1;
         }
 
         .hosp-card-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
+          gap: 12px;
         }
 
         .hosp-title {
@@ -210,6 +222,7 @@ export const HospitalsView = () => {
           font-size: 0.85rem;
           font-weight: 800;
           color: #eab308;
+          white-space: nowrap;
         }
 
         .rating-box .reviews {
@@ -277,6 +290,62 @@ export const HospitalsView = () => {
         .hosp-card-footer .btn {
           flex: 1;
         }
+
+        /* Mobile & Small Screen Responsive Adjustments */
+        @media (max-width: 768px) {
+          .hospitals-view-container {
+            padding: 14px 12px;
+            gap: 14px;
+          }
+
+          .hospitals-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+          }
+
+          .hospital-card {
+            width: 100%;
+            padding: 18px 16px;
+            gap: 14px;
+          }
+
+          .hosp-card-header {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+
+          .hosp-title {
+            font-size: 1.05rem;
+          }
+
+          .hosp-vitals-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+          }
+
+          .vital-tag {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 8px 12px;
+          }
+
+          .hosp-card-footer {
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+          }
+
+          .hosp-card-footer .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
       `}</style>
     </div>
   );

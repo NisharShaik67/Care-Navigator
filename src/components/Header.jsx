@@ -340,9 +340,76 @@ export const Header = () => {
           border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .app-header {
+            height: 64px;
+            padding: 0 16px;
+            gap: 12px;
+          }
+
+          .header-left {
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+          }
+
+          .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            flex-shrink: 0;
+          }
+
+          .header-title-container {
+            min-width: 0;
+            flex: 1;
+          }
+
+          .header-title {
+            font-size: 0.95rem;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .header-subtitle {
+            font-size: 0.72rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .header-right {
+            gap: 10px;
+            flex-shrink: 0;
+          }
+
+          .btn-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+          }
+
+          .role-btn {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 10px;
+            gap: 4px;
+          }
+
+          .avatar-circle {
+            width: 38px;
+            height: 38px;
+            font-size: 0.85rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .app-header {
+            height: 60px;
             padding: 0 12px;
+            gap: 8px;
           }
 
           .header-left {
@@ -350,12 +417,13 @@ export const Header = () => {
           }
 
           .brand-logo {
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
           }
 
           .header-title {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
+            max-width: 140px;
           }
 
           .header-subtitle {
@@ -367,9 +435,21 @@ export const Header = () => {
           }
 
           .role-btn {
-            padding: 7px 10px;
+            padding: 6px 8px;
+          }
+
+          .btn-icon {
+            width: 34px;
+            height: 34px;
+          }
+
+          .avatar-circle {
+            width: 34px;
+            height: 34px;
+            font-size: 0.8rem;
           }
         }
+
       `}</style>
     </header>
   );
