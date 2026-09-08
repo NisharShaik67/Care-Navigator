@@ -44,7 +44,10 @@ export const DashboardView = () => {
             <Sparkles size={14} color="#10b981" />
             <span>AI Care Navigator Active • 24/7 Response</span>
           </div>
-          <h2>{getGreeting()}, {user.name} 👋</h2>
+          <h2>
+            <span>{getGreeting()},</span><br />
+            <span>{user.name} 👋</span>
+          </h2>
           <p className="subtitle">
             ABHA Health ID: <span className="mono text-sky">{user.healthId}</span> • {user.location}
           </p>
