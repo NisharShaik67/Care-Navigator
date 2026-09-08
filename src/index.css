@@ -374,3 +374,150 @@ html, body, #root {
   box-sizing: border-box;
 }
 
+/* ==========================================================================
+   COMPREHENSIVE DEVICE-AUTO-ADJUST RESPONSIVE SYSTEM (Mobile & Tablet)
+   ========================================================================== */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  /* Container & Screen Outer Padding */
+  .care-dashboard-container,
+  .profile-view-container,
+  .symptom-checker-container,
+  .emergency-view-container,
+  .hospitals-view-container,
+  .booking-view-container,
+  .records-view-container,
+  .doctor-dashboard-container {
+    padding: 14px 12px !important;
+    gap: 14px !important;
+  }
+
+  /* Glass Panels & Card Padding */
+  .hero-banner,
+  .profile-card,
+  .glass-panel,
+  .auth-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Headings & Title Fluid Scaling */
+  h1, .hero-headline {
+    font-size: clamp(1.4rem, 5vw, 2.2rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  h2, .modal-title {
+    font-size: clamp(1.2rem, 4vw, 1.6rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  h3 {
+    font-size: clamp(1.05rem, 3.5vw, 1.3rem) !important;
+  }
+
+  /* Auto-Switch Grids to Single Column on Mobile */
+  .services-grid,
+  .medical-flags-grid,
+  .precautions-alerts-grid,
+  .contacts-list-grid,
+  .form-grid,
+  .form-grid-2col,
+  .features-grid,
+  .steps-grid,
+  .roles-grid,
+  .dispatch-info-grid,
+  .profile-completion-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Flex Rows Auto-Wrap on Mobile */
+  .hero-banner,
+  .profile-top,
+  .title-row,
+  .section-title-row,
+  .header-right,
+  .cta-banner-buttons,
+  .edit-form-action-row,
+  .modal-footer-btns {
+    flex-wrap: wrap !important;
+  }
+
+  /* Action Buttons Full Width on Small Devices for Touch Usability */
+  .edit-form-action-row button,
+  .modal-footer-btns button,
+  .cta-banner-buttons button,
+  .hero-cta-group button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Touch Input Target Heights */
+  .form-input,
+  .input-group input,
+  select.form-input,
+  .file-upload-dropzone {
+    min-height: 46px !important;
+    font-size: 0.92rem !important;
+  }
+
+  /* Modal Popups Responsive Sizing */
+  .modal-content,
+  .modal-panel,
+  .glass-panel.modal-content {
+    width: 94vw !important;
+    max-width: 520px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px !important;
+    margin: 12px !important;
+  }
+
+  /* Table Horizontal Momentum Scroll */
+  .table-responsive,
+  .appointments-table-wrap,
+  .records-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  table {
+    min-width: 540px !important;
+  }
+}
+
+/* Extra Small Phones (<= 480px) */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  /* OTP Code Boxes sizing for compact mobile screens */
+  .otp-input {
+    width: 44px !important;
+    height: 48px !important;
+    font-size: 1.15rem !important;
+  }
+
+  .otp-container {
+    gap: 8px !important;
+  }
+
+  /* Fixed Navigation Bottom Bar Mobile Safe Area Padding */
+  .app-navigation {
+    height: 64px !important;
+    padding: 0 6px env(safe-area-inset-bottom, 0px) !important;
+  }
+
+  .tab-label {
+    font-size: 0.68rem !important;
+  }
+}
+
