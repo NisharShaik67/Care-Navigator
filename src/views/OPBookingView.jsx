@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Building2, 
@@ -6,18 +6,35 @@ import {
   Clock, 
   ArrowRight, 
   Camera, 
-  UserCheck, 
-  Sparkles, 
   Star,
+  Sparkles,
   CreditCard,
-  XCircle
+  XCircle,
+  MapPin,
+  Phone,
+  Search,
+  CheckCircle2,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export const OPBookingView = () => {
   const { hospitals, user, bookOPToken, updateDoctorAvatar } = useApp();
 
   const [selectedHospital, setSelectedHospital] = useState(hospitals[0]);
+  const [docSearchQuery, setDocSearchQuery] = useState('');
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
+
+  // Compute filtered doctors list for selected hospital
+  const filteredDoctors = useMemo(() => {
+    if (!selectedHospital || !selectedHospital.doctors) return [];
+    if (!docSearchQuery.trim()) return selectedHospital.doctors;
+    const q = docSearchQuery.toLowerCase();
+    return selectedHospital.doctors.filter(d => 
+      d.name.toLowerCase().includes(q) || 
+      (d.specialty && d.specialty.toLowerCase().includes(q)) ||
+      (d.title && d.title.toLowerCase().includes(q))
+    );
+  }, [selectedHospital, docSearchQuery]);
 
   // Booking Form State
   const [patientType, setPatientType] = useState('self'); // 'self' | 'other'
@@ -32,10 +49,6 @@ export const OPBookingView = () => {
   const [paymentMode, setPaymentMode] = useState('upi'); // 'upi' | 'abha' | 'cash'
 
   const TIME_SLOTS = ['09:30 AM', '11:00 AM', '02:15 PM', '04:30 PM', '05:45 PM', '07:00 PM'];
-
-  const handleHospitalChange = (hosp) => {
-    setSelectedHospital(hosp);
-  };
 
   const handleOpenDoctorBooking = (doc) => {
     setBookingModalDoc(doc);
@@ -63,7 +76,7 @@ export const OPBookingView = () => {
     const tokenData = {
       patientName: patientNameFinal,
       patientPhone: patientPhone,
-      hospitalName: selectedHospital.name,
+      hospitalName: selectedHospital ? selectedHospital.name : 'Hospital',
       doctorName: bookingModalDoc.name,
       specialty: bookingModalDoc.specialty,
       date: bookingDate,
@@ -80,116 +93,146 @@ export const OPBookingView = () => {
 
   return (
     <div className="op-booking-view-container fade-in">
-      {/* Hospital Selection Header Row */}
-      <div className="hospital-header-bar glass-panel">
-        <div className="bar-left">
-          <Building2 size={24} color="#0284c7" />
-          <div>
-            <h3>Select Hospital Facility</h3>
-            <p>Showing nearby OPD centers & emergency hospitals</p>
+      {/* Sleek Hospital Selector Bar */}
+      <div className="compact-hosp-header-bar glass-panel fade-in">
+        <div className="hosp-select-left">
+          <div className="hosp-icon-badge">
+            <Building2 size={22} color="#0284c7" />
           </div>
-        </div>
-
-        <div className="hospital-tabs-pills">
-          {hospitals.map(hosp => (
-            <button
-              key={hosp.id}
-              className={`hosp-pill-btn ${selectedHospital.id === hosp.id ? 'active' : ''}`}
-              onClick={() => handleHospitalChange(hosp)}
+          <div className="hosp-select-wrapper">
+            <label className="hosp-select-label">Select Hospital / Clinic Facility:</label>
+            <select 
+              className="hosp-dropdown-select"
+              value={selectedHospital ? selectedHospital.id : ''}
+              onChange={(e) => {
+                const hosp = hospitals.find(h => h.id === e.target.value);
+                if (hosp) setSelectedHospital(hosp);
+              }}
             >
-              <span className="h-name">{hosp.name}</span>
-              <span className="h-dist">({hosp.distance})</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Uneducated / General Patient Guidance Help Banner */}
-      <div className="common-doctor-help-banner glass-panel fade-in">
-        <div className="banner-icon-badge">
-          <UserCheck size={28} color="#059669" />
-        </div>
-        <div className="banner-content">
-          <h4>⭐ Unsure which specialist to choose?</h4>
-          <p>
-            Every hospital has a designated <strong>Common Duty Triage Doctor</strong>. If you are confused or unsure about medical departments, select the Common Duty Doctor. 
-            They will perform your initial general checkup, diagnose your problem, and personally direct you to the correct specialist doctor!
-          </p>
-        </div>
-      </div>
-
-      {/* Available Doctors List */}
-      <div className="section-header-row">
-        <h3>Available Doctors at {selectedHospital.name}</h3>
-        <p className="sub">Tap on any doctor to book your OP consultation token immediately</p>
-      </div>
-
-      <div className="doctor-cards-grid">
-        {selectedHospital.doctors && selectedHospital.doctors.map(doc => (
-          <div
-            key={doc.id}
-            className={`doc-card glass-card ${doc.isCommonDoctor ? 'common-doctor-highlight' : ''}`}
-            onClick={() => handleOpenDoctorBooking(doc)}
-          >
-            {doc.isCommonDoctor && (
-              <div className="common-doc-ribbon">
-                <Sparkles size={14} color="#ffffff" />
-                <span>RECOMMENDED FOR GENERAL CHECKUP & REFERRAL</span>
-              </div>
-            )}
-
-            <div className="doc-card-inner">
-              <div className="doc-avatar-container">
-                <img 
-                  src={doc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} 
-                  alt={doc.name} 
-                  className="doc-avatar-img" 
-                />
-                <span className="live-dot" title="Available Today"></span>
-                <label 
-                  className="photo-upload-overlay" 
-                  title="Upload / Change Doctor Picture" 
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Camera size={13} color="#ffffff" />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    style={{ display: 'none' }} 
-                    onChange={(e) => handleImageUpload(e, doc.id)}
-                  />
-                </label>
-              </div>
-
-              <div className="doc-details">
-                <div className="doc-title-row">
-                  <h4>{doc.name}</h4>
-                  {doc.rating && (
-                    <span className="rating-tag">
-                      <Star size={12} color="#eab308" fill="#eab308" />
-                      {doc.rating}
-                    </span>
-                  )}
-                </div>
-
-                <p className="doc-specialty-txt">{doc.specialty}</p>
-                <p className="doc-room-txt">Room: {doc.roomNo}</p>
-
-                <div className="doc-meta-row">
-                  <span className="chip chip-exp">{doc.experience} Exp</span>
-                  <span className="chip chip-fee">{doc.fee || '₹300'} OPD</span>
-                  <span className="chip chip-avail">{doc.available}</span>
-                </div>
-              </div>
-
-              <button className="btn btn-primary btn-sm tap-to-book-btn">
-                <span>Book OP</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
+              {hospitals.map(h => (
+                <option key={h.id} value={h.id}>
+                  {h.name} — ({h.distance}) • ⭐ {h.rating} Rating
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
+        </div>
+
+        {selectedHospital && (
+          <div className="hosp-quick-info-pills">
+            <span className="info-chip dist">
+              <MapPin size={13} /> {selectedHospital.distance} away
+            </span>
+            <span className="info-chip star">
+              <Star size={13} fill="#eab308" color="#eab308" /> {selectedHospital.rating} Rating
+            </span>
+            <span className="info-chip queue">
+              ⚡ {selectedHospital.opQueueCount} in OP Queue
+            </span>
+            <span className="info-chip phone">
+              <Phone size={12} /> {selectedHospital.phone}
+            </span>
+          </div>
+        )}
       </div>
+
+
+      {/* Available Doctors List Section */}
+      <div className="doctors-list-section">
+        <div className="section-header-row">
+          <div>
+            <h3>Available Doctors at {selectedHospital ? selectedHospital.name : ''}</h3>
+            <p className="sub">Tap on any doctor to book your OP consultation token immediately</p>
+          </div>
+
+          <div className="doc-search-box">
+            <Search size={16} color="#64748b" />
+            <input 
+              type="text"
+              placeholder="Filter doctor or specialty..."
+              value={docSearchQuery}
+              onChange={(e) => setDocSearchQuery(e.target.value)}
+            />
+            {docSearchQuery && (
+              <button className="clear-btn" onClick={() => setDocSearchQuery('')}>×</button>
+            )}
+          </div>
+        </div>
+
+        <div className="doctor-cards-grid">
+          {filteredDoctors.length === 0 ? (
+            <div className="no-docs-found">
+              <p>No doctors found matching "{docSearchQuery}".</p>
+            </div>
+          ) : (
+            filteredDoctors.map(doc => (
+              <div
+                key={doc.id}
+                className={`doc-card glass-card ${doc.isCommonDoctor ? 'common-doctor-highlight' : ''}`}
+                onClick={() => handleOpenDoctorBooking(doc)}
+              >
+                {doc.isCommonDoctor && (
+                  <div className="common-doc-ribbon">
+                    <Sparkles size={14} color="#ffffff" />
+                    <span>RECOMMENDED FOR GENERAL CHECKUP & REFERRAL</span>
+                  </div>
+                )}
+                <div className="doc-card-inner">
+                  <div className="doc-avatar-container">
+                    <img 
+                      src={doc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} 
+                      alt={doc.name} 
+                      className="doc-avatar-img" 
+                    />
+                    <span className="live-dot" title="Available Today"></span>
+                    <label 
+                      className="photo-upload-overlay" 
+                      title="Upload / Change Doctor Picture" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Camera size={13} color="#ffffff" />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={(e) => handleImageUpload(e, doc.id)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="doc-details">
+                    <div className="doc-title-row">
+                      <h4>{doc.name}</h4>
+                      {doc.rating && (
+                        <span className="rating-tag">
+                          <Star size={12} color="#eab308" fill="#eab308" />
+                          {doc.rating} Rating
+                        </span>
+                      )}
+                    </div>
+
+                    {doc.title && <p className="doc-qualification">{doc.title}</p>}
+                    <p className="doc-specialty-txt">{doc.specialty}</p>
+                    <p className="doc-room-txt">Room: {doc.roomNo}</p>
+
+                    <div className="doc-meta-row">
+                      <span className="chip chip-exp">{doc.experience} Exp</span>
+                      <span className="chip chip-fee">{doc.fee || '₹300'} OPD</span>
+                      <span className="chip chip-avail">{doc.available}</span>
+                    </div>
+                  </div>
+
+                  <button className="btn btn-primary btn-sm tap-to-book-btn">
+                    <span>Book OP</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
 
       {/* Booking Form Modal triggered on Doctor Click */}
       {bookingModalDoc && (
@@ -372,58 +415,155 @@ export const OPBookingView = () => {
           gap: 20px;
         }
 
-        .hospital-header-bar {
-          padding: 20px 24px;
+        .hospitals-section-container {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          border-radius: 20px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .compact-hosp-header-bar {
+          padding: 16px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           flex-wrap: wrap;
           gap: 16px;
+          border-radius: 16px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.03);
         }
 
-        .bar-left {
+        .hosp-select-left {
           display: flex;
           align-items: center;
           gap: 14px;
+          flex: 1;
+          min-width: 280px;
         }
 
-        .bar-left h3 {
-          font-size: 1.2rem;
-          font-weight: 800;
-          color: #0f172a;
-          margin: 0;
-        }
-
-        .bar-left p {
-          font-size: 0.82rem;
-          color: #64748b;
-          margin: 2px 0 0 0;
-        }
-
-        .hospital-tabs-pills {
+        .hosp-icon-badge {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          background: rgba(2, 132, 199, 0.1);
           display: flex;
           align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
+          justify-content: center;
+          flex-shrink: 0;
         }
 
-        .hosp-pill-btn {
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
-          color: #334155;
-          padding: 8px 16px;
-          border-radius: 12px;
-          font-size: 0.85rem;
-          font-weight: 600;
+        .hosp-select-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          width: 100%;
+        }
+
+        .hosp-select-label {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+
+        .hosp-dropdown-select {
+          background: #f8fafc;
+          border: 1.5px solid #0284c7;
+          color: #0f172a;
+          font-size: 0.98rem;
+          font-weight: 700;
+          padding: 9px 14px;
+          border-radius: 10px;
+          outline: none;
           cursor: pointer;
+          width: 100%;
           transition: all 0.2s ease;
         }
 
-        .hosp-pill-btn.active {
-          background: #0284c7;
-          color: #ffffff;
-          border-color: #0284c7;
-          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        .hosp-dropdown-select:focus {
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+        }
+
+        .hosp-quick-info-pills {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .info-chip {
+          font-size: 0.78rem;
+          font-weight: 700;
+          padding: 6px 12px;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .info-chip.dist {
+          background: #e0f2fe;
+          color: #0369a1;
+        }
+
+        .info-chip.star {
+          background: #fef9c3;
+          color: #854d0e;
+          border: 1px solid #fef08a;
+        }
+
+        .info-chip.queue {
+          background: #f1f5f9;
+          color: #334155;
+        }
+
+        .info-chip.phone {
+          background: #f8fafc;
+          color: #475569;
+          border: 1px solid #e2e8f0;
+        }
+
+
+        .doc-qualification {
+          font-size: 0.78rem;
+          color: #64748b;
+          margin: 1px 0 3px 0;
+          font-weight: 500;
+        }
+
+        .doc-search-box {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          padding: 6px 12px;
+          border-radius: 10px;
+          min-width: 220px;
+        }
+
+        .doc-search-box input {
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 0.82rem;
+          width: 100%;
+          color: #1e293b;
+        }
+
+        .no-docs-found {
+          padding: 30px;
+          text-align: center;
+          color: #64748b;
+          font-size: 0.9rem;
+          grid-column: 1 / -1;
         }
 
         .common-doctor-help-banner {

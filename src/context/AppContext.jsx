@@ -103,95 +103,308 @@ export const AppProvider = ({ children }) => {
       qrCode: 'OP-NAH-ORTH-028'
     }
   ]);
-
   const [hospitals] = useState([
     {
-      id: 'hosp-1',
-      name: 'Government General Hospital (GGH)',
-      location: 'Collectorate Road, Guntur',
-      distance: '2.4 km',
-      emergencyBeds: 14,
-      icuBeds: 5,
-      ventilators: 3,
-      opQueueCount: 42,
-      phone: '0863 2234567',
-      rating: 4.6,
-      specialties: ['General Triage & Referral', 'Cardiology', 'Trauma & Emergency', 'Orthopedics', 'Pediatrics'],
+      id: 'hosp-4',
+      name: 'Apollo Primary Clinic & OPD Center',
+      type: 'Primary Care & OPD Clinic',
+      location: 'Main Road, Narasaraopet',
+      distance: '0.8 km',
+      distanceVal: 0.8,
+      emergencyBeds: 4,
+      icuBeds: 1,
+      ventilators: 0,
+      opQueueCount: 8,
+      phone: '08647 225588',
+      rating: 4.7,
+      specialties: ['General Checkup', 'General Medicine', 'Dermatology', 'Pediatrics'],
       doctors: [
         { 
-          id: 'doc-common-1', 
+          id: 'doc-gen-4', 
           name: 'Dr. Common Duty Medical Officer (General Triage & Referral)', 
-          title: 'MBBS, General Triage & OPD Officer', 
+          title: 'MBBS, General OPD Officer', 
           specialty: 'Common General Checkup & Specialist Referral', 
-          experience: '15 yrs', 
+          experience: '10 yrs', 
           roomNo: 'General Triage Block-1, Room 01', 
-          isCommonDoctor: true,
-          fee: '₹50',
-          available: 'Available 24/7',
+          fee: '₹50', 
+          available: 'Available 24/7', 
           rating: 4.9,
-          avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'
+          isCommonDoctor: true
         },
-        { id: 'doc-1', name: 'Dr. K. Srinivas Rao', title: 'MD, DM (Cardiology)', specialty: 'Cardiology', experience: '18 yrs', roomNo: 'OP Block-2, Room 104', fee: '₹300', available: 'Available Today', rating: 4.8 },
-        { id: 'doc-2', name: 'Dr. M. Lakshmi Prasanna', title: 'MS (General Surgery)', specialty: 'General Surgery', experience: '14 yrs', roomNo: 'OP Block-1, Room 202', fee: '₹250', available: 'Available Today', rating: 4.7 }
+        { id: 'doc-402', name: 'Dr. P. Anitha', title: 'MD (Dermatology)', specialty: 'Dermatology', experience: '8 yrs', roomNo: 'OP Desk 2', fee: '₹350', available: 'Available Today', rating: 4.7 }
       ]
     },
     {
       id: 'hosp-2',
       name: 'Narasaraopet Area Hospital',
+      type: 'District Govt Area Hospital',
       location: 'Palnadu Road, Narasaraopet',
       distance: '1.1 km',
+      distanceVal: 1.1,
       emergencyBeds: 8,
       icuBeds: 2,
       ventilators: 1,
       opQueueCount: 18,
       phone: '08647 220108',
       rating: 4.4,
-      specialties: ['General Triage & Referral', 'General Medicine', 'Pediatrics', 'Obstetrics & Gynaecology'],
+      specialties: ['General Checkup', 'General Medicine', 'Orthopedics', 'Pediatrics', 'Obstetrics & Gynaecology'],
       doctors: [
         { 
-          id: 'doc-common-2', 
+          id: 'doc-gen-2', 
           name: 'Dr. Common Duty Physician (General Triage & Referral)', 
           title: 'MBBS, Civil Assistant Surgeon', 
           specialty: 'Common General Checkup & Specialist Referral', 
-          experience: '12 yrs', 
+          experience: '11 yrs', 
           roomNo: 'General Triage Room 02', 
-          isCommonDoctor: true,
-          fee: '₹30',
-          available: 'Available Today',
+          fee: '₹30', 
+          available: 'Available Today', 
           rating: 4.8,
-          avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300'
+          isCommonDoctor: true
         },
         { id: 'doc-3', name: 'Dr. S. Meenakshi', title: 'MS (Orthopedics)', specialty: 'Orthopedics', experience: '12 yrs', roomNo: 'Room 12', fee: '₹300', available: 'Available Today', rating: 4.6 },
         { id: 'doc-4', name: 'Dr. R. V. Ramana', title: 'MD (Pediatrics)', specialty: 'Pediatrics', experience: '16 yrs', roomNo: 'Room 05', fee: '₹300', available: 'Available Today', rating: 4.7 }
       ]
     },
     {
+      id: 'hosp-5',
+      name: 'Sri City Community Health Center (CHC)',
+      type: 'Community Health Center (CHC)',
+      location: 'Station Road, Narasaraopet',
+      distance: '1.8 km',
+      distanceVal: 1.8,
+      emergencyBeds: 6,
+      icuBeds: 1,
+      ventilators: 1,
+      opQueueCount: 12,
+      phone: '08647 231122',
+      rating: 4.3,
+      specialties: ['General Checkup', 'General Medicine', 'Obstetrics & Gynaecology', 'Emergency Triage'],
+      doctors: [
+        { 
+          id: 'doc-501', 
+          name: 'Dr. Common Triage Medical Officer', 
+          title: 'MBBS (General Physician & Triage)', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '7 yrs', 
+          roomNo: 'Triage OPD Desk 1', 
+          fee: '₹50', 
+          available: 'Available Today', 
+          rating: 4.7,
+          isCommonDoctor: true
+        },
+        { id: 'doc-502', name: 'Dr. K. Sunitha', title: 'DGO, MS (Gynecology)', specialty: 'Obstetrics & Gynaecology', experience: '11 yrs', roomNo: 'Maternity Wing 3', fee: '₹250', available: 'Available Today', rating: 4.6 }
+      ]
+    },
+    {
+      id: 'hosp-1',
+      name: 'Government General Hospital (GGH)',
+      type: 'Govt Super Specialty Hospital',
+      location: 'Collectorate Road, Guntur',
+      distance: '2.4 km',
+      distanceVal: 2.4,
+      emergencyBeds: 14,
+      icuBeds: 5,
+      ventilators: 3,
+      opQueueCount: 42,
+      phone: '0863 2234567',
+      rating: 4.6,
+      specialties: ['General Checkup', 'Cardiology', 'Trauma & Emergency', 'Orthopedics', 'General Surgery', 'Pediatrics'],
+      doctors: [
+        { 
+          id: 'doc-gen-1', 
+          name: 'Dr. Common Duty Medical Officer (General Triage & Referral)', 
+          title: 'MD (General Medicine & Primary Care)', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '16 yrs', 
+          roomNo: 'General Triage Block-1, Room 01', 
+          fee: '₹50', 
+          available: 'Available 24/7', 
+          rating: 4.9,
+          isCommonDoctor: true
+        },
+        { id: 'doc-1', name: 'Dr. K. Srinivas Rao', title: 'MD, DM (Cardiology)', specialty: 'Cardiology', experience: '18 yrs', roomNo: 'OP Block-2, Room 104', fee: '₹300', available: 'Available Today', rating: 4.8 },
+        { id: 'doc-2', name: 'Dr. M. Lakshmi Prasanna', title: 'MS (General Surgery)', specialty: 'General Surgery', experience: '14 yrs', roomNo: 'OP Block-1, Room 202', fee: '₹250', available: 'Available Today', rating: 4.7 }
+      ]
+    },
+    {
+      id: 'hosp-6',
+      name: 'KIMS Saveera Multi-Specialty Hospital',
+      type: 'Private Super Specialty Hospital',
+      location: 'NH-16 Express Highway, Guntur',
+      distance: '3.2 km',
+      distanceVal: 3.2,
+      emergencyBeds: 18,
+      icuBeds: 8,
+      ventilators: 5,
+      opQueueCount: 22,
+      phone: '0863 2288999',
+      rating: 4.8,
+      specialties: ['General Checkup', 'Neurology', 'Endocrinology', 'Gastroenterology', 'Cardiology'],
+      doctors: [
+        { 
+          id: 'doc-gen-6', 
+          name: 'Dr. Senior Common Triage Officer', 
+          title: 'MD (General Medicine & Preventive Care)', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '13 yrs', 
+          roomNo: 'Triage Desk 102', 
+          fee: '₹100', 
+          available: 'Available Today', 
+          rating: 4.8,
+          isCommonDoctor: true
+        },
+        { id: 'doc-601', name: 'Dr. N. Chandra Sekhar', title: 'DM (Neurology), MCh', specialty: 'Neurology', experience: '20 yrs', roomNo: 'Neuro Block 301', fee: '₹600', available: 'Available Today', rating: 4.9 },
+        { id: 'doc-602', name: 'Dr. B. Swapna', title: 'MD, DM (Endocrinology)', specialty: 'Endocrinology', experience: '15 yrs', roomNo: 'Diabetes Care Desk', fee: '₹450', available: 'Available Today', rating: 4.8 }
+      ]
+    },
+    {
+      id: 'hosp-7',
+      name: 'Guntur City Care Clinic & OPD Center',
+      type: 'Neighborhood Daycare Clinic',
+      location: 'Brodipet 4th Line, Guntur',
+      distance: '3.9 km',
+      distanceVal: 3.9,
+      emergencyBeds: 3,
+      icuBeds: 0,
+      ventilators: 0,
+      opQueueCount: 6,
+      phone: '0863 2244111',
+      rating: 4.5,
+      specialties: ['General Checkup', 'ENT Specialist', 'General Medicine', 'Dental Care'],
+      doctors: [
+        { 
+          id: 'doc-gen-7', 
+          name: 'Dr. Common Duty Physician (General Triage)', 
+          title: 'MBBS, Family Physician', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '9 yrs', 
+          roomNo: 'General Triage Room 101', 
+          fee: '₹50', 
+          available: 'Available Today', 
+          rating: 4.7,
+          isCommonDoctor: true
+        },
+        { id: 'doc-701', name: 'Dr. G. Ravi Teja', title: 'MS (ENT Specialist)', specialty: 'ENT Specialist', experience: '9 yrs', roomNo: 'Room 102', fee: '₹300', available: 'Available Today', rating: 4.6 }
+      ]
+    },
+    {
       id: 'hosp-3',
       name: 'Ramesh Hospitals & Cardiac Center',
+      type: 'Tertiary Cardiac & Emergency Hospital',
       location: 'Ring Road, Guntur',
       distance: '4.8 km',
+      distanceVal: 4.8,
       emergencyBeds: 22,
       icuBeds: 9,
       ventilators: 6,
       opQueueCount: 29,
       phone: '0863 2377777',
       rating: 4.8,
-      specialties: ['General Triage & Referral', 'Cardiac Care', 'Critical Care', 'Nephrology'],
+      specialties: ['General Checkup', 'Cardiac Care', 'Critical Care', 'Nephrology', 'Pulmonology'],
       doctors: [
         { 
-          id: 'doc-common-3', 
+          id: 'doc-gen-3', 
           name: 'Dr. Senior Common Triage Officer', 
           title: 'MBBS, MEM (Emergency & General Triage)', 
           specialty: 'Common General Checkup & Specialist Referral', 
-          experience: '14 yrs', 
+          experience: '15 yrs', 
           roomNo: 'OP Desk 1', 
-          isCommonDoctor: true,
-          fee: '₹100',
-          available: 'Available Today',
+          fee: '₹100', 
+          available: 'Available Today', 
           rating: 4.9,
-          avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'
+          isCommonDoctor: true
         },
         { id: 'doc-5', name: 'Dr. P. Ramesh Babu', title: 'MD, DM (Cardiology)', specialty: 'Cardiology', experience: '25 yrs', roomNo: 'Tower A, Floor 3', fee: '₹500', available: 'Available Today', rating: 4.9 }
+      ]
+    },
+    {
+      id: 'hosp-8',
+      name: 'Palnadu Mother & Child Health Center',
+      type: 'Maternity & Children Hospital',
+      location: 'Vinukonda Highway, Palnadu',
+      distance: '6.5 km',
+      distanceVal: 6.5,
+      emergencyBeds: 10,
+      icuBeds: 4,
+      ventilators: 2,
+      opQueueCount: 15,
+      phone: '08646 223344',
+      rating: 4.6,
+      specialties: ['General Checkup', 'Pediatrics & Neonatology', 'Obstetrics & Gynaecology'],
+      doctors: [
+        { 
+          id: 'doc-gen-8', 
+          name: 'Dr. Common Duty Medical Officer', 
+          title: 'MBBS, General & Family Physician', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '8 yrs', 
+          roomNo: 'OP Triage Desk 1', 
+          fee: '₹50', 
+          available: 'Available Today', 
+          rating: 4.7,
+          isCommonDoctor: true
+        },
+        { id: 'doc-801', name: 'Dr. D. Sailaja', title: 'MD (Pediatrics), Fellow Neonatology', specialty: 'Pediatrics & Neonatology', experience: '14 yrs', roomNo: 'NICU Block Room 02', fee: '₹350', available: 'Available Today', rating: 4.8 }
+      ]
+    },
+    {
+      id: 'hosp-9',
+      name: 'Manipal Super Specialty Hospital',
+      type: 'Regional Super Specialty',
+      location: 'Tadepalle Bypass, Vijayawada',
+      distance: '8.2 km',
+      distanceVal: 8.2,
+      emergencyBeds: 30,
+      icuBeds: 12,
+      ventilators: 8,
+      opQueueCount: 35,
+      phone: '0866 2299000',
+      rating: 4.9,
+      specialties: ['General Checkup', 'Nephrology', 'Urology', 'Oncology', 'Organ Transplant'],
+      doctors: [
+        { 
+          id: 'doc-gen-9', 
+          name: 'Dr. Senior Common Triage Officer', 
+          title: 'MD (Internal Medicine & General Care)', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '18 yrs', 
+          roomNo: 'Triage Desk 205', 
+          fee: '₹100', 
+          available: 'Available Today', 
+          rating: 4.9,
+          isCommonDoctor: true
+        },
+        { id: 'doc-901', name: 'Dr. A. Vikram Dev', title: 'DM (Nephrology), Transplant Fellow', specialty: 'Nephrology', experience: '22 yrs', roomNo: 'Transplant OPD Wing', fee: '₹700', available: 'Available Today', rating: 4.9 }
+      ]
+    },
+    {
+      id: 'hosp-10',
+      name: 'AIIMS Apex Medical Institute & Hospital',
+      type: 'National Apex Referral Institute',
+      location: 'Mangalagiri, Guntur District',
+      distance: '12.0 km',
+      distanceVal: 12.0,
+      emergencyBeds: 50,
+      icuBeds: 25,
+      ventilators: 15,
+      opQueueCount: 60,
+      phone: '0863 2277000',
+      rating: 4.9,
+      specialties: ['General Checkup', 'Pulmonology', 'Cardiothoracic Surgery', 'Neurosurgery', 'Multi-Specialty'],
+      doctors: [
+        { 
+          id: 'doc-gen-10', 
+          name: 'Dr. Common Duty Medical Officer (General Triage & Referral)', 
+          title: 'MD (General Medicine & Primary OPD)', 
+          specialty: 'Common General Checkup & Specialist Referral', 
+          experience: '22 yrs', 
+          roomNo: 'General Triage Block-G', 
+          fee: '₹50', 
+          available: 'Available 24/7', 
+          rating: 4.9,
+          isCommonDoctor: true
+        },
+        { id: 'doc-1001', name: 'Dr. S. K. Mukherjee', title: 'MD, DM (Pulmonology)', specialty: 'Pulmonology', experience: '28 yrs', roomNo: 'Apex OPD Block-A', fee: '₹100', available: 'Available Today', rating: 5.0 }
       ]
     }
   ]);
@@ -221,10 +434,19 @@ export const AppProvider = ({ children }) => {
     }
   ]);
 
-  const navigateTo = (screen) => {
+  const navigateTo = (screen, resetHistory = false) => {
     if (screen !== currentScreen) {
-      setScreenHistory(prev => [...prev, currentScreen]);
+      if (resetHistory) {
+        setScreenHistory([currentScreen]);
+      } else {
+        setScreenHistory(prev => [...prev, currentScreen]);
+      }
       setCurrentScreenState(screen);
+      try {
+        window.history.pushState({ screen }, '', `#${screen}`);
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -233,10 +455,23 @@ export const AppProvider = ({ children }) => {
       const prevScreen = screenHistory[screenHistory.length - 1];
       setScreenHistory(prev => prev.slice(0, -1));
       setCurrentScreenState(prevScreen);
-    } else {
-      setCurrentScreenState('dashboard');
+    } else if (currentScreen !== 'landing') {
+      setCurrentScreenState('landing');
     }
   };
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.screen) {
+        setCurrentScreenState(event.state.screen);
+        setScreenHistory(prev => (prev.length > 0 ? prev.slice(0, -1) : []));
+      } else if (screenHistory.length > 0) {
+        goBack();
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [screenHistory, currentScreen]);
 
   const updateUserProfile = (updates) => {
     setUser(prev => ({ ...prev, ...updates }));

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { useApp, AADHAAR_DATABASE } from '../context/AppContext';
-import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall } from 'lucide-react';
+import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall, ArrowLeft, Mail, Award, Siren, Fingerprint, BadgeCheck } from 'lucide-react';
 
 export const OnboardingView = () => {
   const { navigateTo, switchRole, updateUserProfile } = useApp();
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'profile'
   const [selectedRole, setSelectedRole] = useState('User');
 
-  // Aadhaar & Doctor / Patient Form State
-  const [aadharNumber, setAadharNumber] = useState('5892 4103 7621');
-  const [doctorPhone, setDoctorPhone] = useState('98765 43210');
+  // Role Specific Credentials State
+  const [uniqueId, setUniqueId] = useState('');
+  const [aadharNumber, setAadharNumber] = useState('');
+  const [doctorId, setDoctorId] = useState('DOC-9082-AP');
+  const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
+  const [responderPhone, setResponderPhone] = useState('+91 98765 10800');
   const [otp, setOtp] = useState(['4', '8', '1', '9']);
   
   // Auto-filled from Aadhaar
@@ -41,16 +44,50 @@ export const OnboardingView = () => {
     }
   };
 
+  const handleUniqueIdChange = (val) => {
+    setUniqueId(val);
+    const clean = val.trim();
+    if (clean.toLowerCase().includes('doc')) {
+      setSelectedRole('Doctor');
+      setDoctorId(val);
+    } else if (clean.includes('@')) {
+      setSelectedRole('Receptionist');
+      setReceptionistGmail(val);
+    } else if (clean.replace(/\s+/g, '').length === 10 && !clean.startsWith('5') && !clean.startsWith('1')) {
+      setSelectedRole('Responder');
+      setResponderPhone(val);
+    } else {
+      setSelectedRole('User');
+      setAadharNumber(val);
+      handleAadhaarNumberChange(val);
+    }
+  };
+
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     if (authMode === 'login') {
       // Step 1 -> Step 2 (OTP)
+      const clean = uniqueId.trim();
+      if (clean.toLowerCase().includes('doc')) setSelectedRole('Doctor');
+      else if (clean.includes('@')) setSelectedRole('Receptionist');
+      else if (clean.replace(/\s+/g, '').length === 10 && !clean.startsWith('5')) setSelectedRole('Responder');
+      else {
+        setSelectedRole('User');
+        setAadharNumber(clean || aadharNumber);
+      }
+
       setAuthMode('otp');
     } else if (authMode === 'otp') {
       // Step 2 -> Step 3 (Profile Completion Form)
       if (selectedRole === 'Doctor' || selectedRole === 'Receptionist' || selectedRole === 'Responder') {
         switchRole(selectedRole);
-        updateUserProfile({ phone: selectedRole === 'Doctor' ? doctorPhone : phoneNumber, doctorPhone, aadharNumber });
+        updateUserProfile({ 
+          phone: selectedRole === 'Responder' ? uniqueId : phoneNumber, 
+          doctorId: uniqueId,
+          receptionistGmail: uniqueId,
+          responderPhone: uniqueId,
+          aadharNumber: uniqueId || aadharNumber 
+        });
         navigateTo('doctor-dashboard', true);
       } else {
         setAuthMode('profile');
@@ -60,7 +97,7 @@ export const OnboardingView = () => {
       const allergiesList = allergiesText ? allergiesText.split(',').map(a => a.trim()).filter(Boolean) : [];
       updateUserProfile({
         name: fullName,
-        aadharNumber,
+        aadharNumber: uniqueId || aadharNumber,
         phone: phoneNumber,
         age: parseInt(age, 10) || 28,
         bloodGroup,
@@ -83,86 +120,33 @@ export const OnboardingView = () => {
     <div className="onboarding-container fade-in">
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
-          {authMode === 'login' ? 'Care Navigator Universal Login' : authMode === 'otp' ? 'Mobile OTP Verification' : 'Complete Aadhaar User Health Profile'}
+          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : authMode === 'otp' ? 'Aadhaar Phone OTP Verification' : 'Complete Aadhaar User Health Profile'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
-            ? (selectedRole === 'Doctor' ? 'Select your role and enter Doctor\'s Phone Number to proceed.' : 'Select your role and enter 12-digit Aadhaar Card Number to proceed.')
+            ? 'Enter your 12-digit Aadhaar Card Number to send verification OTP to registered mobile phone.'
             : authMode === 'otp'
-            ? (selectedRole === 'Doctor' ? `Enter 4-digit OTP sent to Doctor's Phone Number (${doctorPhone})` : `Enter 4-digit OTP sent to mobile linked with Aadhaar (${aadharNumber})`)
-            : 'Aadhaar identity verified! Complete medical details for universal EHR access.'}
+            ? `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`
+            : 'Aadhaar ID & Phone Number verified via OTP! Complete medical details for universal EHR access.'}
         </p>
 
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
-              <label className="form-label">Select Login Role</label>
-              <div className="role-selector-cards role-selector-4">
-                <div
-                  className={`role-card ${selectedRole === 'User' || selectedRole === 'Patient' ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole('User')}
-                >
-                  <UserCheck size={22} color="#10b981" />
-                  <span>User</span>
-                </div>
-                <div
-                  className={`role-card ${selectedRole === 'Doctor' ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole('Doctor')}
-                >
-                  <Stethoscope size={22} color="#0284c7" />
-                  <span>Doctor</span>
-                </div>
-                <div
-                  className={`role-card ${selectedRole === 'Receptionist' ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole('Receptionist')}
-                >
-                  <Building2 size={22} color="#f59e0b" />
-                  <span>Receptionist</span>
-                </div>
-                <div
-                  className={`role-card ${selectedRole === 'Responder' ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole('Responder')}
-                >
-                  <Ambulance size={22} color="#ef4444" />
-                  <span>Responder</span>
-                </div>
+              <label className="form-label">12-Digit Aadhaar Number / Universal ID</label>
+              <div className="input-group">
+                <CreditCard size={18} color="#0284c7" />
+                <input
+                  type="text"
+                  value={uniqueId}
+                  onChange={e => handleUniqueIdChange(e.target.value)}
+                  placeholder="Enter 12-Digit Aadhaar Card Number (e.g. 5892 4103 7621)"
+                  required
+                />
               </div>
-
-              {selectedRole === 'Doctor' ? (
-                <>
-                  <label className="form-label">Doctor's Phone Number (10 Digits)</label>
-                  <div className="input-group">
-                    <PhoneCall size={18} color="#0284c7" />
-                    <input
-                      type="tel"
-                      value={doctorPhone}
-                      onChange={e => setDoctorPhone(e.target.value)}
-                      placeholder="98765 43210"
-                      required
-                    />
-                  </div>
-                  <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
-                    <ShieldCheck size={13} color="#0284c7" /> Verified Medical Practitioner • Direct Portal Authentication
-                  </span>
-                </>
-              ) : (
-                <>
-                  <label className="form-label">Aadhaar Card Number (12 Digits)</label>
-                  <div className="input-group">
-                    <CreditCard size={18} color="#059669" />
-                    <input
-                      type="text"
-                      value={aadharNumber}
-                      onChange={e => handleAadhaarNumberChange(e.target.value)}
-                      placeholder="5892 4103 7621"
-                      required
-                    />
-                  </div>
-                  <span className="aadhar-help-text">
-                    <ShieldCheck size={13} color="#059669" /> UIDAI Health ID Linked • Real-time Name & Address Retrieval
-                  </span>
-                </>
-              )}
+              <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
+                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your linked Phone Number. Supports Aadhaar Card, Doctor ID, Receptionist Email, or Responder Phone
+              </span>
             </>
           )}
 
@@ -202,7 +186,7 @@ export const OnboardingView = () => {
 
               <div className="form-grid-2col">
                 <div>
-                  <label className="form-label">Phone Number</label>
+                  <label className="form-label">Aadhaar-Linked Phone Number</label>
                   <input type="tel" className="form-input" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
                 </div>
                 <div>
@@ -279,7 +263,7 @@ export const OnboardingView = () => {
             <CheckCircle2 size={18} />
             <span>
               {authMode === 'login'
-                ? 'Continue with Aadhaar ID'
+                ? 'Send OTP to Linked Phone Number'
                 : authMode === 'otp'
                 ? 'Verify OTP & Fill Details'
                 : 'Save and Submit'}
@@ -344,27 +328,91 @@ export const OnboardingView = () => {
         }
 
         .role-card {
-          background: #f8fafc;
-          border: 1px solid var(--border-light, #e2e8f0);
-          border-radius: 12px;
-          padding: 12px 6px;
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 14px 6px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+          position: relative;
+        }
+
+        .role-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .role-card-icon-wrapper {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.25s ease;
+        }
+
+        .role-card.role-user .role-card-icon-wrapper {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
+          border: 1px solid rgba(16, 185, 129, 0.35);
+          color: #10b981;
+        }
+
+        .role-card.role-doctor .role-card-icon-wrapper {
+          background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(8, 145, 178, 0.25) 100%);
+          border: 1px solid rgba(2, 132, 199, 0.35);
+          color: #0284c7;
+        }
+
+        .role-card.role-receptionist .role-card-icon-wrapper {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%);
+          border: 1px solid rgba(245, 158, 11, 0.35);
+          color: #d97706;
+        }
+
+        .role-card.role-responder .role-card-icon-wrapper {
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.25) 100%);
+          border: 1px solid rgba(239, 68, 68, 0.35);
+          color: #dc2626;
         }
 
         .role-card span {
-          font-size: 0.75rem;
+          font-size: 0.78rem;
           font-weight: 700;
-          color: var(--text-main, #0f172a);
+          color: #334155;
         }
 
-        .role-card.selected {
-          border-color: var(--primary, #0284c7);
-          background: rgba(2, 132, 199, 0.08);
+        .role-card.role-user.selected {
+          border-color: #10b981;
+          background: #ecfdf5;
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .role-card.role-doctor.selected {
+          border-color: #0284c7;
+          background: #f0f9ff;
+          box-shadow: 0 6px 20px rgba(2, 132, 199, 0.2);
+        }
+
+        .role-card.role-receptionist.selected {
+          border-color: #f59e0b;
+          background: #fffbeb;
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2);
+        }
+
+        .role-card.role-responder.selected {
+          border-color: #ef4444;
+          background: #fef2f2;
+          box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .role-card.selected .role-card-icon-wrapper {
+          transform: scale(1.08);
         }
 
         .input-group {

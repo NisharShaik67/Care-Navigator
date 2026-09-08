@@ -41,20 +41,14 @@ export const Header = () => {
   };
 
   const title = TITLE_MAP[currentScreen] || 'Care Navigator';
-  const showBack = screenHistory.length > 0 && currentScreen !== 'dashboard' && currentScreen !== 'onboarding';
+  const showBack = screenHistory.length > 0 && currentScreen !== 'landing';
 
   return (
     <header className="app-header">
       <div className="header-left">
-        {showBack ? (
-          <button className="btn-icon" onClick={goBack} title="Go Back">
-            <ArrowLeft size={20} />
-          </button>
-        ) : (
-          <div className="brand-logo" onClick={() => navigateTo('dashboard')}>
-            <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
-          </div>
-        )}
+        <div className="brand-logo" onClick={() => navigateTo('dashboard')}>
+          <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
+        </div>
         <div className="header-title-container">
           <h1 className="header-title">{title}</h1>
           <p className="header-subtitle">
@@ -64,16 +58,6 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
-        {/* Fullscreen Toggle Button */}
-        <button 
-          className="btn-icon fullscreen-toggle-btn"
-          onClick={toggleFullScreen}
-          title={isFullscreen ? "Exit Fullscreen" : "Make App Full Screen"}
-          style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f1f5f9', border: '1px solid #cbd5e1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a' }}
-        >
-          {isFullscreen ? <Minimize2 size={18} color="#0284c7" /> : <Maximize2 size={18} color="#0284c7" />}
-        </button>
-
         {/* Active Emergency SOS Pill if triggered */}
         {sosState.active && (
           <div 

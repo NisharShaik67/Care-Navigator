@@ -152,7 +152,7 @@ export const LandingView = () => {
           <div className="hero-cta-group">
             <button className="btn btn-primary btn-hero" onClick={() => handleLaunchPortal('Patient')}>
               <CheckCircle2 size={20} />
-              <span>Sign In with Aadhaar ID</span>
+              <span>Sign In with Aadhaar Number</span>
               <ArrowRight size={18} />
             </button>
 
@@ -442,8 +442,8 @@ export const LandingView = () => {
         <div className="steps-container">
           <div className="step-card glass-card">
             <div className="step-number">01</div>
-            <h4>Enter Aadhaar Card Number</h4>
-            <p>12-digit Aadhaar ID instantly auto-fills identity, verified address, and links to your universal ABHA digital health vault.</p>
+            <h4>Enter 12-Digit Aadhaar Number</h4>
+            <p>12-digit Aadhaar Card Number sends SMS OTP to your linked phone number, auto-filling identity and linking your digital health vault.</p>
           </div>
 
           <div className="step-card glass-card">
@@ -468,7 +468,7 @@ export const LandingView = () => {
           <div className="cta-banner-buttons">
             <button className="btn btn-primary btn-hero" onClick={() => handleLaunchPortal('Patient')}>
               <CheckCircle2 size={20} />
-              <span>Get Started with Aadhaar Login</span>
+              <span>Get Started with Aadhaar & Phone OTP</span>
               <ArrowRight size={18} />
             </button>
             <button className="btn btn-secondary btn-hero" onClick={() => openOptionModal('sos')}>
@@ -594,7 +594,7 @@ export const LandingView = () => {
                       onClick={handleProceedToPortal}
                       style={{ width: '100%', padding: '12px', borderRadius: '12px', background: '#f8fafc', color: '#334155', fontWeight: '600', border: '1px solid #cbd5e1', cursor: 'pointer' }}
                     >
-                      Proceed to Portal Sign In with Aadhaar
+                      Proceed to Portal Sign In with Aadhaar Number
                     </button>
                   )}
                 </div>
