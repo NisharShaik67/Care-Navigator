@@ -275,7 +275,7 @@ export const LandingView = () => {
               onClick={() => setActiveRoleTab('Responder')}
             >
               <Ambulance size={18} />
-              <span>First Responder</span>
+              <span><span className="mobile-hide">First </span>Responder</span>
             </button>
           </div>
 
@@ -1011,26 +1011,47 @@ export const LandingView = () => {
 
         @media (max-width: 768px) {
           .landing-roles-section {
-            padding: 0 14px;
+            padding: 0 10px;
             margin-bottom: 50px;
           }
 
           .role-tabs-header {
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            justify-content: flex-start !important;
-            padding-bottom: 6px;
-            gap: 8px !important;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 4px !important;
+            width: 100% !important;
+            margin-bottom: 16px !important;
+            padding-bottom: 0 !important;
+            overflow-x: visible !important;
           }
 
           .role-tab-btn {
-            padding: 8px 12px !important;
-            font-size: 0.8rem !important;
-            white-space: nowrap !important;
-            flex-shrink: 0 !important;
+            padding: 8px 4px !important;
+            font-size: 0.72rem !important;
+            gap: 4px !important;
+            justify-content: center !important;
             border-radius: 10px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            white-space: nowrap !important;
+          }
+
+          .role-tab-btn svg {
+            width: 14px !important;
+            height: 14px !important;
+            flex-shrink: 0 !important;
+          }
+
+          .mobile-hide {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .role-tab-btn {
+            padding: 7px 2px !important;
+            font-size: 0.68rem !important;
+            gap: 3px !important;
           }
         }
 
