@@ -137,20 +137,7 @@ export const Header = () => {
           )}
         </div>
 
-        {/* Role Selector Pill */}
-        <div className="role-selector-dropdown">
-          <button className="role-btn">
-            <Stethoscope size={15} />
-            <span>{user.role}</span>
-            <ChevronDown size={14} />
-          </button>
-          <div className="role-menu glass-panel">
-            <div className="role-option" onClick={() => switchRole('User')}>User View</div>
-            <div className="role-option" onClick={() => switchRole('Doctor')}>Doctor Portal</div>
-            <div className="role-option" onClick={() => switchRole('Receptionist')}>Receptionist Desk</div>
-            <div className="role-option" onClick={() => switchRole('Responder')}>Ambulance / Responder</div>
-          </div>
-        </div>
+
 
         {/* User Profile avatar */}
         <button 
