@@ -1009,6 +1009,31 @@ export const LandingView = () => {
           flex-wrap: wrap;
         }
 
+        @media (max-width: 768px) {
+          .landing-roles-section {
+            padding: 0 14px;
+            margin-bottom: 50px;
+          }
+
+          .role-tabs-header {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            padding-bottom: 6px;
+            gap: 8px !important;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+          }
+
+          .role-tab-btn {
+            padding: 8px 12px !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            border-radius: 10px !important;
+          }
+        }
+
         .role-tab-btn {
           display: flex;
           align-items: center;
