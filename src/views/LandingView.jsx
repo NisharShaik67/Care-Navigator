@@ -436,7 +436,7 @@ export const LandingView = () => {
             <span className="brand-name">Care Navigator</span>
           </div>
           <p className="footer-copy">
-            © 2026 Ranbidge Solutions Private Limited. Linked with UIDAI Aadhaar Health Architecture.
+            © 2026 Ranbidge Solutions Private Limited.
           </p>
         </div>
       </footer>
