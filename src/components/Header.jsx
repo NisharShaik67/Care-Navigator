@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2, X } from 'lucide-react';
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
@@ -46,9 +46,26 @@ export const Header = () => {
 
   const completionScore = calculateProfileCompletion(user);
   const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
+  const isComplete = completionScore === 100;
 
   return (
     <header className="app-header">
+      {/* Click outside overlay to close notifications */}
+      {showNotifMenu && (
+        <div 
+          onClick={() => setShowNotifMenu(false)} 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 240,
+            background: 'transparent'
+          }}
+        />
+      )}
+
       <div className="header-left">
         <div className="brand-logo" onClick={() => navigateTo('dashboard')}>
           <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
@@ -63,7 +80,7 @@ export const Header = () => {
 
       <div className="header-right">
         {/* Notification Bell Dropdown */}
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', zIndex: 250 }}>
           <button
             className="btn-icon"
             onClick={() => setShowNotifMenu(!showNotifMenu)}
@@ -100,14 +117,34 @@ export const Header = () => {
                 background: '#ffffff',
                 boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
                 border: '1px solid #e2e8f0',
-                zIndex: 250
+                zIndex: 260
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>Notifications</strong>
-                <span className="badge badge-emerald" style={{ fontSize: '0.72rem' }}>
-                  {isProfileIncomplete ? '1 Unread' : 'All Clear'}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="badge badge-emerald" style={{ fontSize: '0.72rem' }}>
+                    {isProfileIncomplete ? '1 Unread' : 'All Clear'}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowNotifMenu(false); }}
+                    style={{
+                      background: '#f1f5f9',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#64748b'
+                    }}
+                    title="Close Notifications"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               </div>
 
               {isProfileIncomplete ? (
@@ -137,15 +174,19 @@ export const Header = () => {
           )}
         </div>
 
-
-
         {/* User Profile avatar */}
         <button 
           className="user-profile-btn" 
           onClick={() => navigateTo('profile')}
           title="View Profile"
         >
-          <div className="avatar-circle">
+          <div 
+            className={`avatar-circle ${isComplete ? 'complete-glow' : ''}`}
+            style={{
+              border: isComplete ? '2px solid #10b981' : '2px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: isComplete ? '0 0 12px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.4)' : 'none'
+            }}
+          >
             {user.name.split(' ').map(n => n[0]).join('')}
           </div>
         </button>

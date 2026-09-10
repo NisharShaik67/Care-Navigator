@@ -59,56 +59,84 @@ export const ProfileView = () => {
 
   return (
     <div className="profile-view-container fade-in">
-      {/* 100% Profile Completion Status Banner */}
-      <div 
-        className="completion-banner-card glass-panel"
-        style={{
-          padding: '20px 24px',
-          borderRadius: '18px',
-          border: isComplete ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(245, 158, 11, 0.45)',
-          background: isComplete ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.09)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {isComplete ? <CheckCircle2 size={28} color="#10b981" /> : <AlertTriangle size={28} color="#f59e0b" />}
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: isComplete ? '#065f46' : '#92400e' }}>
-                {isComplete ? '✓ Profile 100% Completed (EHR Verified)' : `Health Profile Status: ${completionScore}% (Action Required)`}
-              </h3>
-              <p style={{ fontSize: '0.84rem', margin: '4px 0 0 0', color: '#475569' }}>
-                {isComplete
-                  ? 'All required parameters (Aadhaar Base, Age, Blood Group & Prescription Report) are verified.'
-                  : `Please update your ${missingRequirements.join(', ')} below to achieve 100% verification.`}
-              </p>
-            </div>
-          </div>
-          <span 
-            className={`badge ${isComplete ? 'badge-emerald' : 'badge-amber'}`} 
-            style={{ fontSize: '0.9rem', fontWeight: '900', padding: '6px 14px', borderRadius: '20px' }}
-          >
-            {completionScore}% COMPLETE
-          </span>
-        </div>
-
-        {/* Visual Progress Bar */}
-        <div style={{ width: '100%', height: '10px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-          <div 
-            style={{ 
-              width: `${completionScore}%`, 
-              height: '100%', 
-              background: isComplete ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #d97706)',
-              transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' 
-            }}
-          ></div>
-        </div>
-      </div>
-
       {/* Patient Emergency ID Card */}
       <div className="profile-card glass-panel">
         <div className="profile-top">
-          <div className="avatar-large">
-            {user.name.split(' ').map(n => n[0]).join('')}
+          {/* Avatar DP Container with Circular Completion Ring & Percentage Pencil Badge */}
+          <div className="avatar-wrapper" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {/* SVG Circular Progress Ring */}
+            <svg width="98" height="98" viewBox="0 0 98 98" style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
+              <circle
+                cx="49"
+                cy="49"
+                r="43"
+                stroke="#e2e8f0"
+                strokeWidth="6"
+                fill="transparent"
+              />
+              <circle
+                cx="49"
+                cy="49"
+                r="43"
+                stroke={isComplete ? '#10b981' : '#f59e0b'}
+                strokeWidth="6"
+                fill="transparent"
+                strokeDasharray={2 * Math.PI * 43}
+                strokeDashoffset={(2 * Math.PI * 43) * (1 - completionScore / 100)}
+                strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
+              />
+            </svg>
+
+            {/* DP Avatar Circle */}
+            <div 
+              className={`avatar-large ${isComplete ? 'complete-glow' : ''}`}
+              style={{
+                width: '78px',
+                height: '78px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                color: '#ffffff',
+                fontWeight: '800',
+                fontSize: '1.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 2,
+                boxShadow: isComplete ? '0 0 20px rgba(16, 185, 129, 0.7), 0 0 40px rgba(16, 185, 129, 0.35)' : 'none',
+                border: isComplete ? '3px solid #10b981' : '3px solid #ffffff'
+              }}
+            >
+              {user.name.split(' ').map(n => n[0]).join('')}
+            </div>
+
+            {/* Percentage & Edit Pencil Badge */}
+            <div 
+              onClick={() => setIsEditing(!isEditing)}
+              style={{
+                position: 'absolute',
+                bottom: '-4px',
+                right: '-6px',
+                zIndex: 3,
+                background: isComplete ? '#10b981' : '#f59e0b',
+                color: '#ffffff',
+                fontSize: '0.72rem',
+                fontWeight: '900',
+                padding: '3px 8px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.18)',
+                cursor: 'pointer',
+                border: '2px solid #ffffff'
+              }}
+              title={isComplete ? 'Profile 100% Verified' : `Profile ${completionScore}% Complete - Click to Edit`}
+            >
+              <span>{completionScore}%</span>
+              <Edit3 size={11} color="#ffffff" />
+            </div>
           </div>
           <div className="p-header-info">
             <span className="badge badge-emerald">DIGITAL MEDICAL ID</span>
