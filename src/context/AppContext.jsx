@@ -32,72 +32,106 @@ export const calculateProfileCompletion = (user) => {
   return Math.min(100, score);
 };
 
-export const AppProvider = ({ children }) => {
-  const [currentScreen, setCurrentScreenState] = useState('landing'); // 'landing' | 'onboarding' | 'dashboard' | 'emergency' | 'symptom-checker' | 'hospitals' | 'op-booking' | 'appointments' | 'records' | 'profile' | 'doctor-dashboard'
-  const [screenHistory, setScreenHistory] = useState([]);
+const DEFAULT_USER = {
+  name: 'Alex Johnson',
+  age: '',
+  gender: 'MALE', // Auto-filled from Aadhaar Base
+  bloodGroup: '',
+  role: 'Patient', // 'Patient' | 'Doctor' | 'Receptionist' | 'Responder'
+  location: 'Narasaraopet, Palnadu Dist, AP',
+  cityVillage: 'Narasaraopet',
+  pincode: '522601',
+  address: 'Door No 4-12, Main Road, Palnadu District, Narasaraopet',
+  aadhaar: '5892 4103 7621',
+  aadharNumber: '5892 4103 7621',
+  phone: '+91 9876543210',
+  prescriptionReport: null,
+  uploadedReports: [],
+  emergencyContact: '+91 9123456789',
+  allergies: ['Penicillin', 'Dust', 'Sulfa drugs'],
+  healthId: 'ABHA-9102-4821-9012',
+  medicalId: 'MED-9102-4821',
+  emergencyContacts: [
+    { id: 1, name: 'Robert Johnson', relation: 'Father', phone: '+91 98765 43211' },
+    { id: 2, name: 'Sarah Johnson', relation: 'Spouse', phone: '+91 98765 43212' }
+  ],
+  precautions: [
+    'Avoid NSAID pain relievers due to mild gastritis history.',
+    'Maintain daily hydration (>3L/day) for high uric acid prevention.',
+    'Monitor blood pressure weekly.'
+  ],
+  medicineAlerts: [
+    { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
+    { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
+  ]
+};
 
-  const [user, setUser] = useState({
-    name: 'Alex Johnson',
-    age: '',
-    gender: 'MALE', // Auto-filled from Aadhaar Base
-    bloodGroup: '',
-    role: 'Patient', // 'Patient' | 'Doctor' | 'Receptionist' | 'Responder'
-    location: 'Narasaraopet, Palnadu Dist, AP',
-    cityVillage: 'Narasaraopet',
-    pincode: '522601',
-    address: 'Door No 4-12, Main Road, Palnadu District, Narasaraopet',
-    aadhaar: '5892 4103 7621',
-    aadharNumber: '5892 4103 7621',
-    phone: '+91 9876543210',
-    prescriptionReport: null,
-    uploadedReports: [],
-    emergencyContact: '+91 9123456789',
-    allergies: ['Penicillin', 'Dust', 'Sulfa drugs'],
-    healthId: 'ABHA-9102-4821-9012',
-    medicalId: 'MED-9102-4821',
-    emergencyContacts: [
-      { id: 1, name: 'Robert Johnson', relation: 'Father', phone: '+91 98765 43211' },
-      { id: 2, name: 'Sarah Johnson', relation: 'Spouse', phone: '+91 98765 43212' }
-    ],
-    precautions: [
-      'Avoid NSAID pain relievers due to mild gastritis history.',
-      'Maintain daily hydration (>3L/day) for high uric acid prevention.',
-      'Monitor blood pressure weekly.'
-    ],
-    medicineAlerts: [
-      { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
-      { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
-    ]
+const DEFAULT_APPOINTMENTS = [
+  {
+    id: 'op-101',
+    tokenNumber: '14',
+    doctorName: 'Dr. K. Srinivas Rao, MD',
+    hospitalName: 'Government General Hospital, Guntur',
+    specialty: 'Cardiology',
+    date: 'Today',
+    timeSlot: '10:30 AM',
+    status: 'ACTIVE',
+    currentServing: '11',
+    queueAhead: 3,
+    qrCode: 'OP-GGH-CARD-014'
+  },
+  {
+    id: 'op-102',
+    tokenNumber: '28',
+    doctorName: 'Dr. S. Meenakshi, MS',
+    hospitalName: 'Narasaraopet Area Hospital',
+    specialty: 'Orthopedics',
+    date: '2026-08-20',
+    timeSlot: '02:15 PM',
+    status: 'COMPLETED',
+    currentServing: '28',
+    queueAhead: 0,
+    qrCode: 'OP-NAH-ORTH-028'
+  }
+];
+
+export const AppProvider = ({ children }) => {
+  const [currentScreen, setCurrentScreenState] = useState(() => {
+    try {
+      const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+      const saved = localStorage.getItem('cn_currentScreen');
+      return hash || saved || 'landing';
+    } catch (e) {
+      return 'landing';
+    }
   });
 
-  const [appointments, setAppointments] = useState([
-    {
-      id: 'op-101',
-      tokenNumber: '14',
-      doctorName: 'Dr. K. Srinivas Rao, MD',
-      hospitalName: 'Government General Hospital, Guntur',
-      specialty: 'Cardiology',
-      date: 'Today',
-      timeSlot: '10:30 AM',
-      status: 'ACTIVE',
-      currentServing: '11',
-      queueAhead: 3,
-      qrCode: 'OP-GGH-CARD-014'
-    },
-    {
-      id: 'op-102',
-      tokenNumber: '28',
-      doctorName: 'Dr. S. Meenakshi, MS',
-      hospitalName: 'Narasaraopet Area Hospital',
-      specialty: 'Orthopedics',
-      date: '2026-08-20',
-      timeSlot: '02:15 PM',
-      status: 'COMPLETED',
-      currentServing: '28',
-      queueAhead: 0,
-      qrCode: 'OP-NAH-ORTH-028'
+  const [screenHistory, setScreenHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_screenHistory');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
     }
-  ]);
+  });
+
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_user');
+      return saved ? JSON.parse(saved) : DEFAULT_USER;
+    } catch (e) {
+      return DEFAULT_USER;
+    }
+  });
+
+  const [appointments, setAppointments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_appointments');
+      return saved ? JSON.parse(saved) : DEFAULT_APPOINTMENTS;
+    } catch (e) {
+      return DEFAULT_APPOINTMENTS;
+    }
+  });
   const [hospitals] = useState([
     {
       id: 'hosp-4',
@@ -404,30 +438,91 @@ export const AppProvider = ({ children }) => {
     }
   ]);
 
-  const [records, setRecords] = useState([
-    {
-      id: 'rec-1',
-      title: 'General Blood Profile & Lipid Panel',
-      date: '2026-08-10',
-      doctor: 'Dr. P. V. Ramana',
-      facility: 'Guntur City Care Hospital',
-      category: 'Diagnostics',
-      fileType: 'PDF',
-      size: '1.4 MB',
-      summary: 'Hb: 14.2 g/dL, Fasting Blood Sugar: 94 mg/dL. All vital parameters within normal reference ranges.'
-    },
-    {
-      id: 'rec-2',
-      title: 'Chest X-Ray (PA View) & Radiology Report',
-      date: '2026-07-28',
-      doctor: 'Dr. K. Srinivas Rao',
-      facility: 'Government General Hospital',
-      category: 'Radiology',
-      fileType: 'DICOM / PDF',
-      size: '4.2 MB',
-      summary: 'Clear lung fields, normal cardiothoracic ratio. No evidence of active pulmonary disease.'
+  const [records, setRecords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_records');
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 'rec-1',
+          title: 'General Blood Profile & Lipid Panel',
+          date: '2026-08-10',
+          doctor: 'Dr. P. V. Ramana',
+          facility: 'Guntur City Care Hospital',
+          category: 'Diagnostics',
+          fileType: 'PDF',
+          size: '1.4 MB',
+          summary: 'Hb: 14.2 g/dL, Fasting Blood Sugar: 94 mg/dL. All vital parameters within normal reference ranges.'
+        },
+        {
+          id: 'rec-2',
+          title: 'Chest X-Ray (PA View) & Radiology Report',
+          date: '2026-07-28',
+          doctor: 'Dr. K. Srinivas Rao',
+          facility: 'Government General Hospital',
+          category: 'Radiology',
+          fileType: 'DICOM / PDF',
+          size: '4.2 MB',
+          summary: 'Clear lung fields, normal cardiothoracic ratio. No evidence of active pulmonary disease.'
+        }
+      ];
+    } catch (e) {
+      return [
+        {
+          id: 'rec-1',
+          title: 'General Blood Profile & Lipid Panel',
+          date: '2026-08-10',
+          doctor: 'Dr. P. V. Ramana',
+          facility: 'Guntur City Care Hospital',
+          category: 'Diagnostics',
+          fileType: 'PDF',
+          size: '1.4 MB',
+          summary: 'Hb: 14.2 g/dL, Fasting Blood Sugar: 94 mg/dL. All vital parameters within normal reference ranges.'
+        },
+        {
+          id: 'rec-2',
+          title: 'Chest X-Ray (PA View) & Radiology Report',
+          date: '2026-07-28',
+          doctor: 'Dr. K. Srinivas Rao',
+          facility: 'Government General Hospital',
+          category: 'Radiology',
+          fileType: 'DICOM / PDF',
+          size: '4.2 MB',
+          summary: 'Clear lung fields, normal cardiothoracic ratio. No evidence of active pulmonary disease.'
+        }
+      ];
     }
-  ]);
+  });
+
+  // LocalStorage Persistence Synchronization
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_currentScreen', currentScreen);
+    } catch (e) {}
+  }, [currentScreen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_screenHistory', JSON.stringify(screenHistory));
+    } catch (e) {}
+  }, [screenHistory]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_user', JSON.stringify(user));
+    } catch (e) {}
+  }, [user]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_appointments', JSON.stringify(appointments));
+    } catch (e) {}
+  }, [appointments]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_records', JSON.stringify(records));
+    } catch (e) {}
+  }, [records]);
 
   const navigateTo = (screen, resetHistory = false) => {
     if (screen !== currentScreen) {
@@ -482,6 +577,15 @@ export const AppProvider = ({ children }) => {
   };
 
   const logout = () => {
+    try {
+      localStorage.removeItem('cn_currentScreen');
+      localStorage.removeItem('cn_screenHistory');
+      localStorage.removeItem('cn_user');
+      localStorage.removeItem('cn_appointments');
+      localStorage.removeItem('cn_records');
+    } catch (e) {}
+    setUser(DEFAULT_USER);
+    setAppointments(DEFAULT_APPOINTMENTS);
     setCurrentScreenState('landing');
   };
 
