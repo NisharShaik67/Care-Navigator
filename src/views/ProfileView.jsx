@@ -201,6 +201,8 @@ export const ProfileView = () => {
               <div 
                 className="file-upload-dropzone" 
                 style={{ 
+                  position: 'relative',
+                  overflow: 'hidden',
                   padding: '16px', 
                   border: '2px dashed #0284c7', 
                   borderRadius: '14px', 
