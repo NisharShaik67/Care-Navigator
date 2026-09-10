@@ -178,16 +178,77 @@ export const Header = () => {
         <button 
           className="user-profile-btn" 
           onClick={() => navigateTo('profile')}
-          title="View Profile"
+          title={`Profile ${completionScore}% Complete - Click to View`}
+          style={{ position: 'relative', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
         >
-          <div 
-            className={`avatar-circle ${isComplete ? 'complete-glow' : ''}`}
-            style={{
-              border: isComplete ? '2px solid #10b981' : '2px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: isComplete ? '0 0 12px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.4)' : 'none'
-            }}
-          >
-            {user.name.split(' ').map(n => n[0]).join('')}
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* SVG Circular Progress Ring */}
+            <svg width="46" height="46" viewBox="0 0 46 46" style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
+              <circle
+                cx="23"
+                cy="23"
+                r="20"
+                stroke="#e2e8f0"
+                strokeWidth="3.5"
+                fill="transparent"
+              />
+              <circle
+                cx="23"
+                cy="23"
+                r="20"
+                stroke={isComplete ? '#10b981' : '#f59e0b'}
+                strokeWidth="3.5"
+                fill="transparent"
+                strokeDasharray={2 * Math.PI * 20}
+                strokeDashoffset={(2 * Math.PI * 20) * (1 - completionScore / 100)}
+                strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+              />
+            </svg>
+
+            {/* Avatar Circle */}
+            <div 
+              className={`avatar-circle ${isComplete ? 'complete-glow' : ''}`}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                color: '#ffffff',
+                fontWeight: '800',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 2,
+                boxShadow: isComplete ? '0 0 12px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
+                border: isComplete ? '2px solid #10b981' : '2px solid #ffffff'
+              }}
+            >
+              {user.name.split(' ').map(n => n[0]).join('')}
+            </div>
+
+            {/* Percentage Badge */}
+            <span 
+              style={{
+                position: 'absolute',
+                bottom: '-4px',
+                right: '-6px',
+                zIndex: 3,
+                background: isComplete ? '#10b981' : '#f59e0b',
+                color: '#ffffff',
+                fontSize: '0.58rem',
+                fontWeight: '900',
+                padding: '1px 4px',
+                borderRadius: '8px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                border: '1.5px solid #ffffff',
+                lineHeight: 1.25
+              }}
+            >
+              {completionScore}%
+            </span>
           </div>
         </button>
       </div>
