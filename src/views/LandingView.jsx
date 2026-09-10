@@ -916,12 +916,46 @@ export const LandingView = () => {
         @media (max-width: 900px) {
           .features-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+          }
+
+          .feature-card {
+            padding: 20px 16px;
           }
         }
 
-        @media (max-width: 580px) {
+        @media (max-width: 640px) {
+          .landing-features-section {
+            padding: 0 14px;
+            margin-bottom: 50px;
+          }
+
           .features-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+
+          .feature-card {
+            padding: 16px 12px;
+            border-radius: 16px;
+          }
+
+          .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+          }
+
+          .feature-card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            line-height: 1.3;
+          }
+
+          .feature-card p {
+            font-size: 0.78rem;
+            line-height: 1.45;
           }
         }
 
