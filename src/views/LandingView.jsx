@@ -734,6 +734,12 @@ export const LandingView = () => {
           }
         }
 
+        @media (max-width: 768px) {
+          .hero-trust-row {
+            display: none !important;
+          }
+        }
+
         .trust-item {
           display: flex;
           align-items: center;
@@ -802,14 +808,28 @@ export const LandingView = () => {
         @media (max-width: 860px) {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+          }
+
+          .stat-card {
+            padding: 18px 12px;
+          }
+
+          .stat-icon-box {
+            width: 46px;
+            height: 46px;
+            margin-bottom: 8px;
+          }
+
+          .stat-number {
+            font-size: 1.35rem;
+          }
+
+          .stat-label {
+            font-size: 0.75rem;
           }
         }
 
-        @media (max-width: 480px) {
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
-        }
 
         .stat-card {
           padding: 24px 20px;
