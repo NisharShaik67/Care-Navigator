@@ -7,6 +7,7 @@ export const OnboardingView = () => {
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'profile'
   const [selectedRole, setSelectedRole] = useState('User');
   const [errorMsg, setErrorMsg] = useState('');
+  const [inputError, setInputError] = useState(false);
 
   // Role Specific Credentials State
   const [uniqueId, setUniqueId] = useState('');
@@ -17,6 +18,9 @@ export const OnboardingView = () => {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpTimer, setOtpTimer] = useState(10);
   const [otpAutoFilled, setOtpAutoFilled] = useState(false);
+  const [pin, setPin] = useState(['', '', '', '']);
+  const [pinTimer, setPinTimer] = useState(8);
+  const [pinAutoFilled, setPinAutoFilled] = useState(false);
 
   React.useEffect(() => {
     let interval;
@@ -36,6 +40,25 @@ export const OnboardingView = () => {
     }
     return () => clearInterval(interval);
   }, [authMode, otpAutoFilled]);
+
+  React.useEffect(() => {
+    let interval;
+    if (authMode === 'pin' && !pinAutoFilled) {
+      setPinTimer(8);
+      interval = setInterval(() => {
+        setPinTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setPin(['1', '2', '3', '4']);
+            setPinAutoFilled(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [authMode, pinAutoFilled]);
 
   // Auto-filled from Aadhaar
   const [fullName, setFullName] = useState('Alex Johnson');
@@ -69,7 +92,9 @@ export const OnboardingView = () => {
 
   const handleUniqueIdChange = (val) => {
     setErrorMsg('');
-    const isSpecialRole = val.toLowerCase().includes('doc') || val.includes('@');
+    setInputError(false);
+    const hasLetters = /[a-zA-Z@\-]/.test(val);
+    const isSpecialRole = hasLetters || val.toLowerCase().includes('doc') || val.toLowerCase().includes('care-') || val.includes('@');
     let processed = val;
     if (!isSpecialRole) {
       processed = val.replace(/\D/g, '').slice(0, 12);
@@ -79,16 +104,12 @@ export const OnboardingView = () => {
     const digitsOnly = clean.replace(/\D/g, '');
 
     if (!isSpecialRole && digitsOnly.length > 0 && digitsOnly.length !== 10 && digitsOnly.length !== 12) {
-      if (digitsOnly.length === 11) {
-        setErrorMsg('❌ 11-digit numbers are not accepted. Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar).');
-      } else {
-        setErrorMsg(`❌ Invalid length (${digitsOnly.length} digits). Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar).`);
-      }
+      setInputError(true);
     } else {
-      setErrorMsg('');
+      setInputError(false);
     }
 
-    if (clean.toLowerCase().includes('doc')) {
+    if (clean.toLowerCase().includes('doc') || clean.toLowerCase().includes('care-')) {
       setSelectedRole('Doctor');
       setDoctorId(clean);
     } else if (clean.includes('@')) {
@@ -110,7 +131,7 @@ export const OnboardingView = () => {
 
     if (authMode === 'login') {
       const clean = uniqueId.trim();
-      const isDoc = clean.toLowerCase().includes('doc');
+      const isDoc = clean.toLowerCase().includes('doc') || clean.toLowerCase().includes('care-');
       const isEmail = clean.includes('@');
       const digitsOnly = clean.replace(/\D/g, '');
 
@@ -121,11 +142,7 @@ export const OnboardingView = () => {
         }
 
         if (digitsOnly.length !== 10 && digitsOnly.length !== 12) {
-          if (digitsOnly.length === 11) {
-            setErrorMsg('❌ 11-digit numbers are strictly not accepted. Please enter a 10-digit Mobile Number or 12-digit Aadhaar Number.');
-          } else {
-            setErrorMsg(`❌ Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar). Entered: ${digitsOnly.length} digits.`);
-          }
+          setInputError(true);
           return;
         }
 
@@ -146,10 +163,17 @@ export const OnboardingView = () => {
       }
 
       setErrorMsg('');
-      setOtp(['', '', '', '']);
-      setOtpAutoFilled(false);
-      setOtpTimer(10);
-      setAuthMode('otp');
+      if (isEmail) {
+        setPin(['', '', '', '']);
+        setPinAutoFilled(false);
+        setPinTimer(8);
+        setAuthMode('pin');
+      } else {
+        setOtp(['', '', '', '']);
+        setOtpAutoFilled(false);
+        setOtpTimer(10);
+        setAuthMode('otp');
+      }
     } else if (authMode === 'otp') {
       const enteredOtp = otp.join('');
       if (enteredOtp.length < 4 || otp.some(d => !d || d.trim() === '')) {
@@ -160,12 +184,11 @@ export const OnboardingView = () => {
       setErrorMsg('');
       setIsLoggedIn(true);
 
-      if (selectedRole === 'Doctor' || selectedRole === 'Receptionist' || selectedRole === 'Responder') {
+      if (selectedRole === 'Doctor' || selectedRole === 'Responder') {
         switchRole(selectedRole);
         updateUserProfile({ 
           phone: selectedRole === 'Responder' ? uniqueId : phoneNumber, 
           doctorId: uniqueId,
-          receptionistGmail: uniqueId,
           responderPhone: uniqueId,
           aadharNumber: uniqueId || aadharNumber 
         });
@@ -190,6 +213,22 @@ export const OnboardingView = () => {
         switchRole('User');
         navigateTo('dashboard', true);
       }
+    } else if (authMode === 'pin') {
+      const enteredPin = pin.join('');
+      if (enteredPin.length < 4 || pin.some(d => !d || d.trim() === '')) {
+        setErrorMsg('❌ Please enter the complete 4-digit PIN before proceeding.');
+        return;
+      }
+
+      setErrorMsg('');
+      setIsLoggedIn(true);
+      switchRole('Receptionist');
+      updateUserProfile({ 
+        phone: phoneNumber, 
+        receptionistGmail: uniqueId,
+        aadharNumber: uniqueId || aadharNumber 
+      });
+      navigateTo('doctor-dashboard', true);
     }
   };
 
@@ -197,22 +236,44 @@ export const OnboardingView = () => {
     <div className="onboarding-container fade-in">
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
-          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : 'Aadhaar Phone OTP Verification'}
+          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : authMode === 'pin' ? 'Receptionist PIN Verification' : 'Aadhaar Phone OTP Verification'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
             ? 'Enter your 12-digit Aadhaar Card Number to send verification OTP to registered mobile phone.'
-            : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
+            : authMode === 'pin'
+              ? `Enter your 4-digit security PIN for ${receptionistGmail}`
+              : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
         </p>
 
-
+        {errorMsg && (
+          <div 
+            className="auth-error-alert fade-in"
+            style={{
+              background: '#fef2f2',
+              border: '1.5px solid #f87171',
+              color: '#991b1b',
+              padding: '12px 16px',
+              borderRadius: '14px',
+              fontSize: '0.86rem',
+              fontWeight: '600',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+          >
+            <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0 }} />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
               <label className="form-label">12-Digit Aadhaar Number / Universal ID</label>
-              <div className={`input-group ${errorMsg ? 'input-group-error' : ''}`}>
-                <CreditCard size={18} color={errorMsg ? '#dc2626' : '#0284c7'} />
+              <div className={`input-group${inputError ? ' input-error' : ''}`}>
+                <CreditCard size={18} color={inputError ? '#dc2626' : '#0284c7'} />
                 <input
                   type="text"
                   inputMode="numeric"
@@ -259,12 +320,45 @@ export const OnboardingView = () => {
             </>
           )}
 
+          {authMode === 'pin' && (
+            <>
+              <div className="otp-container">
+                {pin.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    type="password"
+                    maxLength="1"
+                    inputMode="numeric"
+                    className="otp-input"
+                    value={digit}
+                    onChange={e => {
+                      setErrorMsg('');
+                      const val = e.target.value;
+                      const newPin = [...pin];
+                      newPin[idx] = val;
+                      setPin(newPin);
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#64748b' }}>
+                {!pinAutoFilled ? (
+                  <span>🔐 Verifying credentials... Auto-filling PIN in <strong>{pinTimer}s</strong></span>
+                ) : (
+                  <span style={{ color: '#059669', fontWeight: '700' }}>✓ PIN Verified & Auto-Filled</span>
+                )}
+              </div>
+            </>
+          )}
+
           <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '20px' }}>
             <CheckCircle2 size={18} />
             <span>
               {authMode === 'login'
                 ? 'Send OTP to Linked Phone Number'
-                : 'Verify OTP & Launch Home Page'}
+                : authMode === 'pin'
+                  ? 'Verify PIN & Launch Receptionist Panel'
+                  : 'Verify OTP & Launch Home Page'}
             </span>
           </button>
         </form>
@@ -421,17 +515,21 @@ export const OnboardingView = () => {
           border: 1.5px solid var(--border-light, #e2e8f0);
           border-radius: 12px;
           padding: 12px 16px;
-          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .input-group-error {
-          border-color: #ef4444;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-          background: #fff5f5;
+        .input-group.input-error {
+          border-color: #dc2626;
+          background: #fef2f2;
+          box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         }
 
-        .input-group-error input {
-          color: #dc2626;
+        .input-group.input-error input {
+          color: #991b1b;
+        }
+
+        .input-group.input-error input::placeholder {
+          color: #fca5a5;
         }
 
         .aadhar-help-text {
