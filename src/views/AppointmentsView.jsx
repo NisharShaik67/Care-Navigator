@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CalendarCheck, QrCode, Clock, Stethoscope, Building2, AlertCircle, XCircle, CheckCircle2, ChevronRight } from 'lucide-react';
+import { CalendarCheck, QrCode, Clock, Stethoscope, Building2, AlertCircle, XCircle, CheckCircle2, ChevronRight, Plus } from 'lucide-react';
 
 export const AppointmentsView = () => {
   const { appointments, cancelAppointment, navigateTo } = useApp();
@@ -17,8 +17,8 @@ export const AppointmentsView = () => {
           <h3>My Doctor Appointments</h3>
           <span className="badge badge-emerald">{activeApps.length} Active</span>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => navigateTo('op-booking')}>
-          + Book New OP Token
+        <button className="btn-icon-blue" onClick={() => navigateTo('op-booking')} title="Book New OP Token" aria-label="Book New OP Token">
+          <Plus size={20} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -168,6 +168,27 @@ export const AppointmentsView = () => {
         .title-with-badge h3 {
           font-size: 1.2rem;
           font-weight: 800;
+        }
+
+        .btn-icon-blue {
+          background: #0284c7;
+          color: #ffffff;
+          border: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-icon-blue:hover {
+          background: #0369a1;
+          transform: translateY(-1px) scale(1.06);
+          box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
         }
 
         .active-tokens-list {
