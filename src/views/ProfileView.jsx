@@ -560,13 +560,17 @@ export const ProfileView = () => {
           padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
+          margin-top: 28px;
+          margin-bottom: 28px;
         }
 
         .section-title-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
         }
 
         .title-left {
@@ -576,31 +580,77 @@ export const ProfileView = () => {
         }
 
         .title-left h3 {
-          font-size: 1.1rem;
+          font-size: 1.15rem;
           font-weight: 800;
+          color: var(--text-main);
         }
 
         .contacts-list-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-          gap: 14px;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
         }
 
         .contact-card {
-          padding: 16px;
+          padding: 18px 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
+          gap: 14px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+          transition: all 0.2s ease;
+        }
+
+        .contact-card:hover {
+          border-color: #cbd5e1;
+          box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+          transform: translateY(-1px);
         }
 
         .contact-card h4 {
-          font-size: 0.95rem;
+          font-size: 0.98rem;
           font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 2px;
         }
 
         .contact-card p {
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+          .contacts-section {
+            padding: 18px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            gap: 16px;
+          }
+
+          .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .title-left h3 {
+            font-size: 1rem;
+            line-height: 1.3;
+          }
+
+          .contacts-list-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+          }
+
+          .contact-card {
+            padding: 16px;
+            border-radius: 14px;
+          }
         }
 
         .add-contact-form {
