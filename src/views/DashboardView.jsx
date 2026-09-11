@@ -23,9 +23,9 @@ import {
 export const DashboardView = () => {
   const { user, navigateTo, appointments, hospitals, records } = useApp();
 
-  const activeAppointments = appointments.filter(a => a.status === 'ACTIVE');
+  const activeAppointments = (appointments || []).filter(a => a.status === 'ACTIVE');
   const completionScore = calculateProfileCompletion(user);
-  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
+  const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -46,7 +46,7 @@ export const DashboardView = () => {
           </div>
           <h2>
             <span>{getGreeting()},</span><br />
-            <span>{user.name} 👋</span>
+            <span>{user?.name || 'User'} 👋</span>
           </h2>
           <p className="subtitle">
             ABHA Health ID: <span className="mono text-sky">{user.healthId}</span> • {user.location}
@@ -157,21 +157,20 @@ export const DashboardView = () => {
           {activeAppointments.map(app => (
             <div key={app.id} className="dash-token-card glass-panel" onClick={() => navigateTo('appointments')}>
               <div className="token-left">
-                <span className="token-badge">TOKEN #{app.tokenNumber}</span>
                 <h4>{app.doctorName}</h4>
                 <p className="sub">{app.hospitalName} • {app.specialty}</p>
               </div>
 
               <div className="token-queue-info">
-                <div className="q-stat">
+                <div className="q-stat q-stat-left">
                   <span className="lbl">NOW SERVING</span>
                   <span className="val text-emerald">#{app.currentServing}</span>
                 </div>
-                <div className="q-stat">
+                <div className="q-stat q-stat-center">
                   <span className="lbl">AHEAD OF YOU</span>
                   <span className="val text-sky">{app.queueAhead} patients</span>
                 </div>
-                <div className="q-stat">
+                <div className="q-stat q-stat-right">
                   <span className="lbl">ESTIMATED WAIT</span>
                   <span className="val">{app.queueAhead * 4} mins</span>
                 </div>
@@ -192,8 +191,8 @@ export const DashboardView = () => {
 
       <style>{`
         .care-dashboard-container {
-          padding: 24px;
-          max-width: 1200px;
+          padding: 24px 32px;
+          max-width: 1720px;
           margin: 0 auto;
           width: 100%;
         }
@@ -453,15 +452,31 @@ export const DashboardView = () => {
         }
 
         .token-queue-info {
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
           align-items: center;
-          gap: 20px;
+          gap: 12px;
+          min-width: 340px;
         }
 
         .q-stat {
           display: flex;
           flex-direction: column;
+        }
+
+        .q-stat-left {
+          align-items: flex-start;
+          text-align: left;
+        }
+
+        .q-stat-center {
+          align-items: center;
+          text-align: center;
+        }
+
+        .q-stat-right {
           align-items: flex-end;
+          text-align: right;
         }
 
         .q-stat .lbl {
@@ -469,12 +484,51 @@ export const DashboardView = () => {
           font-weight: 700;
           color: #94a3b8;
           text-transform: uppercase;
+          white-space: nowrap;
         }
 
         .q-stat .val {
           font-size: 0.95rem;
           font-weight: 800;
           color: #0f172a;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+          .dash-token-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+          }
+
+          .token-left {
+            width: 100%;
+          }
+
+          .token-queue-info {
+            width: 100%;
+            min-width: unset;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+            gap: 8px;
+          }
+
+          .q-stat-left {
+            align-items: flex-start;
+            text-align: left;
+          }
+
+          .q-stat-center {
+            align-items: center;
+            text-align: center;
+          }
+
+          .q-stat-right {
+            align-items: flex-end;
+            text-align: right;
+          }
         }
 
         .text-emerald { color: #10b981; }

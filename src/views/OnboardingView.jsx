@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useApp, AADHAAR_DATABASE } from '../context/AppContext';
-import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall, ArrowLeft, Mail, Award, Siren, Fingerprint, BadgeCheck } from 'lucide-react';
+import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall, ArrowLeft, Mail, Award, Siren, Fingerprint, BadgeCheck, AlertTriangle } from 'lucide-react';
 
 export const OnboardingView = () => {
-  const { navigateTo, switchRole, updateUserProfile } = useApp();
+  const { navigateTo, switchRole, updateUserProfile, setIsLoggedIn } = useApp();
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'profile'
   const [selectedRole, setSelectedRole] = useState('User');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Role Specific Credentials State
   const [uniqueId, setUniqueId] = useState('');
@@ -67,6 +68,7 @@ export const OnboardingView = () => {
   };
 
   const handleUniqueIdChange = (val) => {
+    setErrorMsg('');
     const isSpecialRole = val.toLowerCase().includes('doc') || val.includes('@');
     let processed = val;
     if (!isSpecialRole) {
@@ -74,16 +76,28 @@ export const OnboardingView = () => {
     }
     setUniqueId(processed);
     const clean = processed.trim();
+    const digitsOnly = clean.replace(/\D/g, '');
+
+    if (!isSpecialRole && digitsOnly.length > 0 && digitsOnly.length !== 10 && digitsOnly.length !== 12) {
+      if (digitsOnly.length === 11) {
+        setErrorMsg('❌ 11-digit numbers are not accepted. Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar).');
+      } else {
+        setErrorMsg(`❌ Invalid length (${digitsOnly.length} digits). Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar).`);
+      }
+    } else {
+      setErrorMsg('');
+    }
+
     if (clean.toLowerCase().includes('doc')) {
       setSelectedRole('Doctor');
       setDoctorId(clean);
     } else if (clean.includes('@')) {
       setSelectedRole('Receptionist');
       setReceptionistGmail(clean);
-    } else if (clean.length === 10 && !clean.startsWith('5') && !clean.startsWith('1')) {
+    } else if (digitsOnly.length === 10) {
       setSelectedRole('Responder');
       setResponderPhone(clean);
-    } else {
+    } else if (digitsOnly.length === 12) {
       setSelectedRole('User');
       setAadharNumber(clean);
       handleAadhaarNumberChange(clean);
@@ -92,22 +106,60 @@ export const OnboardingView = () => {
 
   const handleAuthSubmit = (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
     if (authMode === 'login') {
-      // Step 1 -> Step 2 (OTP)
       const clean = uniqueId.trim();
-      if (clean.toLowerCase().includes('doc')) setSelectedRole('Doctor');
-      else if (clean.includes('@')) setSelectedRole('Receptionist');
-      else if (clean.replace(/\s+/g, '').length === 10 && !clean.startsWith('5')) setSelectedRole('Responder');
-      else {
-        setSelectedRole('User');
-        setAadharNumber(clean || aadharNumber);
+      const isDoc = clean.toLowerCase().includes('doc');
+      const isEmail = clean.includes('@');
+      const digitsOnly = clean.replace(/\D/g, '');
+
+      if (!isDoc && !isEmail) {
+        if (!clean || digitsOnly.length === 0) {
+          setErrorMsg('❌ Please enter a valid 10-digit Mobile Number or 12-digit Aadhaar Card Number.');
+          return;
+        }
+
+        if (digitsOnly.length !== 10 && digitsOnly.length !== 12) {
+          if (digitsOnly.length === 11) {
+            setErrorMsg('❌ 11-digit numbers are strictly not accepted. Please enter a 10-digit Mobile Number or 12-digit Aadhaar Number.');
+          } else {
+            setErrorMsg(`❌ Number must be exactly 10 digits (Mobile) or 12 digits (Aadhaar). Entered: ${digitsOnly.length} digits.`);
+          }
+          return;
+        }
+
+        if (digitsOnly.length === 10) {
+          setSelectedRole('Responder');
+          setResponderPhone(digitsOnly);
+        } else if (digitsOnly.length === 12) {
+          setSelectedRole('User');
+          setAadharNumber(digitsOnly);
+          handleAadhaarNumberChange(digitsOnly);
+        }
+      } else if (isDoc) {
+        setSelectedRole('Doctor');
+        setDoctorId(clean);
+      } else if (isEmail) {
+        setSelectedRole('Receptionist');
+        setReceptionistGmail(clean);
       }
 
+      setErrorMsg('');
       setOtp(['', '', '', '']);
       setOtpAutoFilled(false);
       setOtpTimer(10);
       setAuthMode('otp');
     } else if (authMode === 'otp') {
+      const enteredOtp = otp.join('');
+      if (enteredOtp.length < 4 || otp.some(d => !d || d.trim() === '')) {
+        setErrorMsg('❌ Please enter the complete 4-digit OTP code before launching the app home page.');
+        return;
+      }
+
+      setErrorMsg('');
+      setIsLoggedIn(true);
+
       if (selectedRole === 'Doctor' || selectedRole === 'Receptionist' || selectedRole === 'Responder') {
         switchRole(selectedRole);
         updateUserProfile({ 
@@ -130,8 +182,8 @@ export const OnboardingView = () => {
           pincode: found ? found.pincode : pinCode,
           location: found ? `${found.city}, AP` : `${cityVillage}, AP`,
           phone: phoneNumber,
-          age: '', // Keep empty for user to fill in Profile page
-          bloodGroup: '', // Keep empty for user to fill in Profile page
+          age: '', 
+          bloodGroup: '', 
           prescriptionReport: null,
           uploadedReports: []
         });
@@ -153,6 +205,28 @@ export const OnboardingView = () => {
             : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
         </p>
 
+        {errorMsg && (
+          <div 
+            className="auth-error-alert fade-in"
+            style={{
+              background: '#fef2f2',
+              border: '1.5px solid #f87171',
+              color: '#991b1b',
+              padding: '12px 16px',
+              borderRadius: '14px',
+              fontSize: '0.86rem',
+              fontWeight: '600',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+          >
+            <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0 }} />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
@@ -164,12 +238,12 @@ export const OnboardingView = () => {
                   inputMode="numeric"
                   value={uniqueId}
                   onChange={e => handleUniqueIdChange(e.target.value)}
-                  placeholder="Enter 12-Digit Aadhaar Card Number"
+                  placeholder="Enter 12-Digit Aadhaar or 10-Digit Phone"
                   required
                 />
               </div>
               <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
-                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your linked Phone Number. Supports Aadhaar Card, Doctor ID, Receptionist Email, or Responder Phone
+                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your linked Phone Number. Accepts 10-Digit Mobile or 12-Digit Aadhaar.
               </span>
             </>
           )}
@@ -186,6 +260,7 @@ export const OnboardingView = () => {
                     className="otp-input"
                     value={digit}
                     onChange={e => {
+                      setErrorMsg('');
                       const val = e.target.value;
                       const newOtp = [...otp];
                       newOtp[idx] = val;

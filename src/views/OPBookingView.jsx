@@ -406,8 +406,8 @@ export const OPBookingView = () => {
 
       <style>{`
         .op-booking-view-container {
-          padding: 24px;
-          max-width: 1200px;
+          padding: 24px 32px;
+          max-width: 1720px;
           margin: 0 auto;
           width: 100%;
           display: flex;

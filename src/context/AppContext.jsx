@@ -95,12 +95,66 @@ const DEFAULT_APPOINTMENTS = [
   }
 ];
 
+const DEFAULT_RECORDS = [
+  {
+    id: 'rec-1',
+    title: 'Complete Blood Count (CBC) & Lipid Profile',
+    type: 'Lab Report',
+    date: '2026-08-10',
+    doctor: 'Dr. K. Srinivas Rao, MD',
+    facility: 'Government General Hospital, Guntur',
+    summary: 'Hemoglobin levels normal (14.2 g/dL). Total Cholesterol 185 mg/dL.'
+  },
+  {
+    id: 'rec-2',
+    title: 'OPD Digital Prescription - Cardiology',
+    type: 'Prescription',
+    date: '2026-07-22',
+    doctor: 'Dr. S. Meenakshi, MS',
+    facility: 'Narasaraopet Area Hospital',
+    summary: 'Prescribed Cetirizine 10mg daily after dinner and Multivitamin Complex.'
+  },
+  {
+    id: 'rec-3',
+    title: 'COVID-19 Booster Vaccination Certificate',
+    type: 'Vaccination',
+    date: '2025-11-05',
+    doctor: 'Public Health Officer',
+    facility: 'Primary Health Centre, Narasaraopet',
+    summary: 'Universal Immunization Record verified via CoWIN & ABHA.'
+  }
+];
+
 export const AppProvider = ({ children }) => {
+  const [isLoggedIn, setIsLoggedInState] = useState(() => {
+    try {
+      return localStorage.getItem('cn_isLoggedIn') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const setIsLoggedIn = (status) => {
+    setIsLoggedInState(status);
+    try {
+      if (status) {
+        localStorage.setItem('cn_isLoggedIn', 'true');
+      } else {
+        localStorage.removeItem('cn_isLoggedIn');
+      }
+    } catch (e) {}
+  };
+
   const [currentScreen, setCurrentScreenState] = useState(() => {
     try {
       const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
       const saved = localStorage.getItem('cn_currentScreen');
-      return hash || saved || 'landing';
+      const isAuth = localStorage.getItem('cn_isLoggedIn') === 'true';
+      const screen = hash || saved || 'landing';
+      if (!isAuth && screen !== 'landing' && screen !== 'onboarding') {
+        return 'landing';
+      }
+      return screen;
     } catch (e) {
       return 'landing';
     }
@@ -130,6 +184,15 @@ export const AppProvider = ({ children }) => {
       return saved ? JSON.parse(saved) : DEFAULT_APPOINTMENTS;
     } catch (e) {
       return DEFAULT_APPOINTMENTS;
+    }
+  });
+
+  const [records, setRecords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_records');
+      return saved ? JSON.parse(saved) : DEFAULT_RECORDS;
+    } catch (e) {
+      return DEFAULT_RECORDS;
     }
   });
   const [hospitals] = useState([
@@ -438,61 +501,6 @@ export const AppProvider = ({ children }) => {
     }
   ]);
 
-  const [records, setRecords] = useState(() => {
-    try {
-      const saved = localStorage.getItem('cn_records');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'rec-1',
-          title: 'General Blood Profile & Lipid Panel',
-          date: '2026-08-10',
-          doctor: 'Dr. P. V. Ramana',
-          facility: 'Guntur City Care Hospital',
-          category: 'Diagnostics',
-          fileType: 'PDF',
-          size: '1.4 MB',
-          summary: 'Hb: 14.2 g/dL, Fasting Blood Sugar: 94 mg/dL. All vital parameters within normal reference ranges.'
-        },
-        {
-          id: 'rec-2',
-          title: 'Chest X-Ray (PA View) & Radiology Report',
-          date: '2026-07-28',
-          doctor: 'Dr. K. Srinivas Rao',
-          facility: 'Government General Hospital',
-          category: 'Radiology',
-          fileType: 'DICOM / PDF',
-          size: '4.2 MB',
-          summary: 'Clear lung fields, normal cardiothoracic ratio. No evidence of active pulmonary disease.'
-        }
-      ];
-    } catch (e) {
-      return [
-        {
-          id: 'rec-1',
-          title: 'General Blood Profile & Lipid Panel',
-          date: '2026-08-10',
-          doctor: 'Dr. P. V. Ramana',
-          facility: 'Guntur City Care Hospital',
-          category: 'Diagnostics',
-          fileType: 'PDF',
-          size: '1.4 MB',
-          summary: 'Hb: 14.2 g/dL, Fasting Blood Sugar: 94 mg/dL. All vital parameters within normal reference ranges.'
-        },
-        {
-          id: 'rec-2',
-          title: 'Chest X-Ray (PA View) & Radiology Report',
-          date: '2026-07-28',
-          doctor: 'Dr. K. Srinivas Rao',
-          facility: 'Government General Hospital',
-          category: 'Radiology',
-          fileType: 'DICOM / PDF',
-          size: '4.2 MB',
-          summary: 'Clear lung fields, normal cardiothoracic ratio. No evidence of active pulmonary disease.'
-        }
-      ];
-    }
-  });
-
   // LocalStorage Persistence Synchronization
   useEffect(() => {
     try {
@@ -525,6 +533,12 @@ export const AppProvider = ({ children }) => {
   }, [records]);
 
   const navigateTo = (screen, resetHistory = false) => {
+    // If not authenticated and trying to access protected screens, redirect to onboarding
+    if (!isLoggedIn && screen !== 'landing' && screen !== 'onboarding') {
+      setCurrentScreenState('onboarding');
+      return;
+    }
+
     if (screen !== currentScreen) {
       if (resetHistory) {
         setScreenHistory([currentScreen]);
@@ -583,9 +597,12 @@ export const AppProvider = ({ children }) => {
       localStorage.removeItem('cn_user');
       localStorage.removeItem('cn_appointments');
       localStorage.removeItem('cn_records');
+      localStorage.removeItem('cn_isLoggedIn');
     } catch (e) {}
+    setIsLoggedIn(false);
     setUser(DEFAULT_USER);
     setAppointments(DEFAULT_APPOINTMENTS);
+    setRecords(DEFAULT_RECORDS);
     setCurrentScreenState('landing');
   };
 
@@ -624,6 +641,8 @@ export const AppProvider = ({ children }) => {
         screenHistory,
         navigateTo,
         goBack,
+        isLoggedIn,
+        setIsLoggedIn,
         user,
         updateUserProfile,
         switchRole,

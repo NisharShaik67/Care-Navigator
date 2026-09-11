@@ -226,7 +226,7 @@ export const Header = () => {
                 border: isComplete ? '2px solid #10b981' : '2px solid #ffffff'
               }}
             >
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {(user?.name || 'User').split(' ').map(n => n[0]).join('')}
             </div>
 
             {/* Percentage Badge */}

@@ -108,7 +108,7 @@ export const ProfileView = () => {
                 border: isComplete ? '3px solid #10b981' : '3px solid #ffffff'
               }}
             >
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {(user?.name || 'User').split(' ').map(n => n[0]).join('')}
             </div>
 
             {/* Percentage & Edit Pencil Badge */}

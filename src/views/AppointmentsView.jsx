@@ -6,8 +6,8 @@ export const AppointmentsView = () => {
   const { appointments, cancelAppointment, navigateTo } = useApp();
   const [selectedQRModal, setSelectedQRModal] = useState(null);
 
-  const activeApps = appointments.filter(a => a.status === 'ACTIVE');
-  const pastApps = appointments.filter(a => a.status !== 'ACTIVE');
+  const activeApps = (appointments || []).filter(a => a.status === 'ACTIVE');
+  const pastApps = (appointments || []).filter(a => a.status !== 'ACTIVE');
 
   return (
     <div className="appointments-view-container fade-in">
@@ -44,15 +44,15 @@ export const AppointmentsView = () => {
               {/* Live Queue Tracker */}
               <div className="queue-tracker-box">
                 <div className="queue-metric-row">
-                  <div className="metric">
+                  <div className="metric metric-left">
                     <span className="m-lbl">NOW SERVING</span>
                     <span className="m-val text-emerald">#{app.currentServing}</span>
                   </div>
-                  <div className="metric">
+                  <div className="metric metric-center">
                     <span className="m-lbl">PATIENTS AHEAD</span>
                     <span className="m-val text-sky">{app.queueAhead}</span>
                   </div>
-                  <div className="metric">
+                  <div className="metric metric-right">
                     <span className="m-lbl">EST. CONSULT</span>
                     <span className="m-val">{app.queueAhead * 4} mins</span>
                   </div>
@@ -254,10 +254,31 @@ export const AppointmentsView = () => {
         }
 
         .queue-metric-row {
-          display: flex;
-          justify-content: space-around;
-          text-align: center;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          align-items: center;
           margin-bottom: 12px;
+          gap: 8px;
+        }
+
+        .metric {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .metric-left {
+          align-items: flex-start;
+          text-align: left;
+        }
+
+        .metric-center {
+          align-items: center;
+          text-align: center;
+        }
+
+        .metric-right {
+          align-items: flex-end;
+          text-align: right;
         }
 
         .m-lbl {

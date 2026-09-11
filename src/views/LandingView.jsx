@@ -28,7 +28,6 @@ import {
 
 export const LandingView = () => {
   const { navigateTo, switchRole, user } = useApp();
-  const [activeRoleTab, setActiveRoleTab] = useState('User');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -75,7 +74,6 @@ export const LandingView = () => {
 
           <div className={`landing-nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
             <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Features</a>
-            <a href="#roles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Role Portals</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
             <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('User'); }}>
@@ -240,148 +238,7 @@ export const LandingView = () => {
         </div>
       </section>
 
-      {/* Role Showcase Tabs */}
-      <section id="roles" className="landing-roles-section">
-        <div className="section-header text-center">
-          <span className="section-tag">ROLE-BASED PORTALS</span>
-          <h2 className="section-title">Designed for Every Stakeholder in Care</h2>
-        </div>
 
-        <div className="role-tabs-container">
-          <div className="role-tabs-header">
-            <button 
-              className={`role-tab-btn ${activeRoleTab === 'User' || activeRoleTab === 'Patient' ? 'active' : ''}`}
-              onClick={() => setActiveRoleTab('User')}
-            >
-              <UserCheck size={18} />
-              <span>User</span>
-            </button>
-            <button 
-              className={`role-tab-btn ${activeRoleTab === 'Doctor' ? 'active' : ''}`}
-              onClick={() => setActiveRoleTab('Doctor')}
-            >
-              <Stethoscope size={18} />
-              <span>Doctor</span>
-            </button>
-            <button 
-              className={`role-tab-btn ${activeRoleTab === 'Receptionist' ? 'active' : ''}`}
-              onClick={() => setActiveRoleTab('Receptionist')}
-            >
-              <Building2 size={18} />
-              <span>Receptionist</span>
-            </button>
-            <button 
-              className={`role-tab-btn ${activeRoleTab === 'Responder' ? 'active' : ''}`}
-              onClick={() => setActiveRoleTab('Responder')}
-            >
-              <Ambulance size={18} />
-              <span><span className="mobile-hide">First </span>Responder</span>
-            </button>
-          </div>
-
-          <div className="role-tab-content glass-card fade-in">
-            {(activeRoleTab === 'User' || activeRoleTab === 'Patient') && (
-              <div className="role-content-body">
-                <div className="role-text">
-                  <span className="role-badge green">User Portal</span>
-                  <h3>Complete Control Over Your Personal Health Journey</h3>
-                  <ul>
-                    <li><CheckCircle2 size={16} color="#10b981" /> 1-Tap Aadhaar Login with auto-filled profile and health ID.</li>
-                    <li><CheckCircle2 size={16} color="#10b981" /> Book OP tokens and monitor live doctor queue numbers from home.</li>
-                    <li><CheckCircle2 size={16} color="#10b981" /> Store lifetime medical records, prescriptions, and allergy alerts.</li>
-                    <li><CheckCircle2 size={16} color="#10b981" /> Instant 108 Ambulance helpline and emergency responder guidelines.</li>
-                  </ul>
-                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('User')}>
-                    <span>Enter User Portal</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-                <div className="role-preview-card glass-panel">
-                  <UserCheck size={48} color="#10b981" />
-                  <h4>Patient Dashboard</h4>
-                  <p>Aadhaar ID: 5892 4103 7621</p>
-                  <div className="mini-badge">Active Token #14 • GGH Cardiology</div>
-                </div>
-              </div>
-            )}
-
-            {activeRoleTab === 'Doctor' && (
-              <div className="role-content-body">
-                <div className="role-text">
-                  <span className="role-badge sky">Doctor Consultation Portal</span>
-                  <h3>Effortless Patient Consultations & Digital Prescriptions</h3>
-                  <ul>
-                    <li><CheckCircle2 size={16} color="#0284c7" /> Instant access to patient EHR history via Aadhaar scan.</li>
-                    <li><CheckCircle2 size={16} color="#0284c7" /> Real-time OPD patient queue manager and next token caller.</li>
-                    <li><CheckCircle2 size={16} color="#0284c7" /> AI triage recommendations & allergy warning indicators.</li>
-                    <li><CheckCircle2 size={16} color="#0284c7" /> Digital e-prescription generation with automatic pharmacy sync.</li>
-                  </ul>
-                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Doctor')}>
-                    <span>Enter Doctor Portal</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-                <div className="role-preview-card glass-panel">
-                  <Stethoscope size={48} color="#0284c7" />
-                  <h4>Doctor Queue Desk</h4>
-                  <p>Dr. K. Srinivas Rao, MD</p>
-                  <div className="mini-badge sky">3 Patients Waiting in Queue</div>
-                </div>
-              </div>
-            )}
-
-            {activeRoleTab === 'Receptionist' && (
-              <div className="role-content-body">
-                <div className="role-text">
-                  <span className="role-badge amber">Receptionist Desk</span>
-                  <h3>Rapid Patient Lookup & OPD Token Generation</h3>
-                  <ul>
-                    <li><CheckCircle2 size={16} color="#f59e0b" /> Search patient by 12-digit Aadhaar number or phone for 2-second check-in.</li>
-                    <li><CheckCircle2 size={16} color="#f59e0b" /> Issue instant OP tokens for General Triage or Specialty departments.</li>
-                    <li><CheckCircle2 size={16} color="#f59e0b" /> Monitor live Emergency, ICU, and Ventilator bed availability.</li>
-                    <li><CheckCircle2 size={16} color="#f59e0b" /> Handle emergency walk-ins with priority triage routing.</li>
-                  </ul>
-                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Receptionist')}>
-                    <span>Enter Receptionist Desk</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-                <div className="role-preview-card glass-panel">
-                  <Building2 size={48} color="#f59e0b" />
-                  <h4>Receptionist Desk</h4>
-                  <p>Government General Hospital Desk #1</p>
-                  <div className="mini-badge amber">14 Emergency Beds Available</div>
-                </div>
-              </div>
-            )}
-
-            {activeRoleTab === 'Responder' && (
-              <div className="role-content-body">
-                <div className="role-text">
-                  <span className="role-badge red">108 Responder Console</span>
-                  <h3>Live Emergency Telemetry & Dispatch Management</h3>
-                  <ul>
-                    <li><CheckCircle2 size={16} color="#ef4444" /> Real-time GPS navigation to victim location with optimal hospital routing.</li>
-                    <li><CheckCircle2 size={16} color="#ef4444" /> Pre-fetch patient blood group, allergies, and emergency contacts via Aadhaar.</li>
-                    <li><CheckCircle2 size={16} color="#ef4444" /> Transmit pre-hospital vital telemetry to receiving trauma center.</li>
-                    <li><CheckCircle2 size={16} color="#ef4444" /> Direct 1-tap phone communication with victim and emergency room.</li>
-                  </ul>
-                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Responder')}>
-                    <span>Enter Responder Console</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-                <div className="role-preview-card glass-panel">
-                  <Ambulance size={48} color="#ef4444" />
-                  <h4>108 Ambulance Unit</h4>
-                  <p>Vehicle: AP 07 AP 1082</p>
-                  <div className="mini-badge red">En Route • ETA 5 Mins</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* How It Works */}
       <section id="how-it-works" className="landing-how-section">
@@ -462,7 +319,7 @@ export const LandingView = () => {
         }
 
         .landing-nav-inner {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto;
           display: flex;
           align-items: center;
@@ -473,6 +330,7 @@ export const LandingView = () => {
         .landing-brand {
           display: flex;
           align-items: center;
+          
           gap: 12px;
           cursor: pointer;
         }
@@ -616,9 +474,9 @@ export const LandingView = () => {
 
         /* Hero Section */
         .landing-hero {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto;
-          padding: 54px 24px;
+          padding: 54px 32px;
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 48px;
@@ -672,7 +530,7 @@ export const LandingView = () => {
           color: #475569;
           line-height: 1.6;
           margin-bottom: 32px;
-          max-width: 580px;
+          max-width: 720px;
         }
 
         @media (max-width: 992px) {
@@ -793,9 +651,9 @@ export const LandingView = () => {
 
         /* Stats Section */
         .landing-stats-section {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto 60px;
-          padding: 0 24px;
+          padding: 0 32px;
           width: 100%;
         }
 
@@ -902,9 +760,9 @@ export const LandingView = () => {
 
         /* Features Grid */
         .landing-features-section {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto 80px;
-          padding: 0 24px;
+          padding: 0 32px;
         }
 
         .features-grid {
@@ -1177,9 +1035,9 @@ export const LandingView = () => {
 
         /* How It Works */
         .landing-how-section {
-          max-width: 1100px;
+          max-width: 1720px;
           margin: 0 auto 80px;
-          padding: 0 24px;
+          padding: 0 32px;
         }
 
         .steps-container {
@@ -1222,7 +1080,7 @@ export const LandingView = () => {
 
         /* Banner CTA */
         .landing-cta-banner {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto 80px;
           padding: 50px 32px;
           border-radius: 28px;
@@ -1263,7 +1121,7 @@ export const LandingView = () => {
         }
 
         .footer-inner {
-          max-width: 1280px;
+          max-width: 1720px;
           margin: 0 auto;
           display: flex;
           align-items: center;

@@ -69,7 +69,7 @@ export const EmergencyView = () => {
         </div>
 
         <div className="contacts-list">
-          {user.emergencyContacts.map(contact => (
+          {(user?.emergencyContacts || []).map(contact => (
             <div key={contact.id} className="contact-item">
               <div className="contact-info">
                 <span className="c-name">{contact.name}</span>
