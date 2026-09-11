@@ -157,6 +157,7 @@ export const DashboardView = () => {
           {activeAppointments.map(app => (
             <div key={app.id} className="dash-token-card glass-panel" onClick={() => navigateTo('appointments')}>
               <div className="token-left">
+                <div className="token-top-title">TOKEN #{app.tokenNumber}</div>
                 <h4>{app.doctorName}</h4>
                 <p className="sub">{app.hospitalName} • {app.specialty}</p>
               </div>
@@ -439,11 +440,19 @@ export const DashboardView = () => {
           border-radius: 999px;
         }
 
+        .token-top-title {
+          font-size: 1.25rem;
+          font-weight: 900;
+          color: #000000;
+          letter-spacing: -0.02em;
+          margin-bottom: 2px;
+        }
+
         .token-left h4 {
           font-size: 1.1rem;
           font-weight: 700;
           color: #0f172a;
-          margin: 6px 0 2px 0;
+          margin: 0 0 2px 0;
         }
 
         .token-left .sub {

@@ -27,17 +27,14 @@ export const AppointmentsView = () => {
           {activeApps.map(app => (
             <div key={app.id} className="token-card glass-panel fade-in">
               <div className="token-card-top">
-                <div className="token-num-pill">
-                  <span className="lbl">TOKEN</span>
-                  <span className="num">#{app.tokenNumber}</span>
-                </div>
-                <div className="token-hospital-info">
-                  <h4>{app.doctorName}</h4>
+                <div className="token-info-left">
+                  <div className="token-top-title">TOKEN #{app.tokenNumber}</div>
+                  <h4 className="doctor-name">{app.doctorName}</h4>
                   <p className="hosp-name">{app.hospitalName}</p>
                   <p className="slot-info">Patient: <strong>{app.patientName || 'Alex Johnson'}</strong> • {app.specialty} • {app.date} at {app.timeSlot}</p>
                 </div>
-                <div className="status-pill-emerald">
-                  <span>CONFIRMED</span>
+                <div className="token-info-right-bottom">
+                  <span className="confirmed-badge-green">CONFIRMED</span>
                 </div>
               </div>
 
@@ -188,50 +185,61 @@ export const AppointmentsView = () => {
 
         .token-card-top {
           display: flex;
-          align-items: center;
-          gap: 20px;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 16px;
         }
 
-        .token-num-pill {
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          border-radius: 16px;
-          padding: 14px 18px;
-          text-align: center;
-          min-width: 90px;
-        }
-
-        .token-num-pill .lbl {
-          font-size: 0.65rem;
-          font-weight: 800;
-          color: #059669;
-          display: block;
-        }
-
-        .token-num-pill .num {
-          font-size: 1.8rem;
-          font-weight: 800;
-          color: #0f172a;
-        }
-
-        .token-hospital-info {
+        .token-info-left {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
           flex: 1;
         }
 
-        .token-hospital-info h4 {
+        .token-top-title {
+          font-size: 1.35rem;
+          font-weight: 900;
+          color: #000000;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+          margin-bottom: 6px;
+        }
+
+        .token-info-left .doctor-name {
           font-size: 1.1rem;
           font-weight: 700;
           color: var(--text-main);
+          margin-bottom: 2px;
         }
 
-        .token-hospital-info .hosp-name {
+        .token-info-left .hosp-name {
           font-size: 0.88rem;
           color: var(--text-sub);
+          margin-bottom: 2px;
         }
 
-        .token-hospital-info .slot-info {
+        .token-info-left .slot-info {
           font-size: 0.8rem;
           color: var(--text-muted);
+        }
+
+        .token-info-right-bottom {
+          align-self: flex-end;
+          margin-left: auto;
+          flex-shrink: 0;
+        }
+
+        .confirmed-badge-green {
+          background: #10b981;
+          color: #ffffff;
+          font-size: 0.72rem;
+          font-weight: 800;
+          padding: 5px 14px;
+          border-radius: 999px;
+          letter-spacing: 0.05em;
+          display: inline-block;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
         }
 
         .qr-btn {
