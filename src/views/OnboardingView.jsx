@@ -205,34 +205,14 @@ export const OnboardingView = () => {
             : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
         </p>
 
-        {errorMsg && (
-          <div 
-            className="auth-error-alert fade-in"
-            style={{
-              background: '#fef2f2',
-              border: '1.5px solid #f87171',
-              color: '#991b1b',
-              padding: '12px 16px',
-              borderRadius: '14px',
-              fontSize: '0.86rem',
-              fontWeight: '600',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0 }} />
-            <span>{errorMsg}</span>
-          </div>
-        )}
+
 
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
               <label className="form-label">12-Digit Aadhaar Number / Universal ID</label>
-              <div className="input-group">
-                <CreditCard size={18} color="#0284c7" />
+              <div className={`input-group ${errorMsg ? 'input-group-error' : ''}`}>
+                <CreditCard size={18} color={errorMsg ? '#dc2626' : '#0284c7'} />
                 <input
                   type="text"
                   inputMode="numeric"
@@ -438,9 +418,20 @@ export const OnboardingView = () => {
           align-items: center;
           gap: 10px;
           background: #f8fafc;
-          border: 1px solid var(--border-light, #e2e8f0);
+          border: 1.5px solid var(--border-light, #e2e8f0);
           border-radius: 12px;
           padding: 12px 16px;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .input-group-error {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+          background: #fff5f5;
+        }
+
+        .input-group-error input {
+          color: #dc2626;
         }
 
         .aadhar-help-text {
