@@ -193,6 +193,14 @@ export const OnboardingView = () => {
           aadharNumber: uniqueId || aadharNumber 
         });
         navigateTo('doctor-dashboard', true);
+      } else if (selectedRole === 'Receptionist') {
+        switchRole('Receptionist');
+        updateUserProfile({ 
+          phone: phoneNumber, 
+          receptionistGmail: uniqueId,
+          aadharNumber: uniqueId || aadharNumber 
+        });
+        navigateTo('receptionist-dashboard', true);
       } else {
         const cleanNo = (uniqueId || aadharNumber).replace(/\D/g, '');
         const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE['589241037621'];
@@ -228,7 +236,7 @@ export const OnboardingView = () => {
         receptionistGmail: uniqueId,
         aadharNumber: uniqueId || aadharNumber 
       });
-      navigateTo('doctor-dashboard', true);
+      navigateTo('receptionist-dashboard', true);
     }
   };
 

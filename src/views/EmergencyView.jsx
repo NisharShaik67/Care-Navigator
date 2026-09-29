@@ -38,6 +38,22 @@ const FIRST_AID_GUIDES = [
 export const EmergencyView = () => {
   const { user } = useApp();
   const [openGuide, setOpenGuide] = useState(0);
+  const [alertedContacts, setAlertedContacts] = useState({});
+  const [alertNotification, setAlertNotification] = useState('');
+
+  const handleAlertContact = (contact) => {
+    setAlertedContacts(prev => ({ ...prev, [contact.id]: true }));
+    setAlertNotification(`🚨 Emergency Alert Sent & Call Initiated to ${contact.name} (${contact.phone})`);
+    
+    setTimeout(() => {
+      setAlertNotification('');
+    }, 4500);
+
+    const cleanPhone = contact.phone.replace(/\D/g, '');
+    if (cleanPhone) {
+      window.location.href = `tel:${cleanPhone}`;
+    }
+  };
 
   return (
     <div className="emergency-view-container fade-in">
@@ -68,18 +84,58 @@ export const EmergencyView = () => {
           <h3>Emergency Contacts Directory</h3>
         </div>
 
+        {alertNotification && (
+          <div className="alert-toast-banner fade-in" style={{
+            background: '#ecfdf5',
+            border: '1.5px solid #10b981',
+            color: '#047857',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '14px'
+          }}>
+            <CheckCircle2 size={16} color="#059669" />
+            <span>{alertNotification}</span>
+          </div>
+        )}
+
         <div className="contacts-list">
-          {(user?.emergencyContacts || []).map(contact => (
-            <div key={contact.id} className="contact-item">
-              <div className="contact-info">
-                <span className="c-name">{contact.name}</span>
-                <span className="c-rel">{contact.relation} • {contact.phone}</span>
+          {(user?.emergencyContacts || []).map(contact => {
+            const isNotified = alertedContacts[contact.id];
+            return (
+              <div key={contact.id} className="contact-item">
+                <div className="contact-info">
+                  <span className="c-name">{contact.name}</span>
+                  <span className="c-rel">{contact.relation} • {contact.phone}</span>
+                </div>
+                <div className="c-status">
+                  <button 
+                    type="button"
+                    onClick={() => handleAlertContact(contact)}
+                    className={`status-tag ${isNotified ? 'tag-sent' : 'tag-ready'} active-contact-btn`}
+                    title={`Click to call & send SOS alert to ${contact.name}`}
+                    style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
+                    {isNotified ? (
+                      <>
+                        <CheckCircle2 size={13} color="#059669" />
+                        <span>Alerted (Call)</span>
+                      </>
+                    ) : (
+                      <>
+                        <PhoneCall size={13} color="#0284c7" />
+                        <span>Ready (Click to Call)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="c-status">
-                <span className="status-tag tag-ready">Ready</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -354,13 +410,29 @@ export const EmergencyView = () => {
         }
 
         .tag-ready {
-          background: rgba(148, 163, 184, 0.15);
-          color: var(--text-muted);
+          background: rgba(2, 132, 199, 0.1);
+          color: #0284c7;
         }
 
         .tag-sent {
-          background: rgba(16, 185, 129, 0.12);
+          background: rgba(16, 185, 129, 0.15);
           color: #059669;
+        }
+
+        .active-contact-btn {
+          padding: 6px 12px;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .active-contact-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+          background: rgba(2, 132, 199, 0.2);
+        }
+
+        .active-contact-btn.tag-sent:hover {
+          background: rgba(16, 185, 129, 0.25);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
         }
 
         .guides-accordion {
@@ -440,9 +512,9 @@ export const EmergencyView = () => {
           width: 100%;
           border-radius: 16px;
           overflow: hidden;
-          background: #090d16;
-          border: 1px solid rgba(56, 189, 248, 0.3);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
           margin: 16px 0;
           display: flex;
           flex-direction: column;
@@ -450,8 +522,8 @@ export const EmergencyView = () => {
 
         .map-hud-header {
           padding: 16px 20px;
-          background: rgba(15, 23, 42, 0.85);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -535,7 +607,7 @@ export const EmergencyView = () => {
         .map-canvas-container {
           position: relative;
           width: 100%;
-          background: #020617;
+          background: #f1f5f9;
           overflow: hidden;
           transition: transform 0.2s ease-out;
         }
@@ -554,18 +626,18 @@ export const EmergencyView = () => {
           display: flex;
           align-items: center;
           gap: 6px;
-          background: rgba(15, 23, 42, 0.85);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(8px);
           padding: 6px;
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid #cbd5e1;
           z-index: 10;
         }
 
         .map-ctrl-btn {
-          background: rgba(30, 41, 59, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #cbd5e1;
+          background: #f8fafc;
+          border: 1px solid #cbd5e1;
+          color: #1e293b;
           width: 32px;
           height: 32px;
           border-radius: 6px;
@@ -590,15 +662,15 @@ export const EmergencyView = () => {
         }
 
         .map-ctrl-btn.speed-btn.active {
-          background: rgba(245, 158, 11, 0.2);
+          background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.5);
-          color: #fbbf24;
+          color: #d97706;
         }
 
         .map-route-progress {
           padding: 14px 20px;
-          background: rgba(15, 23, 42, 0.95);
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          background: #f8fafc;
+          border-top: 1px solid #e2e8f0;
         }
 
         .progress-label-row {

@@ -14,6 +14,7 @@ import { AppointmentsView } from './views/AppointmentsView';
 import { MedicalHistoryView } from './views/MedicalHistoryView';
 import { ProfileView } from './views/ProfileView';
 import { DoctorDashboardView } from './views/DoctorDashboardView';
+import { ReceptionistView } from './views/ReceptionistView';
 
 const MainContent = () => {
   const { currentScreen } = useApp();
@@ -42,6 +43,9 @@ const MainContent = () => {
         return <ProfileView />;
       case 'doctor-dashboard':
         return <DoctorDashboardView />;
+      case 'receptionist':
+      case 'receptionist-dashboard':
+        return <ReceptionistView />;
       default:
         return <DashboardView />;
     }
@@ -53,6 +57,10 @@ const MainContent = () => {
 
   if (currentScreen === 'onboarding') {
     return <OnboardingView />;
+  }
+
+  if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard') {
+    return <ReceptionistView />;
   }
 
   return (

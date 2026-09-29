@@ -14,7 +14,7 @@ export const Navigation = () => {
     { id: 'records', label: 'Health Vault', icon: FolderHeart }
   ];
 
-  if (currentScreen === 'onboarding' || currentScreen === 'landing') return null;
+  if (currentScreen === 'onboarding' || currentScreen === 'landing' || currentScreen === 'receptionist-dashboard' || currentScreen === 'receptionist') return null;
 
   return (
     <nav className="app-navigation">

@@ -585,6 +585,8 @@ export const AppProvider = ({ children }) => {
     setUser(prev => ({ ...prev, role }));
     if (role === 'Doctor') {
       setCurrentScreenState('doctor-dashboard');
+    } else if (role === 'Receptionist') {
+      setCurrentScreenState('receptionist-dashboard');
     } else {
       setCurrentScreenState('dashboard');
     }

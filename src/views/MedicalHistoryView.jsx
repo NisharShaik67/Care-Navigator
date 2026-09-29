@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { FolderHeart, FileText, Download, Upload, Plus, Search, Filter, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { FolderHeart, FileText, Download, Upload, Plus, Search, Filter, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 
 export const MedicalHistoryView = () => {
   const { records, addMedicalRecord } = useApp();
   const [filterType, setFilterType] = useState('All');
   const [showUploadModal, setShowUploadModal] = useState(false);
+
+  // Close modal on ESC key press without navigating away
+  useEffect(() => {
+    if (!showUploadModal) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+        setShowUploadModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
+  }, [showUploadModal]);
 
   const [title, setTitle] = useState('');
   const [type, setType] = useState('Lab Report');
@@ -98,9 +112,20 @@ export const MedicalHistoryView = () => {
 
       {/* Upload Document Modal */}
       {showUploadModal && (
-        <div className="modal-overlay" onClick={() => setShowUploadModal(null)}>
+        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
           <div className="modal-content glass-panel fade-in" onClick={e => e.stopPropagation()}>
-            <h3 className="modal-title">Upload New Medical Record</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 className="modal-title" style={{ margin: 0 }}>Upload New Medical Record</h3>
+              <button 
+                type="button"
+                className="modal-close-btn" 
+                onClick={() => setShowUploadModal(false)}
+                title="Close (ESC)"
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
             <p className="modal-subtitle">Add prescriptions, diagnostic lab reports, or vaccination files.</p>
 
             <form onSubmit={handleUploadSubmit} className="upload-form">

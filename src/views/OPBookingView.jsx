@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Building2, 
@@ -23,6 +23,20 @@ export const OPBookingView = () => {
   const [selectedHospital, setSelectedHospital] = useState(hospitals[0]);
   const [docSearchQuery, setDocSearchQuery] = useState('');
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
+
+  // Close booking modal on ESC key press
+  useEffect(() => {
+    if (!bookingModalDoc) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+        setBookingModalDoc(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
+  }, [bookingModalDoc]);
 
   // Compute filtered doctors list for selected hospital
   const filteredDoctors = useMemo(() => {
@@ -694,7 +708,7 @@ export const OPBookingView = () => {
           width: 24px;
           height: 24px;
           border-radius: 50%;
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(2, 132, 199, 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -771,7 +785,7 @@ export const OPBookingView = () => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(15, 23, 42, 0.6);
+          background: rgba(2, 132, 199, 0.15);
           backdrop-filter: blur(8px);
           z-index: 1000;
           display: flex;

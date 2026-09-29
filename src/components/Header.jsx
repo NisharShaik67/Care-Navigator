@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2, X, Trash2 } from 'lucide-react';
+import { NotificationSwipeItem } from './NotificationSwipeItem';
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
@@ -13,13 +14,57 @@ const TITLE_MAP = {
   'appointments': 'My OP Tokens & Live Queue',
   'records': 'Digital Health Vault & EHR',
   'profile': 'My Health Profile & Contacts',
-  'doctor-dashboard': 'Doctor Consultation Portal'
+  'doctor-dashboard': 'Doctor Consultation Portal',
+  'receptionist-dashboard': 'Reception Desk Portal'
 };
 
 export const Header = () => {
   const { currentScreen, screenHistory, goBack, user, switchRole, navigateTo } = useApp();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+
+  const completionScore = calculateProfileCompletion(user);
+  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
+  const isComplete = completionScore === 100;
+
+  const [headerNotifications, setHeaderNotifications] = useState([
+    {
+      id: 'hn-1',
+      title: 'Complete Your Health Profile',
+      text: `Your profile is ${completionScore}% complete. Please update Age, Blood Group & Prescription to reach 100% EHR verification.`,
+      time: 'Just now',
+      urgent: false,
+      important: isProfileIncomplete
+    },
+    {
+      id: 'hn-2',
+      title: 'OP Token #14 Active',
+      text: 'Dr. K. Srinivas Rao at GGH Guntur Cardiology OPD is serving Token #11. Queue ahead: 3.',
+      time: '15m ago',
+      urgent: false,
+      important: false
+    },
+    {
+      id: 'hn-3',
+      title: 'EHR Vault Synced',
+      text: 'Digital prescription & lab diagnostic report archived safely to ABHA Vault.',
+      time: '1h ago',
+      urgent: false,
+      important: false
+    }
+  ]);
+
+  const handleClearAllHeaderNotifs = () => {
+    setHeaderNotifications([]);
+  };
+
+  const handleDeleteHeaderNotif = (id) => {
+    setHeaderNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleToggleImportantHeaderNotif = (id) => {
+    setHeaderNotifications(prev => prev.map(n => n.id === id ? { ...n, important: !n.important } : n));
+  };
 
   useEffect(() => {
     const handleFSChange = () => {
@@ -28,6 +73,19 @@ export const Header = () => {
     document.addEventListener('fullscreenchange', handleFSChange);
     return () => document.removeEventListener('fullscreenchange', handleFSChange);
   }, []);
+
+  useEffect(() => {
+    if (!showNotifMenu) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+        setShowNotifMenu(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
+  }, [showNotifMenu]);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -41,12 +99,16 @@ export const Header = () => {
     }
   };
 
-  const title = TITLE_MAP[currentScreen] || 'Care Navigator';
-  const showBack = screenHistory.length > 0 && currentScreen !== 'landing';
+  const defaultHome = user?.role === 'Doctor'
+    ? 'doctor-dashboard'
+    : user?.role === 'Receptionist'
+      ? 'receptionist-dashboard'
+      : user?.role === 'Responder'
+        ? 'emergency'
+        : 'dashboard';
 
-  const completionScore = calculateProfileCompletion(user);
-  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
-  const isComplete = completionScore === 100;
+  const title = TITLE_MAP[currentScreen] || 'Care Navigator';
+  const showBack = (screenHistory.length > 0 || currentScreen !== defaultHome) && currentScreen !== 'landing' && currentScreen !== 'onboarding';
 
   return (
     <header className="app-header">
@@ -67,7 +129,12 @@ export const Header = () => {
       )}
 
       <div className="header-left">
-        <div className="brand-logo" onClick={() => navigateTo('dashboard')}>
+        <div 
+          className="brand-logo" 
+          onClick={() => {
+            navigateTo(defaultHome);
+          }}
+        >
           <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
         </div>
         <div className="header-title-container">
@@ -88,7 +155,7 @@ export const Header = () => {
             style={{ position: 'relative' }}
           >
             <Bell size={20} color="#0f172a" />
-            {isProfileIncomplete && (
+            {headerNotifications.length > 0 && (
               <span 
                 style={{ 
                   position: 'absolute', 
@@ -111,63 +178,71 @@ export const Header = () => {
                 position: 'absolute',
                 top: 'calc(100% + 10px)',
                 right: 0,
-                width: '320px',
+                width: '340px',
+                maxWidth: '92vw',
                 padding: '16px',
                 borderRadius: '16px',
                 background: '#ffffff',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
+                boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
                 border: '1px solid #e2e8f0',
                 zIndex: 260
               }}
             >
+              {/* Header row with Title and Clear All button with icon (no close notification button) */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>Notifications</strong>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="badge badge-emerald" style={{ fontSize: '0.72rem' }}>
-                    {isProfileIncomplete ? '1 Unread' : 'All Clear'}
+                  <strong style={{ fontSize: '0.92rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Bell size={16} color="#0284c7" /> Notifications
+                  </strong>
+                  <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>
+                    {headerNotifications.length > 0 ? `${headerNotifications.length} Active` : 'All Clear'}
                   </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowNotifMenu(false); }}
-                    style={{
-                      background: '#f1f5f9',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: '#64748b'
-                    }}
-                    title="Close Notifications"
-                  >
-                    <X size={14} />
-                  </button>
                 </div>
+
+                {/* Clear All Notifications Button with Icon */}
+                <button
+                  onClick={handleClearAllHeaderNotifs}
+                  disabled={headerNotifications.length === 0}
+                  style={{
+                    background: headerNotifications.length === 0 ? '#f1f5f9' : '#fee2e2',
+                    border: '1px solid #fca5a5',
+                    color: headerNotifications.length === 0 ? '#94a3b8' : '#dc2626',
+                    borderRadius: '8px',
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: headerNotifications.length === 0 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  title="Clear All Notifications"
+                >
+                  <Trash2 size={13} />
+                  <span>Clear All</span>
+                </button>
               </div>
 
-              {isProfileIncomplete ? (
-                <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#b45309', fontWeight: '800', fontSize: '0.85rem', marginBottom: '4px' }}>
-                    <AlertTriangle size={16} />
-                    <span>Complete Your Health Profile</span>
+              {/* Notification List with Mobile Swipe Support */}
+              {headerNotifications.length > 0 ? (
+                <div>
+                  <div style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '2px' }}>
+                    {headerNotifications.map(n => (
+                      <NotificationSwipeItem
+                        key={n.id}
+                        notification={n}
+                        onDelete={handleDeleteHeaderNotif}
+                        onToggleImportant={handleToggleImportantHeaderNotif}
+                      />
+                    ))}
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                    Your profile is {completionScore}% complete. Please update your <strong>Age, Blood Group, and Doctor Prescription</strong> to reach 100% EHR verification.
-                  </p>
-                  <button 
-                    className="btn btn-primary btn-sm" 
-                    onClick={() => { setShowNotifMenu(false); navigateTo('profile'); }}
-                    style={{ width: '100%', justifyContent: 'center' }}
-                  >
-                    <span>Complete Profile Now</span>
-                  </button>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '12px', color: '#64748b', fontSize: '0.84rem' }}>
-                  <CheckCircle2 size={24} color="#10b981" style={{ marginBottom: '6px' }} />
-                  <p style={{ margin: 0 }}>Your profile is 100% complete and verified!</p>
+                <div style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
+                  <CheckCircle2 size={32} color="#10b981" style={{ marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 2px 0', fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>All Caught Up!</p>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>No pending notifications.</span>
                 </div>
               )}
             </div>
@@ -271,7 +346,36 @@ export const Header = () => {
         .header-left {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 12px;
+        }
+
+        .header-back-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          background: #f1f5f9;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 12px;
+          color: #0f172a;
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+          white-space: nowrap;
+        }
+
+        .header-back-btn:hover {
+          background: #0284c7;
+          border-color: #0284c7;
+          color: #ffffff;
+          transform: translateX(-3px);
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        }
+
+        .header-back-btn:active {
+          transform: translateX(-1px) scale(0.97);
         }
 
         .btn-icon {

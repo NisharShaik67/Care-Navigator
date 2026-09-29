@@ -147,22 +147,30 @@ export const HospitalsView = () => {
         }
 
         .filter-pill {
-          background: #f8fafc;
-          border: 1px solid var(--border-dark);
-          color: var(--text-sub);
-          font-size: 0.78rem;
-          font-weight: 600;
+          background: #f1f5f9;
+          border: 1.5px solid #cbd5e1;
+          color: #334155;
+          font-size: 0.8rem;
+          font-weight: 700;
           padding: 6px 14px;
           border-radius: 999px;
           cursor: pointer;
           white-space: nowrap;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-pill:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+          border-color: #94a3b8;
         }
 
         .filter-pill.active {
-          background: var(--primary);
-          border-color: var(--primary);
-          color: #fff;
+          background: #0284c7 !important;
+          border-color: #0284c7 !important;
+          color: #ffffff !important;
+          font-weight: 800;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
         }
 
         .hospitals-grid {

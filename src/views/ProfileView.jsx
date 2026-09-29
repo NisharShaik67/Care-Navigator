@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
 import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut, Upload, AlertCircle } from 'lucide-react';
 
@@ -15,6 +15,20 @@ export const ProfileView = () => {
   );
 
   const [showAddContactModal, setShowAddContactModal] = useState(false);
+
+  // Close modal on ESC key press
+  useEffect(() => {
+    if (!showAddContactModal) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+        setShowAddContactModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
+  }, [showAddContactModal]);
   const [cName, setCName] = useState('');
   const [cRel, setCRel] = useState('Family');
   const [cPhone, setCPhone] = useState('');
