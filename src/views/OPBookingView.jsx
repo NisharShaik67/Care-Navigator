@@ -1002,6 +1002,30 @@ export const OPBookingView = () => {
           font-size: 1.4rem;
           font-weight: 900;
         }
+
+        @media (max-width: 768px) {
+          .section-header-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+          .doc-search-box {
+            width: 100%;
+          }
+          .doc-search-box input {
+            width: 100%;
+          }
+          .doctor-cards-grid {
+            grid-template-columns: 1fr;
+          }
+          .hosp-select-card {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .modal-time-slots-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
       `}</style>
     </div>
   );

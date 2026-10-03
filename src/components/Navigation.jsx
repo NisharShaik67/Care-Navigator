@@ -135,6 +135,21 @@ export const Navigation = () => {
           background: #dc2626;
           border: 1px solid #ffffff;
         }
+
+        @media (max-width: 480px) {
+          .app-navigation {
+            height: 62px;
+            padding: 0 4px;
+          }
+          .nav-tab {
+            padding: 4px 2px;
+            gap: 2px;
+          }
+          .tab-label {
+            font-size: 0.65rem;
+            letter-spacing: -0.2px;
+          }
+        }
       `}</style>
     </nav>
   );

@@ -2980,6 +2980,20 @@ export const DoctorDashboardView = () => {
             max-height: 92vh !important;
           }
 
+          .filter-search-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+          }
+
+          .search-box {
+            width: 100%;
+          }
+
+          .filter-dropdown {
+            width: 100%;
+          }
+
           .profile-modal-responsive .modal-header {
             padding: 14px 16px !important;
           }

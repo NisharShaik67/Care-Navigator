@@ -529,6 +529,21 @@ export const DashboardView = () => {
         }
 
         @media (max-width: 768px) {
+          .hero-banner {
+            justify-content: space-between;
+            gap: 12px;
+            padding: 20px 16px;
+          }
+
+          .hero-right-profile {
+            margin-right: 0 !important;
+          }
+
+          .hero-right-profile div {
+            width: 80px !important;
+            height: 80px !important;
+          }
+
           .dash-token-card {
             flex-direction: column;
             align-items: stretch;
