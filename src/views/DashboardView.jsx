@@ -38,8 +38,8 @@ export const DashboardView = () => {
   return (
     <div className="care-dashboard-container fade-in">
       {/* Welcome Hero Banner */}
-      <div className="hero-banner glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-        <div className="hero-left">
+      <div className="hero-banner glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: '12px' }}>
+        <div className="hero-left" style={{ flex: 1, minWidth: 0 }}>
           <div className="greeting-pill">
             <Sparkles size={14} color="#10b981" />
             <span>AI Care Navigator Active • 24/7 Response</span>
@@ -54,7 +54,7 @@ export const DashboardView = () => {
         </div>
 
         {/* Right Corner Circular Profile Picture */}
-        <div className="hero-right-profile" style={{ flexShrink: 0, marginRight: '36px' }}>
+        <div className="hero-right-profile" style={{ flexShrink: 0 }}>
           <div style={{
             width: '115px',
             height: '115px',
@@ -530,18 +530,23 @@ export const DashboardView = () => {
 
         @media (max-width: 768px) {
           .hero-banner {
-            justify-content: space-between;
-            gap: 12px;
-            padding: 20px 16px;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 14px !important;
           }
 
           .hero-right-profile {
             margin-right: 0 !important;
+            flex-shrink: 0 !important;
           }
 
           .hero-right-profile div {
-            width: 80px !important;
-            height: 80px !important;
+            width: 75px !important;
+            height: 75px !important;
+            border-width: 3.5px !important;
           }
 
           .dash-token-card {
