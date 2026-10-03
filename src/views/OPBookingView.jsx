@@ -14,7 +14,8 @@ import {
   Phone,
   Search,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Zap
 } from 'lucide-react';
 
 export const OPBookingView = () => {
@@ -41,12 +42,14 @@ export const OPBookingView = () => {
   // Compute filtered doctors list for selected hospital
   const filteredDoctors = useMemo(() => {
     if (!selectedHospital || !selectedHospital.doctors) return [];
-    if (!docSearchQuery.trim()) return selectedHospital.doctors;
-    const q = docSearchQuery.toLowerCase();
+    const q = (docSearchQuery || '').toLowerCase().trim();
+    if (!q) return selectedHospital.doctors;
     return selectedHospital.doctors.filter(d => 
-      d.name.toLowerCase().includes(q) || 
-      (d.specialty && d.specialty.toLowerCase().includes(q)) ||
-      (d.title && d.title.toLowerCase().includes(q))
+      (d.name || '').toLowerCase().includes(q) || 
+      (d.specialty || '').toLowerCase().includes(q) ||
+      (d.title || '').toLowerCase().includes(q) ||
+      (d.qualification || '').toLowerCase().includes(q) ||
+      (d.roomNo || '').toLowerCase().includes(q)
     );
   }, [selectedHospital, docSearchQuery]);
 
@@ -134,17 +137,37 @@ export const OPBookingView = () => {
 
         {selectedHospital && (
           <div className="hosp-quick-info-pills">
-            <span className="info-chip dist">
-              <MapPin size={13} /> {selectedHospital.distance} away
-            </span>
-            <span className="info-chip star">
-              <Star size={13} fill="#eab308" color="#eab308" /> {selectedHospital.rating} Rating
-            </span>
             <span className="info-chip queue">
-              ⚡ {selectedHospital.opQueueCount} in OP Queue
+              <span style={{
+                background: '#f59e0b',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)',
+                flexShrink: 0
+              }}>
+                <Zap size={13} color="#ffffff" fill="#ffffff" />
+              </span>
+              <strong style={{ color: '#000000', fontSize: '0.88rem' }}>{selectedHospital.opQueueCount} in OP Queue</strong>
             </span>
             <span className="info-chip phone">
-              <Phone size={12} /> {selectedHospital.phone}
+              <span style={{
+                background: '#16a34a',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)',
+                flexShrink: 0
+              }}>
+                <Phone size={13} color="#ffffff" fill="#ffffff" />
+              </span>
+              <strong style={{ color: '#000000', fontSize: '0.88rem' }}>{selectedHospital.phone?.replace(/^0/, '')}</strong>
             </span>
           </div>
         )}
@@ -508,18 +531,19 @@ export const OPBookingView = () => {
         .hosp-quick-info-pills {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
           flex-wrap: wrap;
+          margin-right: 12px;
         }
 
         .info-chip {
-          font-size: 0.78rem;
-          font-weight: 700;
-          padding: 6px 12px;
+          font-size: 0.82rem;
+          font-weight: 800;
+          padding: 8px 16px;
           border-radius: 20px;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
         }
 
         .info-chip.dist {
@@ -534,14 +558,17 @@ export const OPBookingView = () => {
         }
 
         .info-chip.queue {
-          background: #f1f5f9;
-          color: #334155;
+          background: transparent;
+          color: #0f172a;
+          border: none;
+          padding: 4px 8px;
         }
 
         .info-chip.phone {
-          background: #f8fafc;
-          color: #475569;
-          border: 1px solid #e2e8f0;
+          background: transparent;
+          color: #000000;
+          border: none;
+          padding: 4px 8px;
         }
 
 

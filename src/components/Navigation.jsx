@@ -3,15 +3,16 @@ import { useApp } from '../context/AppContext';
 import { Home, ShieldAlert, Bot, CalendarCheck, FolderHeart } from 'lucide-react';
 
 export const Navigation = () => {
-  const { currentScreen, navigateTo, appointments } = useApp();
+  const { currentScreen, navigateTo, appointments, user } = useApp();
 
   const activeAppointmentsCount = appointments.filter(a => a.status === 'ACTIVE').length;
+  const isDoctor = user?.role === 'Doctor' || user?.name?.includes('Raghavendra');
 
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
-    { id: 'symptom-checker', label: 'AI Symptom', icon: Bot },
-    { id: 'op-booking', label: 'Book OP', icon: CalendarCheck, badge: activeAppointmentsCount > 0 ? activeAppointmentsCount : null },
-    { id: 'records', label: 'Health Vault', icon: FolderHeart }
+    ...(!isDoctor ? [{ id: 'op-booking', label: 'Book OP', icon: CalendarCheck, badge: activeAppointmentsCount > 0 ? activeAppointmentsCount : null }] : []),
+    { id: 'records', label: 'Health Vault', icon: FolderHeart },
+    { id: 'symptom-checker', label: 'AI Symptom', icon: Bot }
   ];
 
   if (currentScreen === 'onboarding' || currentScreen === 'landing' || currentScreen === 'receptionist-dashboard' || currentScreen === 'receptionist') return null;
@@ -40,6 +41,7 @@ export const Navigation = () => {
       <style>{`
         .app-navigation {
           height: 68px;
+          flex-shrink: 0;
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(16px);
           border-top: 1px solid #e2e8f0;

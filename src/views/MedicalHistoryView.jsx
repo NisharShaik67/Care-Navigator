@@ -26,8 +26,45 @@ export const MedicalHistoryView = () => {
   const [doctor, setDoctor] = useState('Dr. Rajesh Sharma');
   const [facility, setFacility] = useState('City Care Hospital');
   const [summary, setSummary] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const filteredRecords = records.filter(rec => filterType === 'All' || rec.type === filterType);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      setFileName(file.name);
+      if (!title) {
+        setTitle(file.name.replace(/\.[^/.]+$/, ''));
+      }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFileName(file.name);
+      if (!title) {
+        setTitle(file.name.replace(/\.[^/.]+$/, ''));
+      }
+    }
+  };
 
   const handleUploadSubmit = (e) => {
     e.preventDefault();
@@ -38,11 +75,12 @@ export const MedicalHistoryView = () => {
       date: new Date().toISOString().split('T')[0],
       doctor,
       facility,
-      summary: summary || 'Patient uploaded digital health record document.'
+      summary: summary || (fileName ? `Attached file: ${fileName}` : 'Patient uploaded digital health record document.')
     });
     setShowUploadModal(false);
     setTitle('');
     setSummary('');
+    setFileName('');
   };
 
   return (
@@ -59,9 +97,14 @@ export const MedicalHistoryView = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={() => setShowUploadModal(true)}>
-          <Plus size={18} />
-          <span>Upload Record</span>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => setShowUploadModal(true)}
+          title="Upload Record"
+          aria-label="Upload Record"
+          style={{ padding: '10px 18px', borderRadius: '30px' }}
+        >
+          <Plus size={22} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -164,10 +207,37 @@ export const MedicalHistoryView = () => {
                 placeholder="Brief summary of test findings or dosage instructions..."
               />
 
-              <div className="file-drop-area">
+              <div 
+                className={`file-drop-area ${isDraggingOver ? 'dragging-over' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  border: isDraggingOver ? '2px dashed #a855f7' : '2px dashed #cbd5e1',
+                  background: isDraggingOver ? 'rgba(168, 85, 247, 0.1)' : '#f8fafc',
+                  transition: 'all 0.2s ease'
+                }}
+              >
                 <Upload size={28} color="#a855f7" />
-                <span>Drag & drop image or PDF file here</span>
+                <strong>{fileName ? `📎 Attached: ${fileName}` : 'Drag & drop image or PDF file here, or click to browse'}</strong>
                 <span className="file-sub">Supports PDF, JPG, PNG up to 15MB</span>
+                <input 
+                  type="file" 
+                  onChange={handleFileChange}
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    cursor: 'pointer'
+                  }}
+                />
               </div>
 
               <div className="modal-footer-btns">

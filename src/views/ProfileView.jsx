@@ -13,6 +13,7 @@ export const ProfileView = () => {
   const [reportName, setReportName] = useState(
     user.prescriptionReport?.name || (user.uploadedReports?.[0]?.name || '')
   );
+  const [isDragOverProfile, setIsDragOverProfile] = useState(false);
 
   const [showAddContactModal, setShowAddContactModal] = useState(false);
 
@@ -153,23 +154,48 @@ export const ProfileView = () => {
             </div>
           </div>
           <div className="p-header-info">
-            <span className="badge badge-emerald">DIGITAL MEDICAL ID</span>
             <h2>{user.name}</h2>
             <p>{user.gender} {user.age ? `• ${user.age} yrs` : ''} • {user.cityVillage || user.location} ({user.pincode || '522601'})</p>
-            <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || '5892 4103 7621'}</strong> • ID: <strong>{user.medicalId}</strong></p>
+            <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || '5892 4103 7621'}</strong></p>
             <p className="med-id-tag text-muted" style={{ fontSize: '0.78rem', marginTop: '2px' }}>
               Aadhaar Address: {user.address || 'Door No 4-12, Main Road, Palnadu District, Narasaraopet'}
             </p>
           </div>
 
           <div className="profile-header-btns">
-            <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(!isEditing)}>
-              <Edit3 size={16} />
-              <span>{isEditing ? 'Cancel Edit' : 'Complete / Update Profile'}</span>
+            <button 
+              className="btn-icon-raw" 
+              onClick={() => setIsEditing(!isEditing)}
+              title={isEditing ? 'Cancel Edit' : 'Complete / Update Profile'}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Edit3 size={22} color="#0284c7" />
             </button>
-            <button className="btn btn-danger-soft btn-sm" onClick={logout} title="Logout Account">
-              <LogOut size={16} />
-              <span>Logout</span>
+            <button 
+              className="btn-icon-raw" 
+              onClick={logout} 
+              title="Logout Account"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <LogOut size={22} color="#dc2626" />
             </button>
           </div>
         </div>
@@ -206,7 +232,7 @@ export const ProfileView = () => {
               </div>
               <div>
                 <label className="form-label">
-                  Age <span style={{ color: '#ef4444' }}>* (Required)</span>
+                  Age <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input 
                   type="number" 
@@ -219,7 +245,7 @@ export const ProfileView = () => {
               </div>
               <div>
                 <label className="form-label">
-                  Blood Group <span style={{ color: '#ef4444' }}>* (Required)</span>
+                  Blood Group <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select className="form-input" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} required>
                   <option value="">-- Select Blood Group --</option>
@@ -238,27 +264,46 @@ export const ProfileView = () => {
             {/* Doctor Prescription Upload Box */}
             <div style={{ marginTop: '16px', marginBottom: '16px' }}>
               <label className="form-label">
-                Present / Previous Doctor Prescription or Medical Report <span style={{ color: '#ef4444' }}>* (Required for 100%)</span>
+                Present / Previous Doctor Prescription or Medical Report <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <div 
                 className="file-upload-dropzone" 
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragOverProfile(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragOverProfile(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragOverProfile(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    setReportName(e.dataTransfer.files[0].name);
+                  }
+                }}
                 style={{ 
                   position: 'relative',
                   overflow: 'hidden',
                   padding: '16px', 
-                  border: '2px dashed #0284c7', 
+                  border: isDragOverProfile ? '2px dashed #0284c7' : '2px dashed #0284c7', 
                   borderRadius: '14px', 
-                  background: 'rgba(2, 132, 199, 0.04)', 
+                  background: isDragOverProfile ? 'rgba(2, 132, 199, 0.14)' : 'rgba(2, 132, 199, 0.04)', 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '14px',
-                  cursor: 'pointer' 
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease'
                 }}
               >
                 <Upload size={24} color="#0284c7" />
                 <div style={{ flex: 1 }}>
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>
-                    {reportName ? `📎 Attached: ${reportName}` : 'Click to Upload Doctor Prescription or Medical Report (PDF/JPG)'}
+                    {reportName ? `📎 Attached: ${reportName}` : 'Click or Drag & Drop Doctor Prescription / Medical Report (PDF/JPG)'}
                   </strong>
                   <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '2px 0 0 0' }}>Supports prescription files up to 10MB</p>
                 </div>
@@ -277,7 +322,7 @@ export const ProfileView = () => {
             <div className="edit-form-action-row">
               <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px' }}>
                 <CheckCircle2 size={18} />
-                <span>Save & Complete Profile (Reach 100%)</span>
+                <span>Save</span>
               </button>
             </div>
           </form>

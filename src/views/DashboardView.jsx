@@ -38,7 +38,7 @@ export const DashboardView = () => {
   return (
     <div className="care-dashboard-container fade-in">
       {/* Welcome Hero Banner */}
-      <div className="hero-banner glass-panel">
+      <div className="hero-banner glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
         <div className="hero-left">
           <div className="greeting-pill">
             <Sparkles size={14} color="#10b981" />
@@ -49,8 +49,30 @@ export const DashboardView = () => {
             <span>{user?.name || 'User'} 👋</span>
           </h2>
           <p className="subtitle">
-            ABHA Health ID: <span className="mono text-sky">{user.healthId}</span> • {user.location}
+            {user.location}
           </p>
+        </div>
+
+        {/* Right Corner Circular Profile Picture */}
+        <div className="hero-right-profile" style={{ flexShrink: 0, marginRight: '36px' }}>
+          <div style={{
+            width: '115px',
+            height: '115px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '4.5px solid #0284c7',
+            boxShadow: '0 10px 28px rgba(2, 132, 199, 0.32)',
+            background: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <img 
+              src={user?.name?.includes('Raghavendra') || user?.role === 'Doctor' ? "/doctor_raghavendra.jpg" : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"} 
+              alt={user?.name || "Profile"} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          </div>
         </div>
       </div>
 
@@ -112,16 +134,18 @@ export const DashboardView = () => {
           <ChevronRight size={20} className="arrow" />
         </div>
 
-        <div className="service-card card-op" onClick={() => navigateTo('op-booking')}>
-          <div className="card-icon icon-sky">
-            <CalendarCheck size={28} />
+        {!(user?.role === 'Doctor' || user?.name?.includes('Raghavendra')) && (
+          <div className="service-card card-op" onClick={() => navigateTo('op-booking')}>
+            <div className="card-icon icon-sky">
+              <CalendarCheck size={28} />
+            </div>
+            <div className="card-info">
+              <h4>Book OP Token Appointment</h4>
+              <p>Skip hospital registration lines with instant digital consultation tokens.</p>
+            </div>
+            <ChevronRight size={20} className="arrow" />
           </div>
-          <div className="card-info">
-            <h4>Book OP Token Appointment</h4>
-            <p>Skip hospital registration lines with instant digital consultation tokens.</p>
-          </div>
-          <ChevronRight size={20} className="arrow" />
-        </div>
+        )}
 
         <div className="service-card card-hospitals" onClick={() => navigateTo('hospitals')}>
           <div className="card-icon icon-purple">
@@ -441,10 +465,11 @@ export const DashboardView = () => {
         }
 
         .token-top-title {
-          font-size: 1.25rem;
-          font-weight: 900;
-          color: #000000;
-          letter-spacing: -0.02em;
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: #0284c7;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
           margin-bottom: 2px;
         }
 

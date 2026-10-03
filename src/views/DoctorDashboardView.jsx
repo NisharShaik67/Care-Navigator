@@ -71,9 +71,9 @@ export const DoctorDashboardView = () => {
   // Doctor Name & Profile Edit State
   const [isEditingDoctor, setIsEditingDoctor] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState({
-    name: user?.name || 'Dr. Anjali Kumar',
+    name: user?.name || 'Dr. Raghavendra',
     title: 'Senior General Physician',
-    specialty: 'General Physician',
+    specialty: user?.specialty || 'General Physician',
     hospital: 'ABC Hospital',
     department: 'Department of General Medicine',
     licenseNo: 'MCI-AP-89412',
@@ -108,10 +108,10 @@ export const DoctorDashboardView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
 
-  // Prescription Form state inside patient modal
   const [rxDiagnosis, setRxDiagnosis] = useState('');
   const [rxMedicines, setRxMedicines] = useState('');
   const [consultCompletedAlert, setConsultCompletedAlert] = useState(null);
+  const [isEmergencyAccepted, setIsEmergencyAccepted] = useState(false);
 
   // Emergency Alert Data
   const [emergencyAlert, setEmergencyAlert] = useState({
@@ -298,7 +298,7 @@ export const DoctorDashboardView = () => {
   const [notificationsList, setNotificationsList] = useState([
     { id: 1, title: 'Critical Alert', text: '1 Emergency patient (Ramesh Gupta) requires immediate attention in Bay 02.', time: '2m ago', urgent: true, important: true },
     { id: 2, title: 'Lab Results Ready', text: 'CBC & Lipid profile for Patient Amit Patel has been uploaded to EHR.', time: '15m ago', urgent: false, important: false },
-    { id: 3, title: 'Shift Handover Sync', text: 'Dr. Anjali Kumar shift logged for ABC Hospital General Medicine OPD.', time: '1h ago', urgent: false, important: false }
+    { id: 3, title: 'Shift Handover Sync', text: 'Dr. Raghavendra shift logged for ABC Hospital General Medicine OPD.', time: '1h ago', urgent: false, important: false }
   ]);
 
   const handleClearAllDoctorNotifs = () => {
@@ -315,10 +315,14 @@ export const DoctorDashboardView = () => {
 
   // Filtered Appointments logic
   const filteredAppointments = appointmentsList.filter(apt => {
-    const matchesSearch = apt.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          apt.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          apt.time.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterType === 'All' ? true : apt.type.toLowerCase().includes(filterType.toLowerCase());
+    const q = (searchQuery || '').toLowerCase().trim();
+    const matchesSearch = !q || 
+                          (apt.patientName || '').toLowerCase().includes(q) ||
+                          (apt.type || '').toLowerCase().includes(q) ||
+                          (apt.time || '').toLowerCase().includes(q) ||
+                          (apt.phone || '').toLowerCase().includes(q) ||
+                          (apt.reason || '').toLowerCase().includes(q);
+    const matchesFilter = filterType === 'All' ? true : (apt.type || '').toLowerCase().includes((filterType || '').toLowerCase());
     return matchesSearch && matchesFilter;
   });
 
@@ -332,8 +336,10 @@ export const DoctorDashboardView = () => {
 
   // Handle Emergency Response
   const handleAcceptEmergency = () => {
-    alert(`Emergency Accepted! Dr. Anjali Kumar assigned to Patient ${emergencyAlert.patientName} at ${emergencyAlert.location}.`);
+    setIsEmergencyAccepted(true);
     setShowEmergencyModal(false);
+    setConsultCompletedAlert(`✓ Emergency Accepted! Dr. Raghavendra assigned to Patient ${emergencyAlert.patientName} at ${emergencyAlert.location}.`);
+    setTimeout(() => setConsultCompletedAlert(null), 5000);
   };
 
   return (
@@ -432,8 +438,8 @@ export const DoctorDashboardView = () => {
                 <div className="profile-section-card fade-in hover-lift">
                   <div className="doctor-photo-wrap">
                     <img
-                      src="/doctor_anjali_kumar.jpg"
-                      alt="Dr. Anjali Kumar"
+                      src="/doctor_raghavendra.jpg"
+                      alt={doctorInfo.name}
                       className="doctor-photo"
                       onError={(e) => {
                         // Fallback avatar if image fails to load
@@ -488,31 +494,62 @@ export const DoctorDashboardView = () => {
                   </div>
                 </div>
 
-                {/* EMERGENCY ALERT CARD */}
+                {/* EMERGENCY ALERT CARD (PENDING OR ACCEPTED) */}
                 {emergencyAlert && (
-                  <div className="emergency-alert-card fade-in stagger-3 hover-lift">
+                  <div 
+                    className="emergency-alert-card fade-in stagger-3 hover-lift"
+                    style={isEmergencyAccepted ? {
+                      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                      borderColor: '#86efac',
+                      boxShadow: '0 8px 24px rgba(22, 163, 74, 0.12)'
+                    } : {}}
+                  >
                     <div className="emergency-alert-header">
                       <div className="alert-badge-group">
-                        <span className="alert-pulse-icon">
-                          <AlertTriangle size={18} color="#dc2626" />
-                        </span>
-                        <span className="alert-title-text">EMERGENCY ALERT</span>
+                        {isEmergencyAccepted ? (
+                          <>
+                            <span className="alert-pulse-icon" style={{ background: '#dcfce7' }}>
+                              <CheckCircle2 size={18} color="#16a34a" />
+                            </span>
+                            <span className="alert-title-text" style={{ color: '#15803d' }}>ACCEPTED EMERGENCY CASE</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="alert-pulse-icon">
+                              <AlertTriangle size={18} color="#dc2626" />
+                            </span>
+                            <span className="alert-title-text">EMERGENCY ALERT</span>
+                          </>
+                        )}
                       </div>
-                      <span className="alert-time">{emergencyAlert.time}</span>
+                      <span className="alert-time" style={{ color: isEmergencyAccepted ? '#15803d' : undefined }}>
+                        {isEmergencyAccepted ? 'ACTIVE NOW' : emergencyAlert.time}
+                      </span>
                     </div>
 
                     <div className="emergency-alert-body">
-                      <h3 className="emergency-text">{emergencyAlert.count} patient requires attention</h3>
-                      <p className="emergency-subtext">
-                        Patient: <strong>{emergencyAlert.patientName}</strong> ({emergencyAlert.gender}, {emergencyAlert.age} yrs) • {emergencyAlert.condition}
+                      <h3 className="emergency-text" style={{ color: isEmergencyAccepted ? '#065f46' : undefined }}>
+                        {isEmergencyAccepted ? `Dr. Raghavendra Assigned • ${emergencyAlert.patientName}` : `${emergencyAlert.count} patient requires attention`}
+                      </h3>
+                      <p className="emergency-subtext" style={{ color: isEmergencyAccepted ? '#166534' : undefined }}>
+                        Patient: <strong>{emergencyAlert.patientName}</strong> ({emergencyAlert.gender}, {emergencyAlert.age} yrs) • {emergencyAlert.condition} • <strong>{emergencyAlert.location}</strong>
                       </p>
                     </div>
 
-                    <div className="emergency-alert-footer">
-                      <button className="view-details-btn" onClick={() => setShowEmergencyModal(true)}>
-                        <span>View Details</span>
+                    <div className="emergency-alert-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <button 
+                        className="view-details-btn" 
+                        onClick={() => setShowEmergencyModal(true)}
+                        style={isEmergencyAccepted ? { background: '#16a34a', color: '#ffffff' } : {}}
+                      >
+                        <span>{isEmergencyAccepted ? 'View Triage Details' : 'View Details'}</span>
                         <ChevronRight size={16} />
                       </button>
+                      {isEmergencyAccepted && (
+                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#15803d', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Check size={16} color="#16a34a" /> Assigned to Dr. Raghavendra
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -745,7 +782,10 @@ export const DoctorDashboardView = () => {
                     <ChevronRight size={18} color="#94a3b8" />
                   </div>
 
-                  <div className="more-item hover-lift fade-in stagger-2" onClick={() => alert('Emergency National Helpline Dialing: 108 / 104')}>
+                  <div className="more-item hover-lift fade-in stagger-2" onClick={() => {
+                    setConsultCompletedAlert('📞 Connecting to National Health Helpline 108 / 104...');
+                    setTimeout(() => setConsultCompletedAlert(null), 4000);
+                  }}>
                     <Phone size={20} color="#16a34a" />
                     <div className="more-text">
                       <h4>National Health Emergency Helpline</h4>
@@ -827,7 +867,7 @@ export const DoctorDashboardView = () => {
 
             <div className="modal-body" style={{ padding: '24px 28px' }}>
               <div className="profile-modal-head">
-                <img src="/doctor_anjali_kumar.jpg" alt={doctorInfo.name} className="modal-doc-photo" />
+                <img src="/doctor_raghavendra.jpg" alt={doctorInfo.name} className="modal-doc-photo" />
                 <div>
                   <div className="doc-name-edit-row">
                     <h3 className="doc-h3">{doctorInfo.name}</h3>
@@ -901,7 +941,7 @@ export const DoctorDashboardView = () => {
                 className="form-txt-input"
                 value={tempDoctorName}
                 onChange={(e) => setTempDoctorName(e.target.value)}
-                placeholder="e.g. Dr. Anjali Kumar"
+                placeholder="e.g. Dr. Raghavendra"
                 required
               />
 
@@ -996,12 +1036,23 @@ export const DoctorDashboardView = () => {
 
             <div className="alert-modal-footer">
               <button className="btn-cancel-alert" onClick={() => setShowEmergencyModal(false)}>
-                Dismiss
+                {isEmergencyAccepted ? 'Close' : 'Dismiss'}
               </button>
-              <button className="btn-accept-emergency" onClick={handleAcceptEmergency}>
-                <Zap size={18} />
-                <span>Accept & Assign Doctor</span>
-              </button>
+              {!isEmergencyAccepted ? (
+                <button className="btn-accept-emergency" onClick={handleAcceptEmergency}>
+                  <Zap size={18} />
+                  <span>Accept & Assign Doctor</span>
+                </button>
+              ) : (
+                <button 
+                  className="btn-accept-emergency" 
+                  style={{ background: '#16a34a', borderColor: '#15803d' }}
+                  onClick={() => setShowEmergencyModal(false)}
+                >
+                  <CheckCircle2 size={18} />
+                  <span>Emergency Accepted & Assigned</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1115,9 +1166,9 @@ export const DoctorDashboardView = () => {
 
             <div className="drawer-body">
               <div className="drawer-doc-box">
-                <img src="/doctor_anjali_kumar.jpg" alt="Doctor" className="drawer-doc-img" />
+                <img src="/doctor_raghavendra.jpg" alt="Doctor" className="drawer-doc-img" />
                 <div>
-                  <h4>Dr. Anjali Kumar</h4>
+                  <h4>{doctorInfo.name}</h4>
                   <p>General Physician • ABC Hospital</p>
                 </div>
               </div>

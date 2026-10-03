@@ -73,9 +73,11 @@ const MainContent = () => {
 
       <style>{`
         .care-navigator-app {
-          min-height: 100vh;
+          height: 100vh;
+          max-height: 100vh;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
           background: #ffffff;
           color: #0f172a;
           font-family: var(--font-main, 'Inter', sans-serif);
@@ -83,8 +85,11 @@ const MainContent = () => {
 
         .care-main-viewport {
           flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
           display: flex;
           flex-direction: column;
+          -webkit-overflow-scrolling: touch;
         }
 
         .fade-in {

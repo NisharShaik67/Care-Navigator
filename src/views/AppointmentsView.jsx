@@ -219,12 +219,13 @@ export const AppointmentsView = () => {
         }
 
         .token-top-title {
-          font-size: 1.35rem;
-          font-weight: 900;
-          color: #000000;
-          letter-spacing: -0.02em;
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: #0284c7;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
           line-height: 1.2;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
 
         .token-info-left .doctor-name {

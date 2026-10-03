@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Building2, Search, Filter, Star, Phone, MapPin, Clock, Bed, HeartPulse, ChevronRight, Stethoscope } from 'lucide-react';
+import { Building2, Search, Filter, Star, Phone, MapPin, Clock, Bed, HeartPulse, ChevronRight, Stethoscope, X } from 'lucide-react';
 
 const SPECIALTY_FILTERS = ['All', 'Emergency', 'Cardiology', 'ICU', 'Pediatrics', 'Orthopedics', 'General'];
 
@@ -10,10 +10,14 @@ export const HospitalsView = () => {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [selectedHospitalModal, setSelectedHospitalModal] = useState(null);
 
-  const filteredHospitals = hospitals.filter(hosp => {
-    const matchesSearch = hosp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hosp.address.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'All' || hosp.specialties.some(s => s.toLowerCase().includes(selectedFilter.toLowerCase()));
+  const filteredHospitals = (hospitals || []).filter(hosp => {
+    const q = (searchTerm || '').toLowerCase().trim();
+    const matchesSearch = !q ||
+                          (hosp.name || '').toLowerCase().includes(q) ||
+                          (hosp.address || '').toLowerCase().includes(q) ||
+                          (hosp.specialties || []).some(s => (s || '').toLowerCase().includes(q));
+    const matchesFilter = selectedFilter === 'All' || 
+                          (hosp.specialties || []).some(s => (s || '').toLowerCase().includes((selectedFilter || '').toLowerCase()));
     return matchesSearch && matchesFilter;
   });
 
@@ -21,7 +25,7 @@ export const HospitalsView = () => {
     <div className="hospitals-view-container fade-in">
       {/* Search & Filter Header */}
       <div className="search-filter-bar glass-panel">
-        <div className="search-input-group">
+        <div className="search-input-group" style={{ position: 'relative' }}>
           <Search size={18} color="#94a3b8" />
           <input
             type="text"
@@ -29,6 +33,15 @@ export const HospitalsView = () => {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')} 
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center' }}
+              title="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         <div className="filter-chips-row">

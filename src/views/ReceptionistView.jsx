@@ -396,23 +396,28 @@ export const ReceptionistView = () => {
   };
 
   // Filtered Queue List
-  const filteredQueueList = queueList.filter(item => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(queueSearch.toLowerCase()) ||
-      item.token.toLowerCase().includes(queueSearch.toLowerCase()) ||
-      item.uhid.toLowerCase().includes(queueSearch.toLowerCase()) ||
-      item.dept.toLowerCase().includes(queueSearch.toLowerCase());
+  const filteredQueueList = (queueList || []).filter(item => {
+    const q = (queueSearch || '').toLowerCase().trim();
+    const matchesSearch = !q ||
+      (item.name || '').toLowerCase().includes(q) ||
+      (item.token || '').toLowerCase().includes(q) ||
+      (item.uhid || '').toLowerCase().includes(q) ||
+      (item.dept || '').toLowerCase().includes(q) ||
+      (item.phone || '').toLowerCase().includes(q);
 
     if (queueFilter === 'ALL') return matchesSearch;
-    return matchesSearch && item.status.toUpperCase() === queueFilter;
+    return matchesSearch && (item.status || '').toUpperCase() === queueFilter;
   });
 
   // Filtered Registrations List
-  const filteredRegistrations = registrationsList.filter(item =>
-    item.name.toLowerCase().includes(regSearch.toLowerCase()) ||
-    item.uhid.toLowerCase().includes(regSearch.toLowerCase()) ||
-    item.dept.toLowerCase().includes(regSearch.toLowerCase())
-  );
+  const filteredRegistrations = (registrationsList || []).filter(item => {
+    const q = (regSearch || '').toLowerCase().trim();
+    return !q ||
+      (item.name || '').toLowerCase().includes(q) ||
+      (item.uhid || '').toLowerCase().includes(q) ||
+      (item.dept || '').toLowerCase().includes(q) ||
+      (item.phone || '').toLowerCase().includes(q);
+  });
 
   const displayHospitalName = user?.hospitalName || 'Government General Hospital (GGH), Guntur';
   const displayEmail = user?.receptionistGmail || user?.email || 'sneha.reddy@carenavigator.com';
@@ -1385,14 +1390,37 @@ export const ReceptionistView = () => {
                   placeholder="Enter Patient Name, Token (e.g. OP-01) or UHID..."
                   value={checkSearchTerm}
                   onChange={(e) => setCheckSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const term = (checkSearchTerm || '').toLowerCase().trim();
+                      if (!term) {
+                        setSearchResult(null);
+                        return;
+                      }
+                      const match = (queueList || []).find(q =>
+                        (q.name || '').toLowerCase().includes(term) ||
+                        (q.token || '').toLowerCase().includes(term) ||
+                        (q.uhid || '').toLowerCase().includes(term) ||
+                        (q.phone || '').toLowerCase().includes(term)
+                      );
+                      setSearchResult(match || 'NOT_FOUND');
+                    }
+                  }}
                 />
                 <button
                   className="btn-search-exec"
                   onClick={() => {
-                    const match = queueList.find(q =>
-                      q.name.toLowerCase().includes(checkSearchTerm.toLowerCase()) ||
-                      q.token.toLowerCase().includes(checkSearchTerm.toLowerCase()) ||
-                      q.uhid.toLowerCase().includes(checkSearchTerm.toLowerCase())
+                    const term = (checkSearchTerm || '').toLowerCase().trim();
+                    if (!term) {
+                      setSearchResult(null);
+                      return;
+                    }
+                    const match = (queueList || []).find(q =>
+                      (q.name || '').toLowerCase().includes(term) ||
+                      (q.token || '').toLowerCase().includes(term) ||
+                      (q.uhid || '').toLowerCase().includes(term) ||
+                      (q.phone || '').toLowerCase().includes(term)
                     );
                     setSearchResult(match || 'NOT_FOUND');
                   }}

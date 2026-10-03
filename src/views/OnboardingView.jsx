@@ -12,7 +12,7 @@ export const OnboardingView = () => {
   // Role Specific Credentials State
   const [uniqueId, setUniqueId] = useState('');
   const [aadharNumber, setAadharNumber] = useState('');
-  const [doctorId, setDoctorId] = useState('DOC-9082-AP');
+  const [doctorId, setDoctorId] = useState('DOCTOR-001');
   const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
   const [responderPhone, setResponderPhone] = useState('+91 98765 10800');
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -187,8 +187,10 @@ export const OnboardingView = () => {
       if (selectedRole === 'Doctor' || selectedRole === 'Responder') {
         switchRole(selectedRole);
         updateUserProfile({ 
+          name: selectedRole === 'Doctor' ? 'Dr. Raghavendra' : undefined,
+          specialty: selectedRole === 'Doctor' ? 'General Physician' : undefined,
           phone: selectedRole === 'Responder' ? uniqueId : phoneNumber, 
-          doctorId: uniqueId,
+          doctorId: uniqueId || 'DOCTOR-001',
           responderPhone: uniqueId,
           aadharNumber: uniqueId || aadharNumber 
         });
@@ -279,6 +281,35 @@ export const OnboardingView = () => {
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
+              {selectedRole === 'Doctor' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                  border: '1.5px solid #7dd3fc',
+                  borderRadius: '16px',
+                  marginBottom: '16px',
+                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.1)'
+                }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '3px solid #0284c7',
+                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)',
+                    flexShrink: 0
+                  }}>
+                    <img src="/doctor_raghavendra.jpg" alt="Dr. Raghavendra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369a1' }}>Dr. Raghavendra</h4>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>General Physician • Universal ID: <strong style={{ color: '#0284c7' }}>DOCTOR-001</strong></p>
+                  </div>
+                </div>
+              )}
               <label className="form-label">12-Digit Aadhaar Number / Universal ID</label>
               <div className={`input-group${inputError ? ' input-error' : ''}`}>
                 <CreditCard size={18} color={inputError ? '#dc2626' : '#0284c7'} />

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Star, AlertTriangle, CheckCircle2, Info, Bell, Sparkles, X, ChevronsUpDown } from 'lucide-react';
 
 export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportant }) => {
@@ -47,6 +47,42 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
       setOffsetX(0);
     }
   };
+
+  // Global Mouse Listener for Drag
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleWindowMouseMove = (e) => {
+      currentXRef.current = e.clientX;
+      const diff = currentXRef.current - startXRef.current;
+      const clampedDiff = Math.max(-130, Math.min(130, diff));
+      setOffsetX(clampedDiff);
+    };
+
+    const handleWindowMouseUp = () => {
+      setIsDragging(false);
+      const diff = currentXRef.current - startXRef.current;
+
+      if (diff > SWIPE_THRESHOLD) {
+        setIsRemoving(true);
+        setTimeout(() => {
+          onDelete(notification.id);
+        }, 250);
+      } else if (diff < -SWIPE_THRESHOLD) {
+        onToggleImportant(notification.id);
+        setOffsetX(0);
+      } else {
+        setOffsetX(0);
+      }
+    };
+
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    window.addEventListener('mouseup', handleWindowMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+    };
+  }, [isDragging, notification.id, onDelete, onToggleImportant]);
 
   // Mouse Handlers (For Desktop responsive testing)
   const handleMouseDown = (e) => {

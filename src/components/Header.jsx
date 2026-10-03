@@ -331,6 +331,7 @@ export const Header = () => {
       <style>{`
         .app-header {
           height: 72px;
+          flex-shrink: 0;
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(16px);
           border-bottom: 1px solid #e2e8f0;
