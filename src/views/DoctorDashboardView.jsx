@@ -354,9 +354,16 @@ export const DoctorDashboardView = () => {
               <button className="nav-icon-btn" onClick={() => setShowMenuDrawer(true)} title="Open Menu">
                 <Menu size={22} color="#ffffff" />
               </button>
-              <div className="app-brand">
-                <h1 className="app-name">Care Navigator</h1>
-                <span className="gov-tag">HEALTH EMERGENCY SYSTEM</span>
+              <div className="app-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/Logo.jpeg" 
+                  alt="Care Navigator Logo" 
+                  style={{ width: '34px', height: '34px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} 
+                />
+                <div>
+                  <h1 className="app-name">Care Navigator</h1>
+                  <span className="gov-tag">HEALTH EMERGENCY SYSTEM</span>
+                </div>
               </div>
             </div>
 

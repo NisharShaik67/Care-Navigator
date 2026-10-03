@@ -617,11 +617,18 @@ export const Header = () => {
 
           .header-title {
             font-size: 0.88rem;
-            max-width: 140px;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .header-subtitle {
-            display: none;
+            font-size: 0.68rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
           }
 
           .role-btn span {

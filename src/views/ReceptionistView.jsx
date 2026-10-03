@@ -442,8 +442,8 @@ export const ReceptionistView = () => {
             <Menu size={20} color="#ffffff" />
           </button>
           <div className="navy-brand-group">
-            <div className="navy-logo-icon">
-              <Building2 size={22} color="#0284c7" />
+            <div className="navy-logo-icon" style={{ overflow: 'hidden', padding: 0, borderRadius: '10px' }}>
+              <img src="/Logo.jpeg" alt="Care Navigator Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div>
               <h1 className="navy-app-title">Care Navigator</h1>
