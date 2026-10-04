@@ -146,6 +146,15 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
+        {/* Fullscreen Toggle Button */}
+        <button
+          className="btn-icon"
+          onClick={toggleFullScreen}
+          title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}
+        >
+          {isFullscreen ? <Minimize2 size={19} color="#0f172a" /> : <Maximize2 size={19} color="#0f172a" />}
+        </button>
+
         {/* Notification Bell Dropdown */}
         <div style={{ position: 'relative', zIndex: 250 }}>
           <button
@@ -330,18 +339,22 @@ export const Header = () => {
 
       <style>{`
         .app-header {
-          height: 72px;
+          min-height: 72px;
           flex-shrink: 0;
-          background: rgba(255, 255, 255, 0.95);
+          background: #ffffff;
           backdrop-filter: blur(16px);
           border-bottom: 1px solid #e2e8f0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 24px;
+          padding-top: max(8px, env(safe-area-inset-top, 0px));
+          padding-bottom: 8px;
+          padding-left: max(24px, env(safe-area-inset-left, 0px));
+          padding-right: max(24px, env(safe-area-inset-right, 0px));
           position: sticky;
           top: 0;
           z-index: 100;
+          width: 100%;
         }
 
         .header-left {

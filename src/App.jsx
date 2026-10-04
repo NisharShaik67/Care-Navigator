@@ -73,8 +73,11 @@ const MainContent = () => {
 
       <style>{`
         .care-navigator-app {
+          width: 100%;
           height: 100vh;
-          max-height: 100vh;
+          height: 100dvh;
+          min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
           overflow: hidden;

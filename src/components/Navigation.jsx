@@ -40,18 +40,22 @@ export const Navigation = () => {
 
       <style>{`
         .app-navigation {
-          height: 68px;
+          min-height: 68px;
           flex-shrink: 0;
-          background: rgba(255, 255, 255, 0.95);
+          background: #ffffff;
           backdrop-filter: blur(16px);
           border-top: 1px solid #e2e8f0;
           display: flex;
           align-items: center;
           justify-content: space-around;
-          padding: 0 12px;
+          padding-top: 6px;
+          padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+          padding-left: max(12px, env(safe-area-inset-left, 0px));
+          padding-right: max(12px, env(safe-area-inset-right, 0px));
           position: sticky;
           bottom: 0;
           z-index: 90;
+          width: 100%;
         }
 
         .nav-tab {

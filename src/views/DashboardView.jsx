@@ -42,7 +42,7 @@ export const DashboardView = () => {
         <div className="hero-left" style={{ flex: 1, minWidth: 0 }}>
           <div className="greeting-pill">
             <Sparkles size={14} color="#10b981" />
-            <span>AI Care Navigator Active • 24/7 Response</span>
+            <span>Care Navigator Active 24/7</span>
           </div>
           <h2>
             <span>{getGreeting()},</span><br />
