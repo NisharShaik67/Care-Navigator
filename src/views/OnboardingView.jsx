@@ -116,10 +116,14 @@ export const OnboardingView = () => {
       setSelectedRole('Receptionist');
       setReceptionistGmail(clean);
     } else if (digitsOnly.length === 10) {
-      setSelectedRole('Responder');
-      setResponderPhone(clean);
+      setPhoneNumber(`+91 ${digitsOnly}`);
+      if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
+        setSelectedRole('User');
+      }
     } else if (digitsOnly.length === 12) {
-      setSelectedRole('User');
+      if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
+        setSelectedRole('User');
+      }
       setAadharNumber(clean);
       handleAadhaarNumberChange(clean);
     }
@@ -143,16 +147,21 @@ export const OnboardingView = () => {
 
         if (digitsOnly.length !== 10 && digitsOnly.length !== 12) {
           setInputError(true);
+          setErrorMsg('❌ Input must be a 10-digit Mobile Phone Number or 12-digit Aadhaar Card Number.');
           return;
         }
 
         if (digitsOnly.length === 10) {
-          setSelectedRole('Responder');
-          setResponderPhone(digitsOnly);
+          setPhoneNumber(`+91 ${digitsOnly}`);
+          if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
+            setSelectedRole('User');
+          }
         } else if (digitsOnly.length === 12) {
-          setSelectedRole('User');
           setAadharNumber(digitsOnly);
           handleAadhaarNumberChange(digitsOnly);
+          if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
+            setSelectedRole('User');
+          }
         }
       } else if (isDoc) {
         setSelectedRole('Doctor');
@@ -242,18 +251,32 @@ export const OnboardingView = () => {
     }
   };
 
+  const digitsOnlyId = (uniqueId || '').replace(/\D/g, '');
+  const is10DigitMobile = digitsOnlyId.length === 10 || (!aadharNumber && phoneNumber && uniqueId.replace(/\D/g, '').length === 10);
+  const displayPhone = is10DigitMobile && digitsOnlyId.length === 10
+    ? `+91 ${digitsOnlyId}`
+    : (phoneNumber || '+91 9876543210');
+
   return (
     <div className="onboarding-container fade-in">
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
-          {authMode === 'login' ? 'Care Navigator Aadhaar Login' : authMode === 'pin' ? 'Receptionist PIN Verification' : 'Aadhaar Phone OTP Verification'}
+          {authMode === 'login' 
+            ? 'Care Navigator Portal Login' 
+            : authMode === 'pin' 
+              ? 'Receptionist PIN Verification' 
+              : is10DigitMobile 
+                ? 'Mobile Phone OTP Verification' 
+                : 'Aadhaar Phone OTP Verification'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
-            ? 'Enter your 12-digit Aadhaar Card Number to send verification OTP to registered mobile phone.'
+            ? 'Enter your 10-digit Mobile Phone Number or 12-digit Aadhaar Card Number to receive verification OTP.'
             : authMode === 'pin'
               ? `Enter your 4-digit security PIN for ${receptionistGmail}`
-              : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${phoneNumber || '+91 98765 43210'})`}
+              : is10DigitMobile
+                ? `Enter 4-digit verification code sent via SMS to your Mobile Phone (${displayPhone})`
+                : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${displayPhone})`}
         </p>
 
         {errorMsg && (
@@ -310,7 +333,7 @@ export const OnboardingView = () => {
                   </div>
                 </div>
               )}
-              <label className="form-label">12-Digit Aadhaar Number / Universal ID</label>
+              <label className="form-label">10-Digit Mobile Number / 12-Digit Aadhaar Number</label>
               <div className={`input-group${inputError ? ' input-error' : ''}`}>
                 <CreditCard size={18} color={inputError ? '#dc2626' : '#0284c7'} />
                 <input
@@ -318,12 +341,12 @@ export const OnboardingView = () => {
                   inputMode="numeric"
                   value={uniqueId}
                   onChange={e => handleUniqueIdChange(e.target.value)}
-                  placeholder="Enter 12-Digit Aadhaar or 10-Digit Phone"
+                  placeholder="Enter 10-Digit Mobile or 12-Digit Aadhaar"
                   required
                 />
               </div>
               <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
-                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your linked Phone Number. Accepts 10-Digit Mobile or 12-Digit Aadhaar.
+                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your Mobile Phone. Accepts 10-Digit Mobile or 12-Digit Aadhaar.
               </span>
             </>
           )}
