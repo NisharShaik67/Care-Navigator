@@ -10,18 +10,15 @@ import {
   Sparkles,
   CreditCard,
   XCircle,
-  MapPin,
   Phone,
   Search,
-  CheckCircle2,
-  SlidersHorizontal,
   Zap
 } from 'lucide-react';
 
 export const OPBookingView = () => {
   const { hospitals, user, bookOPToken, updateDoctorAvatar } = useApp();
 
-  const [selectedHospital, setSelectedHospital] = useState(hospitals[0]);
+  const [selectedHospital, setSelectedHospital] = useState(hospitals?.[0] || null);
   const [docSearchQuery, setDocSearchQuery] = useState('');
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
 

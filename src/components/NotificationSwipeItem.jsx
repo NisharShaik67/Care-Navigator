@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Star, AlertTriangle, CheckCircle2, Info, Bell, Sparkles, X, ChevronsUpDown } from 'lucide-react';
+import { Trash2, Star, AlertTriangle, X, ChevronsUpDown } from 'lucide-react';
 
 export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportant }) => {
   const [offsetX, setOffsetX] = useState(0);
@@ -118,8 +118,6 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
       setOffsetX(0);
     }
   };
-
-  const isImportant = notification.important || notification.urgent;
 
   return (
     <div 

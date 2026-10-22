@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Building2, Search, Filter, Star, Phone, MapPin, Clock, Bed, HeartPulse, ChevronRight, Stethoscope, X } from 'lucide-react';
+import { Search, Filter, Star, Phone, MapPin, Clock, Bed, HeartPulse, Stethoscope, X } from 'lucide-react';
 
 const SPECIALTY_FILTERS = ['All', 'Emergency', 'Cardiology', 'ICU', 'Pediatrics', 'Orthopedics', 'General'];
 
@@ -8,7 +8,6 @@ export const HospitalsView = () => {
   const { hospitals, navigateTo } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [selectedHospitalModal, setSelectedHospitalModal] = useState(null);
 
   const filteredHospitals = (hospitals || []).filter(hosp => {
     const q = (searchTerm || '').toLowerCase().trim();

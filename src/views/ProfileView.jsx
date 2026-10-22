@@ -1,35 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut, Upload, AlertCircle } from 'lucide-react';
+import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut, Upload, Camera, Trash2, X, Sparkles, Image as ImageIcon } from 'lucide-react';
 
 export const ProfileView = () => {
   const { user, updateUserProfile, logout } = useApp();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone);
-  const [age, setAge] = useState(user.age || '');
-  const [bloodGroup, setBloodGroup] = useState(user.bloodGroup || '');
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [age, setAge] = useState(user?.age || '');
+  const [bloodGroup, setBloodGroup] = useState(user?.bloodGroup || '');
   const [reportName, setReportName] = useState(
-    user.prescriptionReport?.name || (user.uploadedReports?.[0]?.name || '')
+    user?.prescriptionReport?.name || (user?.uploadedReports?.[0]?.name || '')
   );
   const [isDragOverProfile, setIsDragOverProfile] = useState(false);
 
-  const [showAddContactModal, setShowAddContactModal] = useState(false);
-
-  // Close modal on ESC key press
+  // Sync inputs whenever active user profile changes
   useEffect(() => {
-    if (!showAddContactModal) return;
+    if (!user) return;
+    setName(user.name || '');
+    setPhone(user.phone || '');
+    setAge(user.age || '');
+    setBloodGroup(user.bloodGroup || '');
+    setReportName(user.prescriptionReport?.name || (user.uploadedReports?.[0]?.name || ''));
+  }, [user]);
+
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const photoFileInputRef = React.useRef(null);
+
+  const PRESET_AVATARS = [
+    { id: 'av-1', label: 'Male Portrait 1', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=240' },
+    { id: 'av-2', label: 'Female Portrait 1', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=240' },
+    { id: 'av-3', label: 'Male Portrait 2', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=240' },
+    { id: 'av-4', label: 'Female Portrait 2', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=240' },
+    { id: 'av-5', label: 'Senior Citizen', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=240' },
+    { id: 'av-6', label: 'Professional Profile', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=240' }
+  ];
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const dataUrl = uploadEvent.target.result;
+      updateUserProfile({ photo: dataUrl });
+      setShowPhotoModal(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    updateUserProfile({ photo: null });
+    setShowPhotoModal(false);
+  };
+
+  const handleSelectPresetAvatar = (url) => {
+    updateUserProfile({ photo: url });
+    setShowPhotoModal(false);
+  };
+
+  // Close modals on ESC key press
+  useEffect(() => {
+    if (!showAddContactModal && !showPhotoModal) return;
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
         e.preventDefault();
         setShowAddContactModal(false);
+        setShowPhotoModal(false);
       }
     };
     window.addEventListener('keydown', handleEsc, true);
     return () => window.removeEventListener('keydown', handleEsc, true);
-  }, [showAddContactModal]);
+  }, [showAddContactModal, showPhotoModal]);
   const [cName, setCName] = useState('');
   const [cRel, setCRel] = useState('Family');
   const [cPhone, setCPhone] = useState('');
@@ -58,7 +106,7 @@ export const ProfileView = () => {
     if (!cName || !cPhone) return;
     const newContact = { id: Date.now(), name: cName, relation: cRel, phone: cPhone };
     updateUserProfile({
-      emergencyContacts: [...user.emergencyContacts, newContact]
+      emergencyContacts: [...(user?.emergencyContacts || []), newContact]
     });
     setShowAddContactModal(false);
     setCName('');
@@ -103,9 +151,11 @@ export const ProfileView = () => {
               />
             </svg>
 
-            {/* DP Avatar Circle */}
+            {/* DP Avatar Circle with Photo / Initials & Edit Option */}
             <div 
               className={`avatar-large ${isComplete ? 'complete-glow' : ''}`}
+              onClick={() => setShowPhotoModal(true)}
+              title="Click to edit, upload or change profile photo"
               style={{
                 width: '78px',
                 height: '78px',
@@ -120,11 +170,41 @@ export const ProfileView = () => {
                 position: 'relative',
                 zIndex: 2,
                 boxShadow: isComplete ? '0 0 20px rgba(16, 185, 129, 0.7), 0 0 40px rgba(16, 185, 129, 0.35)' : 'none',
-                border: isComplete ? '3px solid #10b981' : '3px solid #ffffff'
+                border: isComplete ? '3px solid #10b981' : '3px solid #ffffff',
+                overflow: 'hidden',
+                cursor: 'pointer'
               }}
             >
-              {(user?.name || 'User').split(' ').map(n => n[0]).join('')}
+              {user?.photo ? (
+                <img 
+                  src={user.photo} 
+                  alt={user?.name || 'User'} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : (
+                (user?.name || 'User').split(' ').map(n => n[0]).join('')
+              )}
+
+              {/* Hover overlay for quick photo edit */}
+              <div className="avatar-hover-overlay">
+                <Camera size={18} color="#ffffff" />
+                <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#ffffff', marginTop: '2px' }}>Edit</span>
+              </div>
             </div>
+
+            {/* Camera Edit Photo Badge Button */}
+            <button
+              type="button"
+              className="avatar-photo-edit-badge"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPhotoModal(true);
+              }}
+              title="Edit Profile Photo"
+              aria-label="Edit Profile Photo"
+            >
+              <Camera size={13} color="#ffffff" />
+            </button>
 
             {/* Percentage & Edit Pencil Badge */}
             <div 
@@ -155,10 +235,10 @@ export const ProfileView = () => {
           </div>
           <div className="p-header-info">
             <h2>{user.name}</h2>
-            <p>{user.gender} {user.age ? `• ${user.age} yrs` : ''} • {user.cityVillage || user.location} ({user.pincode || '522601'})</p>
-            <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || '5892 4103 7621'}</strong></p>
+            <p>{user.gender} {user.age ? `• ${user.age} yrs` : ''} • {user.cityVillage || user.location || 'AP'} ({user.pincode || '522601'})</p>
+            <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || (user.phone ? `Linked to Mobile (${user.phone})` : 'Registered via Mobile OTP')}</strong></p>
             <p className="med-id-tag text-muted" style={{ fontSize: '0.78rem', marginTop: '2px' }}>
-              Aadhaar Address: {user.address || 'Door No 4-12, Main Road, Palnadu District, Narasaraopet'}
+              Address: {user.address || (user.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}
             </p>
           </div>
 
@@ -211,17 +291,42 @@ export const ProfileView = () => {
             {/* Readonly Aadhaar Details Box */}
             <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
               <span className="badge badge-emerald" style={{ marginBottom: '8px', fontSize: '0.72rem' }}>
-                <ShieldCheck size={12} /> Auto-Filled From UIDAI Aadhaar
+                <ShieldCheck size={12} /> {user.aadharNumber ? 'Auto-Filled From UIDAI Aadhaar' : 'Verified Digital Health Identity'}
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.84rem', marginTop: '6px' }}>
                 <div><strong>Full Name:</strong> {user.name}</div>
-                <div><strong>Aadhaar Card No:</strong> {user.aadharNumber}</div>
+                <div><strong>Aadhaar Card No:</strong> {user.aadharNumber || (user.phone ? `Linked to Mobile (${user.phone})` : 'Not Linked')}</div>
                 <div><strong>Gender:</strong> {user.gender}</div>
-                <div><strong>Aadhaar Address:</strong> {user.address}</div>
+                <div><strong>Aadhaar Address:</strong> {user.address || (user.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}</div>
               </div>
             </div>
 
             <div className="form-grid">
+              {/* Profile Photo Edit Option Row */}
+              <div style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, border: '2px solid #0284c7', flexShrink: 0 }}>
+                    {user?.photo ? (
+                      <img src={user.photo} alt={user?.name || 'User'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      (user?.name || 'User').split(' ').map(n => n[0]).join('')
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>Profile Photo / Image</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{user?.photo ? 'Custom picture uploaded' : 'Default initials avatar'}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoModal(true)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', padding: '7px 14px' }}
+                >
+                  <Camera size={14} />
+                  <span>Edit Photo</span>
+                </button>
+              </div>
               <div>
                 <label className="form-label">User Full Name</label>
                 <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required />
@@ -419,7 +524,7 @@ export const ProfileView = () => {
         </div>
 
         <div className="contacts-list-grid">
-          {user.emergencyContacts.map(c => (
+          {(user?.emergencyContacts || []).map(c => (
             <div key={c.id} className="contact-card glass-card">
               <div>
                 <h4>{c.name}</h4>
@@ -482,6 +587,130 @@ export const ProfileView = () => {
         </div>
       )}
 
+      {/* Hidden File Input for Custom Photo Upload */}
+      <input
+        type="file"
+        ref={photoFileInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handlePhotoUpload}
+      />
+
+      {/* Edit Profile Photo Modal */}
+      {showPhotoModal && (
+        <div className="modal-overlay fade-in" onClick={() => setShowPhotoModal(false)}>
+          <div className="modal-content glass-panel fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px', width: '92%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Camera size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Update Profile Photo</h3>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>Upload custom photo or pick an avatar</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowPhotoModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#64748b', borderRadius: '8px' }}
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Current Photo Preview */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '18px' }}>
+              <div style={{
+                width: '92px',
+                height: '92px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                color: '#ffffff',
+                fontSize: '2rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '3px solid #10b981',
+                boxShadow: '0 8px 24px rgba(2, 132, 199, 0.25)',
+                overflow: 'hidden',
+                marginBottom: '10px'
+              }}>
+                {user?.photo ? (
+                  <img src={user.photo} alt={user?.name || 'User'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (user?.name || 'User').split(' ').map(n => n[0]).join('')
+                )}
+              </div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{user?.name}</div>
+              <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+                {user?.photo ? 'Active Custom Profile Picture' : 'Default Initials Profile Avatar'}
+              </div>
+            </div>
+
+            {/* Upload from Device Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              <button
+                type="button"
+                onClick={() => photoFileInputRef.current?.click()}
+                className="btn btn-primary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}
+              >
+                <Upload size={17} />
+                <span>Upload Photo from Device / Camera</span>
+              </button>
+
+              {user?.photo && (
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="btn btn-outline"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }}
+                >
+                  <Trash2 size={16} color="#dc2626" />
+                  <span>Remove Custom Photo & Use Initials</span>
+                </button>
+              )}
+            </div>
+
+            {/* Suggested Sample Avatars */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '10px' }}>
+                <Sparkles size={14} color="#0284c7" />
+                <span>Or Select from Quick Avatars</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+                {PRESET_AVATARS.map(preset => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPresetAvatar(preset.url)}
+                    style={{
+                      border: user?.photo === preset.url ? '3px solid #0284c7' : '2px solid transparent',
+                      padding: '2px',
+                      borderRadius: '50%',
+                      background: 'none',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: user?.photo === preset.url ? '0 0 10px rgba(2, 132, 199, 0.5)' : 'none'
+                    }}
+                    title="Click to select this avatar"
+                  >
+                    <img 
+                      src={preset.url} 
+                      alt="Preset Avatar" 
+                      style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', display: 'block' }} 
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .profile-view-container {
           flex: 1;
@@ -517,6 +746,77 @@ export const ProfileView = () => {
           align-items: center;
           justify-content: center;
           border: 3px solid rgba(255, 255, 255, 0.2);
+          position: relative;
+          cursor: pointer;
+        }
+
+        .avatar-photo-edit-badge {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          z-index: 4;
+          background: #0284c7;
+          color: #ffffff;
+          border: 2px solid #ffffff;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45);
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+        }
+
+        .avatar-photo-edit-badge:hover {
+          transform: scale(1.15);
+          background: #0369a1;
+        }
+
+        .avatar-hover-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.55);
+          backdrop-filter: blur(2px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          border-radius: 50%;
+          z-index: 5;
+        }
+
+        .avatar-large:hover .avatar-hover-overlay {
+          opacity: 1;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.5);
+          backdrop-filter: blur(5px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: #ffffff;
+          border-radius: 20px;
+          width: 100%;
+          max-width: 480px;
+          padding: 24px;
+          box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          position: relative;
         }
 
         .p-header-info {

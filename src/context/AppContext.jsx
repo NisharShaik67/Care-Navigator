@@ -1,4 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  saveUserToFirestore, 
+  getUserFromFirestore, 
+  subscribeUserFromFirestore, 
+  syncAccountToFirestore, 
+  subscribeAccountsFromFirestore, 
+  saveAppointmentToFirestore, 
+  updateAppointmentInFirestore, 
+  subscribeAppointmentsFromFirestore, 
+  saveMedicalRecordToFirestore 
+} from '../firebase/firestoreService';
+import { isFirebaseConfigured, firebaseConfig } from '../firebase/config';
 
 const AppContext = createContext();
 
@@ -10,7 +22,8 @@ export const AADHAAR_DATABASE = {
     bloodGroup: 'O+',
     address: 'Door No 4-12, Main Road, Palnadu District, Narasaraopet',
     city: 'Narasaraopet',
-    pincode: '522601'
+    pincode: '522601',
+    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'
   },
   '123456789012': {
     name: 'Priya Sharma',
@@ -19,7 +32,8 @@ export const AADHAAR_DATABASE = {
     bloodGroup: 'B+',
     address: 'House No 18, Collectorate Colony, Guntur',
     city: 'Guntur',
-    pincode: '522004'
+    pincode: '522004',
+    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
   }
 };
 
@@ -37,6 +51,7 @@ const DEFAULT_USER = {
   age: '',
   gender: 'MALE', // Auto-filled from Aadhaar Base
   bloodGroup: '',
+  photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300',
   role: 'Patient', // 'Patient' | 'Doctor' | 'Receptionist' | 'Responder'
   location: 'Narasaraopet, Palnadu Dist, AP',
   cityVillage: 'Narasaraopet',
@@ -125,11 +140,422 @@ const DEFAULT_RECORDS = [
   }
 ];
 
+export const SEED_ACCOUNTS = {
+  'acc_alex': {
+    ...DEFAULT_USER,
+    accountId: 'acc_alex',
+    role: 'Patient',
+    aliases: ['aadhaar:589241037621', '589241037621']
+  },
+  'acc_priya': {
+    ...DEFAULT_USER,
+    accountId: 'acc_priya',
+    name: 'Priya Sharma',
+    age: '32',
+    gender: 'FEMALE',
+    bloodGroup: 'B+',
+    address: 'House No 18, Collectorate Colony, Guntur',
+    cityVillage: 'Guntur',
+    pincode: '522004',
+    location: 'Guntur, Palnadu Dist, AP',
+    aadhaar: '1234 5678 9012',
+    aadharNumber: '1234 5678 9012',
+    phone: '+91 9876543211',
+    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+    role: 'Patient',
+    prescriptionReport: { name: 'Priya_Cardio_Prescription.pdf', date: '2026-08-15' },
+    uploadedReports: [
+      { id: 1, name: 'Priya_Cardio_Prescription.pdf', date: '2026-08-15', size: '1.2 MB' }
+    ],
+    emergencyContact: '+91 98765 43212',
+    allergies: ['Dust'],
+    healthId: 'ABHA-1234-5678-9012',
+    medicalId: 'MED-1234-5678',
+    emergencyContacts: [
+      { id: 1, name: 'Amit Sharma', relation: 'Spouse', phone: '+91 98765 43212' }
+    ],
+    precautions: ['Routine blood pressure checkup bi-weekly.'],
+    medicineAlerts: [
+      { id: 1, name: 'Iron & Folic Acid', timing: '08:00 AM (Morning)', dose: '1 Tablet after breakfast' }
+    ],
+    aliases: ['aadhaar:123456789012', '123456789012']
+  },
+  'acc_doctor_001': {
+    accountId: 'acc_doctor_001',
+    name: 'Dr. Raghavendra',
+    title: 'Senior General Physician',
+    specialty: 'General Physician',
+    doctorId: 'DOCTOR-001',
+    hospital: 'ABC Hospital',
+    department: 'Department of General Medicine',
+    licenseNo: 'MCI-AP-89412',
+    opdRoom: 'Room No. 104, OPD Block A',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '12 Years',
+    qualifications: 'MBBS, MD (Internal Medicine)',
+    totalConsultationsToday: 7,
+    phone: '+91 98765 00001',
+    photo: '/doctor_raghavendra.jpg',
+    role: 'Doctor',
+    aliases: ['doctor:DOCTOR-001', 'DOCTOR-001', 'doctor:DOC-001', 'DOC-001']
+  },
+  'acc_receptionist': {
+    accountId: 'acc_receptionist',
+    name: 'GGH Reception Desk',
+    role: 'Receptionist',
+    receptionistGmail: 'reception.narasaraopet@gmail.com',
+    email: 'reception.narasaraopet@gmail.com',
+    phone: '+91 98765 10800',
+    hospital: 'Government General Hospital, Guntur',
+    aliases: ['email:reception.narasaraopet@gmail.com', 'reception.narasaraopet@gmail.com', 'email:reception@hospital.com', 'reception@hospital.com']
+  },
+  'acc_responder': {
+    accountId: 'acc_responder',
+    name: 'Ravi Kumar',
+    role: 'Responder',
+    driverRole: 'Ambulance Driver / Responder',
+    phone: '+91 98765 10800',
+    vehicleNo: 'AP 07 TE 1084',
+    vehicleType: 'ALS Advanced Cardiac ICU Fleet #04',
+    baseStation: 'Government General Hospital (GGH) Guntur Fleet Hub',
+    location: 'Hospital Express Highway • Sector 4',
+    isOnline: true,
+    aliases: ['responder:9876510800', '9876510800', 'phone:9876510800', '108', 'responder', 'ravi', 'ravikumar']
+  }
+};
+
+export const extract10DigitPhone = (rawPhone) => {
+  if (!rawPhone) return '';
+  const digits = String(rawPhone).replace(/\D/g, '');
+  if (digits.length === 10) return digits;
+  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+  if (digits.length >= 12 && digits.startsWith('91')) return digits.slice(-10);
+  if (digits.length > 10) return digits.slice(-10);
+  return '';
+};
+
+export const extract12DigitAadhaar = (rawAadhaar) => {
+  if (!rawAadhaar) return '';
+  const digits = String(rawAadhaar).replace(/\D/g, '');
+  if (digits.length === 12) return digits;
+  return '';
+};
+
+export const getAccountDb = () => {
+  try {
+    const raw = localStorage.getItem('cn_accounts_db');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        let updated = false;
+        Object.values(SEED_ACCOUNTS).forEach(acc => {
+          if (!parsed[acc.accountId]) {
+            parsed[acc.accountId] = acc;
+            updated = true;
+          }
+          if (Array.isArray(acc.aliases)) {
+            acc.aliases.forEach(alias => {
+              if (!parsed[alias]) {
+                parsed[alias] = acc;
+                updated = true;
+              }
+            });
+          }
+        });
+        if (updated) {
+          saveAccountDb(parsed);
+        }
+        return parsed;
+      }
+    }
+  } catch {}
+
+  const initialDb = {};
+  Object.values(SEED_ACCOUNTS).forEach(acc => {
+    initialDb[acc.accountId] = acc;
+    if (Array.isArray(acc.aliases)) {
+      acc.aliases.forEach(alias => {
+        initialDb[alias] = acc;
+      });
+    }
+  });
+
+  try {
+    localStorage.setItem('cn_accounts_db', JSON.stringify(initialDb));
+  } catch {}
+
+  return initialDb;
+};
+
+export const saveAccountDb = (db) => {
+  try {
+    localStorage.setItem('cn_accounts_db', JSON.stringify(db));
+  } catch {}
+};
+
+export const findAccountInDb = (db, identifier) => {
+  if (!db || !identifier) return null;
+  const raw = String(identifier).trim();
+  if (!raw) return null;
+
+  if (db[raw]) return db[raw];
+
+  const lower = raw.toLowerCase();
+  if (db[lower]) return db[lower];
+
+  const a12 = extract12DigitAadhaar(raw);
+  if (a12) {
+    if (db[a12]) return db[a12];
+    if (db[`aadhaar:${a12}`]) return db[`aadhaar:${a12}`];
+  }
+
+  const p10 = extract10DigitPhone(raw);
+  if (p10) {
+    if (db[p10]) return db[p10];
+    if (db[`phone:${p10}`]) return db[`phone:${p10}`];
+  }
+
+  const cleanDoc = raw.replace(/\s+/g, '').toUpperCase();
+  if (db[cleanDoc]) return db[cleanDoc];
+  if (db[`doctor:${cleanDoc}`]) return db[`doctor:${cleanDoc}`];
+
+  if (raw.includes('@')) {
+    if (db[`email:${lower}`]) return db[`email:${lower}`];
+  }
+
+  const checkedAccountIds = new Set();
+  for (const item of Object.values(db)) {
+    if (!item || typeof item !== 'object') continue;
+    const accId = item.accountId || JSON.stringify(item);
+    if (checkedAccountIds.has(accId)) continue;
+    checkedAccountIds.add(accId);
+
+    if (Array.isArray(item.aliases)) {
+      for (const al of item.aliases) {
+        if (!al) continue;
+        const alStr = String(al).trim().toLowerCase();
+        if (alStr === lower || (p10 && alStr === p10) || (a12 && alStr === a12) || alStr === cleanDoc.toLowerCase()) {
+          return item;
+        }
+      }
+    }
+
+    const itemAadhaar = extract12DigitAadhaar(item.aadharNumber || item.aadhaar || '');
+    const itemPhone = extract10DigitPhone(item.phone || '');
+    const itemDoc = (item.doctorId || '').replace(/\s+/g, '').toUpperCase();
+    const itemEmail = (item.receptionistGmail || item.email || '').toLowerCase().trim();
+
+    if (a12 && itemAadhaar === a12) return item;
+    if (p10 && itemPhone === p10) return item;
+    if (cleanDoc && itemDoc && (itemDoc === cleanDoc || cleanDoc.includes(itemDoc) || itemDoc.includes(cleanDoc))) return item;
+    if (lower.includes('@') && itemEmail === lower) return item;
+  }
+
+  return null;
+};
+
+export const persistUserDataToDb = (userToSave, extraData = {}) => {
+  if (!userToSave) return null;
+  try {
+    const db = getAccountDb();
+    let existing = null;
+    if (userToSave.accountId && db[userToSave.accountId]) {
+      existing = db[userToSave.accountId];
+    } else {
+      const lookupKey = userToSave.accountId || userToSave.aadharNumber || userToSave.aadhaar || userToSave.phone || userToSave.doctorId || userToSave.receptionistGmail || userToSave.email;
+      existing = findAccountInDb(db, lookupKey);
+    }
+
+    const accountId = existing?.accountId || userToSave.accountId || (
+      userToSave.role === 'Doctor' ? `acc_doctor_${Date.now()}` :
+      userToSave.role === 'Receptionist' ? `acc_reception_${Date.now()}` :
+      (userToSave.role === 'Responder' || userToSave.role === 'Driver') ? `acc_resp_${Date.now()}` :
+      `acc_patient_${Date.now()}`
+    );
+
+    const merged = {
+      ...(existing || {}),
+      ...userToSave,
+      ...extraData,
+      accountId
+    };
+
+    merged.completionScore = calculateProfileCompletion(merged);
+
+    const aliasSet = new Set();
+    aliasSet.add(accountId);
+
+    const a12 = extract12DigitAadhaar(merged.aadharNumber || merged.aadhaar || '');
+    if (a12) {
+      aliasSet.add(`aadhaar:${a12}`);
+      aliasSet.add(a12);
+    }
+
+    const p10 = extract10DigitPhone(merged.phone || '');
+    if (p10) {
+      aliasSet.add(`phone:${p10}`);
+      aliasSet.add(p10);
+    }
+
+    if (merged.doctorId && merged.doctorId.trim()) {
+      const cDoc = merged.doctorId.replace(/\s+/g, '').toUpperCase();
+      aliasSet.add(`doctor:${cDoc}`);
+      aliasSet.add(cDoc);
+    }
+    if (merged.receptionistGmail || merged.email) {
+      const cEmail = (merged.receptionistGmail || merged.email).toLowerCase().trim();
+      if (cEmail.includes('@')) {
+        aliasSet.add(`email:${cEmail}`);
+        aliasSet.add(cEmail);
+      }
+    }
+
+    merged.aliases = Array.from(aliasSet);
+
+    db[accountId] = merged;
+    merged.aliases.forEach(alias => {
+      db[alias] = merged;
+    });
+
+    saveAccountDb(db);
+
+    // Asynchronously synchronize account profile to Cloud Firestore
+    try {
+      saveUserToFirestore(accountId, merged);
+      syncAccountToFirestore(accountId, merged);
+    } catch (fsErr) {
+      console.warn('[Firestore] Sync warning:', fsErr);
+    }
+
+    return merged;
+  } catch (err) {
+    console.error('Failed to persist user data to db:', err);
+    return userToSave;
+  }
+};
+
+export const findOrCreateAccount = (identifier, roleHint, initialDefaults = {}) => {
+  const db = getAccountDb();
+  const raw = String(identifier || '').trim();
+  const a12 = extract12DigitAadhaar(raw);
+  const p10 = extract10DigitPhone(raw);
+  const isEmail = raw.includes('@');
+  const isDoc = roleHint === 'Doctor' || raw.toUpperCase().includes('DOC') || raw.toUpperCase().startsWith('DR');
+  const isResponder = roleHint === 'Responder' || roleHint === 'Driver' || (p10 && !a12);
+
+  const existing = findAccountInDb(db, identifier);
+  if (existing) {
+    if (isResponder && existing.role !== 'Responder') {
+      return persistUserDataToDb({ ...existing, role: 'Responder' });
+    }
+    return existing;
+  }
+
+  let newAcc = {};
+
+  if (isDoc) {
+    const cleanDoc = raw.replace(/\s+/g, '').toUpperCase() || 'DOCTOR-001';
+    newAcc = {
+      accountId: `acc_doc_${cleanDoc.toLowerCase()}`,
+      name: initialDefaults.name || 'Dr. Raghavendra',
+      title: 'Senior General Physician',
+      specialty: initialDefaults.specialty || 'General Physician',
+      doctorId: cleanDoc,
+      hospital: 'ABC Hospital',
+      department: 'Department of General Medicine',
+      licenseNo: 'MCI-AP-89412',
+      opdRoom: 'Room No. 104, OPD Block A',
+      shiftHours: '09:00 AM - 05:00 PM',
+      experience: '12 Years',
+      qualifications: 'MBBS, MD (Internal Medicine)',
+      totalConsultationsToday: 7,
+      phone: initialDefaults.phone || '+91 98765 00001',
+      photo: initialDefaults.photo || '/doctor_raghavendra.jpg',
+      role: 'Doctor',
+      aliases: [`doctor:${cleanDoc}`, cleanDoc]
+    };
+  } else if (isEmail || roleHint === 'Receptionist') {
+    const cleanEmail = raw.toLowerCase();
+    newAcc = {
+      accountId: `acc_rec_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
+      name: initialDefaults.name || 'GGH Reception Desk',
+      role: 'Receptionist',
+      receptionistGmail: cleanEmail,
+      email: cleanEmail,
+      phone: initialDefaults.phone || '+91 98765 10800',
+      hospital: 'Government General Hospital, Guntur',
+      aliases: [`email:${cleanEmail}`, cleanEmail]
+    };
+  } else if (isResponder) {
+    const phoneClean = p10 ? `+91 ${p10}` : (initialDefaults.phone || '+91 98765 10800');
+    newAcc = {
+      accountId: `acc_resp_${p10 || Date.now()}`,
+      name: initialDefaults.name || 'Ravi Kumar',
+      role: 'Responder',
+      driverRole: 'Ambulance Driver / Responder',
+      phone: phoneClean,
+      vehicleNo: initialDefaults.vehicleNo || 'AP 07 TE 1084',
+      vehicleType: initialDefaults.vehicleType || 'ALS Advanced Cardiac ICU Fleet #04',
+      baseStation: initialDefaults.baseStation || 'Government General Hospital (GGH) Guntur Fleet Hub',
+      location: initialDefaults.location || 'Hospital Express Highway • Sector 4',
+      isOnline: true,
+      aliases: p10 ? [`responder:${p10}`, p10, `phone:${p10}`] : ['responder:108', '108']
+    };
+  } else {
+    let aadhaarClean = a12 || '';
+    let phoneClean = '';
+    if (p10) {
+      phoneClean = `+91 ${p10}`;
+    } else {
+      phoneClean = initialDefaults.phoneNumber || initialDefaults.phone || '';
+    }
+
+    const aadhaarBase = AADHAAR_DATABASE[aadhaarClean] || null;
+
+    const cityToUse = aadhaarBase ? aadhaarBase.city : (initialDefaults.cityVillage || 'Narasaraopet');
+    const pinToUse = aadhaarBase ? aadhaarBase.pincode : (initialDefaults.pinCode || initialDefaults.pincode || '522601');
+    const addressToUse = aadhaarBase ? aadhaarBase.address : (initialDefaults.aadhaarAddress || initialDefaults.address || `${cityToUse}, Andhra Pradesh`);
+    const nameToUse = aadhaarBase ? aadhaarBase.name : (initialDefaults.fullName || initialDefaults.name || (p10 ? `User ${p10.slice(-4)}` : (aadhaarClean ? `User ${aadhaarClean.slice(-4)}` : 'Patient')));
+    const healthIdToUse = aadhaarClean ? `ABHA-${aadhaarClean.slice(0, 4)}-${aadhaarClean.slice(4, 8)}-${aadhaarClean.slice(8, 12)}` : (p10 ? `ABHA-PHONE-${p10.slice(-6)}` : `ABHA-${Date.now().toString().slice(-8)}`);
+
+    newAcc = {
+      accountId: `acc_pat_${aadhaarClean || p10 || Date.now()}`,
+      name: nameToUse,
+      age: initialDefaults.age || (aadhaarBase ? aadhaarBase.age : ''),
+      gender: aadhaarBase ? aadhaarBase.gender : (initialDefaults.gender || 'MALE'),
+      bloodGroup: initialDefaults.bloodGroup || (aadhaarBase ? aadhaarBase.bloodGroup : ''),
+      address: addressToUse,
+      cityVillage: cityToUse,
+      pincode: pinToUse,
+      location: `${cityToUse}, AP`,
+      aadhaar: aadhaarClean ? `${aadhaarClean.slice(0, 4)} ${aadhaarClean.slice(4, 8)} ${aadhaarClean.slice(8, 12)}` : '',
+      aadharNumber: aadhaarClean || '',
+      phone: phoneClean,
+      photo: aadhaarBase?.photo || (aadhaarBase?.gender === 'FEMALE' 
+        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' 
+        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'),
+      prescriptionReport: null,
+      uploadedReports: [],
+      emergencyContact: '',
+      allergies: [],
+      healthId: healthIdToUse,
+      medicalId: `MED-${Date.now().toString().slice(-6)}`,
+      emergencyContacts: [],
+      precautions: [],
+      medicineAlerts: [],
+      role: 'Patient',
+      aliases: []
+    };
+  }
+
+  return persistUserDataToDb(newAcc);
+};
+
 export const AppProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedInState] = useState(() => {
     try {
       return localStorage.getItem('cn_isLoggedIn') === 'true';
-    } catch (e) {
+    } catch {
       return false;
     }
   });
@@ -142,7 +568,7 @@ export const AppProvider = ({ children }) => {
       } else {
         localStorage.removeItem('cn_isLoggedIn');
       }
-    } catch (e) {}
+    } catch {}
   };
 
   const [currentScreen, setCurrentScreenState] = useState(() => {
@@ -155,7 +581,7 @@ export const AppProvider = ({ children }) => {
         return 'landing';
       }
       return screen;
-    } catch (e) {
+    } catch {
       return 'landing';
     }
   });
@@ -164,7 +590,7 @@ export const AppProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem('cn_screenHistory');
       return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
@@ -173,7 +599,7 @@ export const AppProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem('cn_user');
       return saved ? JSON.parse(saved) : DEFAULT_USER;
-    } catch (e) {
+    } catch {
       return DEFAULT_USER;
     }
   });
@@ -182,7 +608,7 @@ export const AppProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem('cn_appointments');
       return saved ? JSON.parse(saved) : DEFAULT_APPOINTMENTS;
-    } catch (e) {
+    } catch {
       return DEFAULT_APPOINTMENTS;
     }
   });
@@ -191,7 +617,7 @@ export const AppProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem('cn_records');
       return saved ? JSON.parse(saved) : DEFAULT_RECORDS;
-    } catch (e) {
+    } catch {
       return DEFAULT_RECORDS;
     }
   });
@@ -505,32 +931,96 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('cn_currentScreen', currentScreen);
-    } catch (e) {}
+    } catch {}
   }, [currentScreen]);
 
   useEffect(() => {
     try {
       localStorage.setItem('cn_screenHistory', JSON.stringify(screenHistory));
-    } catch (e) {}
+    } catch {}
   }, [screenHistory]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('cn_user', JSON.stringify(user));
-    } catch (e) {}
-  }, [user]);
+      if (isLoggedIn && user && user.accountId) {
+        localStorage.setItem('cn_user', JSON.stringify(user));
+      }
+    } catch {}
+  }, [user, isLoggedIn]);
 
   useEffect(() => {
     try {
       localStorage.setItem('cn_appointments', JSON.stringify(appointments));
-    } catch (e) {}
+    } catch {}
   }, [appointments]);
 
   useEffect(() => {
     try {
       localStorage.setItem('cn_records', JSON.stringify(records));
-    } catch (e) {}
+    } catch {}
   }, [records]);
+
+  // Real-time Cloud Firestore synchronization
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+
+    // 1. Listen to all registered accounts in Firestore
+    const unsubAccounts = subscribeAccountsFromFirestore((firestoreAccounts) => {
+      if (firestoreAccounts && Object.keys(firestoreAccounts).length > 0) {
+        const localDb = getAccountDb();
+        let changed = false;
+        Object.entries(firestoreAccounts).forEach(([accId, accData]) => {
+          if (!localDb[accId] || JSON.stringify(localDb[accId]) !== JSON.stringify(accData)) {
+            localDb[accId] = accData;
+            if (Array.isArray(accData.aliases)) {
+              accData.aliases.forEach(al => { localDb[al] = accData; });
+            }
+            changed = true;
+          }
+        });
+        if (changed) {
+          saveAccountDb(localDb);
+        }
+      }
+    });
+
+    // 2. Listen to OP Token Appointments in Firestore
+    const unsubAppointments = subscribeAppointmentsFromFirestore((firestoreAppts) => {
+      if (firestoreAppts && firestoreAppts.length > 0) {
+        setAppointments(prev => {
+          const map = new Map();
+          firestoreAppts.forEach(a => map.set(a.id, a));
+          prev.forEach(a => {
+            if (!map.has(a.id)) map.set(a.id, a);
+          });
+          return Array.from(map.values());
+        });
+      }
+    });
+
+    return () => {
+      if (typeof unsubAccounts === 'function') unsubAccounts();
+      if (typeof unsubAppointments === 'function') unsubAppointments();
+    };
+  }, []);
+
+  // 3. Listen to current user profile updates in Firestore in real-time
+  useEffect(() => {
+    if (!isFirebaseConfigured || !isLoggedIn || !user?.accountId) return;
+
+    const unsubUser = subscribeUserFromFirestore(user.accountId, (remoteUserData) => {
+      if (remoteUserData) {
+        setUser(prev => ({
+          ...prev,
+          ...remoteUserData
+        }));
+      }
+    });
+
+    return () => {
+      if (typeof unsubUser === 'function') unsubUser();
+    };
+  }, [isLoggedIn, user?.accountId]);
 
   const navigateTo = (screen, resetHistory = false) => {
     // If not authenticated and trying to access protected screens, redirect to onboarding
@@ -548,7 +1038,7 @@ export const AppProvider = ({ children }) => {
       setCurrentScreenState(screen);
       try {
         window.history.pushState({ screen }, '', `#${screen}`);
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -578,21 +1068,66 @@ export const AppProvider = ({ children }) => {
   }, [screenHistory, currentScreen]);
 
   const updateUserProfile = (updates) => {
-    setUser(prev => ({ ...prev, ...updates }));
+    setUser(prev => {
+      const updated = { ...prev, ...updates };
+      persistUserDataToDb(updated);
+      try {
+        localStorage.setItem('cn_user', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const lookupAccount = (identifier) => {
+    const db = getAccountDb();
+    return findAccountInDb(db, identifier);
+  };
+
+  const loginWithAccount = (identifier, roleHint = 'Patient', initialDefaults = {}) => {
+    const account = findOrCreateAccount(identifier, roleHint, initialDefaults);
+    setUser(account);
+    if (account.appointments && Array.isArray(account.appointments)) {
+      setAppointments(account.appointments);
+    }
+    if (account.records && Array.isArray(account.records)) {
+      setRecords(account.records);
+    }
+    setIsLoggedIn(true);
+    try {
+      localStorage.setItem('cn_isLoggedIn', 'true');
+      localStorage.setItem('cn_user', JSON.stringify(account));
+    } catch {}
+    return account;
   };
 
   const switchRole = (role) => {
-    setUser(prev => ({ ...prev, role }));
+    if (isLoggedIn) {
+      setUser(prev => {
+        if (!prev || !prev.accountId) return { ...prev, role };
+        const updated = { ...prev, role };
+        persistUserDataToDb(updated);
+        return updated;
+      });
+    }
     if (role === 'Doctor') {
       setCurrentScreenState('doctor-dashboard');
     } else if (role === 'Receptionist') {
       setCurrentScreenState('receptionist-dashboard');
+    } else if (role === 'Responder' || role === 'Driver') {
+      setCurrentScreenState('emergency');
     } else {
       setCurrentScreenState('dashboard');
     }
   };
 
   const logout = () => {
+    // Preserve the active user's latest saved data, appointments, and records in cn_accounts_db
+    try {
+      if (isLoggedIn && user && user.accountId) {
+        persistUserDataToDb(user, { appointments, records });
+      }
+    } catch {}
+
     try {
       localStorage.removeItem('cn_currentScreen');
       localStorage.removeItem('cn_screenHistory');
@@ -600,7 +1135,8 @@ export const AppProvider = ({ children }) => {
       localStorage.removeItem('cn_appointments');
       localStorage.removeItem('cn_records');
       localStorage.removeItem('cn_isLoggedIn');
-    } catch (e) {}
+    } catch {}
+
     setIsLoggedIn(false);
     setUser(DEFAULT_USER);
     setAppointments(DEFAULT_APPOINTMENTS);
@@ -617,21 +1153,66 @@ export const AppProvider = ({ children }) => {
       currentServing: '8',
       queueAhead: 4,
       qrCode: `OP-TOKEN-${Date.now().toString().slice(-4)}`,
+      patientId: user?.accountId || user?.aadharNumber || 'anonymous',
+      patientName: user?.name || user?.fullName || 'Patient',
+      createdAt: new Date().toISOString(),
       ...tokenData
     };
-    setAppointments(prev => [newToken, ...prev]);
+    setAppointments(prev => {
+      const updated = [newToken, ...prev];
+      if (user) {
+        persistUserDataToDb(user, { appointments: updated });
+      }
+      return updated;
+    });
+
+    // Save to Cloud Firestore
+    try {
+      saveAppointmentToFirestore(newToken);
+    } catch (e) {
+      console.warn('[Firestore] Failed to save appointment:', e);
+    }
+
     navigateTo('appointments');
   };
 
   const cancelAppointment = (id) => {
-    setAppointments(prev => prev.map(app => app.id === id ? { ...app, status: 'CANCELLED' } : app));
+    setAppointments(prev => {
+      const updated = prev.map(app => app.id === id ? { ...app, status: 'CANCELLED' } : app);
+      if (user) {
+        persistUserDataToDb(user, { appointments: updated });
+      }
+      return updated;
+    });
+
+    try {
+      updateAppointmentInFirestore(id, { status: 'CANCELLED' });
+    } catch (e) {
+      console.warn('[Firestore] Failed to cancel appointment in Firestore:', e);
+    }
   };
 
   const addMedicalRecord = (newRec) => {
-    setRecords(prev => [{ id: 'rec-' + Date.now(), ...newRec }, ...prev]);
+    const record = { id: 'rec-' + Date.now(), ...newRec };
+    setRecords(prev => {
+      const updated = [record, ...prev];
+      if (user) {
+        persistUserDataToDb(user, { records: updated });
+      }
+      return updated;
+    });
+
+    try {
+      saveMedicalRecordToFirestore({
+        ...record,
+        userId: user?.accountId || user?.aadharNumber || 'patient'
+      });
+    } catch (e) {
+      console.warn('[Firestore] Failed to save medical record in Firestore:', e);
+    }
   };
 
-  const updateDoctorAvatar = (id, newAvatarUrl) => {
+  const updateDoctorAvatar = (_id, _newAvatarUrl) => {
     // optional helper
   };
 
@@ -655,7 +1236,12 @@ export const AppProvider = ({ children }) => {
         hospitals,
         records,
         addMedicalRecord,
-        updateDoctorAvatar
+        updateDoctorAvatar,
+        loginWithAccount,
+        lookupAccount,
+        getStoredAccounts: getAccountDb,
+        isFirebaseConfigured,
+        firebaseConfig
       }}
     >
       {children}

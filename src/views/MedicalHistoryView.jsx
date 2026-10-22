@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { FolderHeart, FileText, Download, Upload, Plus, Search, Filter, ShieldCheck, CheckCircle2, X } from 'lucide-react';
+import { FolderHeart, FileText, Download, Upload, Plus, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 
 export const MedicalHistoryView = () => {
   const { records, addMedicalRecord } = useApp();
@@ -190,13 +190,22 @@ export const MedicalHistoryView = () => {
                 <option value="Discharge Summary">Discharge Summary</option>
               </select>
 
-              <label className="form-label">Prescribing Doctor / Facility</label>
+              <label className="form-label">Prescribing Doctor</label>
               <input
                 type="text"
                 className="form-input"
                 value={doctor}
                 onChange={e => setDoctor(e.target.value)}
                 placeholder="Dr. Rajesh Sharma"
+              />
+
+              <label className="form-label">Hospital / Medical Facility</label>
+              <input
+                type="text"
+                className="form-input"
+                value={facility}
+                onChange={e => setFacility(e.target.value)}
+                placeholder="e.g. Government General Hospital, Guntur"
               />
 
               <label className="form-label">Clinical Notes / Summary</label>

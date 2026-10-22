@@ -1,21 +1,27 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Home, ShieldAlert, Bot, CalendarCheck, FolderHeart } from 'lucide-react';
+import { Home, ShieldAlert, Bot, CalendarCheck, FolderHeart, Building2, User } from 'lucide-react';
 
 export const Navigation = () => {
   const { currentScreen, navigateTo, appointments, user } = useApp();
 
   const activeAppointmentsCount = appointments.filter(a => a.status === 'ACTIVE').length;
   const isDoctor = user?.role === 'Doctor' || user?.name?.includes('Raghavendra');
+  const isResponder = user?.role === 'Responder' || user?.role === 'Driver';
 
-  const navItems = [
+  const navItems = isResponder ? [
+    { id: 'emergency', label: '108 Command', icon: ShieldAlert },
+    { id: 'hospitals', label: 'Hospitals', icon: Building2 },
+    { id: 'records', label: 'Health Vault', icon: FolderHeart },
+    { id: 'profile', label: 'Profile', icon: User }
+  ] : [
     { id: 'dashboard', label: 'Home', icon: Home },
     ...(!isDoctor ? [{ id: 'op-booking', label: 'Book OP', icon: CalendarCheck, badge: activeAppointmentsCount > 0 ? activeAppointmentsCount : null }] : []),
     { id: 'records', label: 'Health Vault', icon: FolderHeart },
     { id: 'symptom-checker', label: 'AI Symptom', icon: Bot }
   ];
 
-  if (currentScreen === 'onboarding' || currentScreen === 'landing' || currentScreen === 'receptionist-dashboard' || currentScreen === 'receptionist') return null;
+  if (currentScreen === 'onboarding' || currentScreen === 'landing' || currentScreen === 'receptionist-dashboard' || currentScreen === 'receptionist' || currentScreen === 'doctor-dashboard') return null;
 
   return (
     <nav className="app-navigation">

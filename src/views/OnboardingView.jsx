@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp, AADHAAR_DATABASE } from '../context/AppContext';
-import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall, ArrowLeft, Mail, Award, Siren, Fingerprint, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, UserCheck, Stethoscope, Ambulance, CreditCard, Building2, ShieldCheck, Upload, PhoneCall, Mail, Award, Siren, Fingerprint, BadgeCheck, AlertTriangle } from 'lucide-react';
 
 export const OnboardingView = () => {
-  const { navigateTo, switchRole, updateUserProfile, setIsLoggedIn } = useApp();
+  const { navigateTo, switchRole, updateUserProfile, setIsLoggedIn, loginWithAccount, lookupAccount } = useApp();
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'profile'
   const [selectedRole, setSelectedRole] = useState('User');
   const [errorMsg, setErrorMsg] = useState('');
@@ -15,62 +15,77 @@ export const OnboardingView = () => {
   const [doctorId, setDoctorId] = useState('DOCTOR-001');
   const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
   const [responderPhone, setResponderPhone] = useState('+91 98765 10800');
-  const [otp, setOtp] = useState(['', '', '', '']);
-  const [otpTimer, setOtpTimer] = useState(10);
-  const [otpAutoFilled, setOtpAutoFilled] = useState(false);
   const [pin, setPin] = useState(['', '', '', '']);
-  const [pinTimer, setPinTimer] = useState(8);
-  const [pinAutoFilled, setPinAutoFilled] = useState(false);
+  const pinInputRefs = React.useRef([]);
 
   React.useEffect(() => {
-    let interval;
-    if (authMode === 'otp' && !otpAutoFilled) {
-      setOtpTimer(10);
-      interval = setInterval(() => {
-        setOtpTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setOtp(['4', '8', '1', '9']);
-            setOtpAutoFilled(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (authMode === 'pin') {
+      const timer = setTimeout(() => {
+        pinInputRefs.current[0]?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
     }
-    return () => clearInterval(interval);
-  }, [authMode, otpAutoFilled]);
+  }, [authMode]);
 
-  React.useEffect(() => {
-    let interval;
-    if (authMode === 'pin' && !pinAutoFilled) {
-      setPinTimer(8);
-      interval = setInterval(() => {
-        setPinTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setPin(['1', '2', '3', '4']);
-            setPinAutoFilled(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  const handlePinChange = (val, idx) => {
+    setErrorMsg('');
+    const cleanDigits = val.replace(/\D/g, '');
+
+    if (cleanDigits.length > 1) {
+      const pasted = cleanDigits.slice(0, 4).split('');
+      const updated = [...pin];
+      pasted.forEach((d, i) => {
+        if (i < 4) updated[i] = d;
+      });
+      setPin(updated);
+      const nextIdx = Math.min(pasted.length, 3);
+      if (pinInputRefs.current[nextIdx]) {
+        pinInputRefs.current[nextIdx].focus();
+      }
+      return;
     }
-    return () => clearInterval(interval);
-  }, [authMode, pinAutoFilled]);
+
+    const single = cleanDigits.slice(-1);
+    const newPin = [...pin];
+    newPin[idx] = single;
+    setPin(newPin);
+
+    if (single && idx < 3) {
+      if (pinInputRefs.current[idx + 1]) {
+        pinInputRefs.current[idx + 1].focus();
+      }
+    }
+  };
+
+  const handlePinKeyDown = (e, idx) => {
+    if (e.key === 'Backspace') {
+      if (!pin[idx] && idx > 0) {
+        const newPin = [...pin];
+        newPin[idx - 1] = '';
+        setPin(newPin);
+        if (pinInputRefs.current[idx - 1]) {
+          pinInputRefs.current[idx - 1].focus();
+        }
+      }
+    } else if (e.key === 'ArrowLeft' && idx > 0) {
+      if (pinInputRefs.current[idx - 1]) pinInputRefs.current[idx - 1].focus();
+    } else if (e.key === 'ArrowRight' && idx < 3) {
+      if (pinInputRefs.current[idx + 1]) pinInputRefs.current[idx + 1].focus();
+    }
+  };
+
 
   // Auto-filled from Aadhaar
-  const [fullName, setFullName] = useState('Alex Johnson');
-  const [aadhaarAddress, setAadhaarAddress] = useState('Door No 4-12, Main Road, Palnadu District, Narasaraopet');
+  const [fullName, setFullName] = useState('');
+  const [aadhaarAddress, setAadhaarAddress] = useState('');
   
   // Required patient inputs
-  const [phoneNumber, setPhoneNumber] = useState('+91 9876543210');
-  const [age, setAge] = useState('28');
-  const [bloodGroup, setBloodGroup] = useState('O+');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [age, setAge] = useState('');
+  const [bloodGroup, setBloodGroup] = useState('');
   const [gender, setGender] = useState('MALE');
-  const [cityVillage, setCityVillage] = useState('Narasaraopet');
-  const [pinCode, setPinCode] = useState('522601');
+  const [cityVillage, setCityVillage] = useState('');
+  const [pinCode, setPinCode] = useState('');
   
   // File & Optional
   const [medicalReportName, setMedicalReportName] = useState('Previous_Doctor_Prescription_Report.pdf');
@@ -79,14 +94,39 @@ export const OnboardingView = () => {
   const handleAadhaarNumberChange = (val) => {
     const digitsOnly = val.replace(/\D/g, '').slice(0, 12);
     setAadharNumber(digitsOnly);
-    // Real-time Aadhaar Auto-Fill
-    const cleanNo = digitsOnly;
-    const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE[val];
-    if (found) {
-      setFullName(found.name);
-      setAadhaarAddress(found.address);
-      setCityVillage(found.city);
-      setPinCode(found.pincode);
+    
+    // Check if account already exists in DB
+    const saved = lookupAccount ? lookupAccount(digitsOnly) : null;
+    if (saved) {
+      if (saved.name) setFullName(saved.name);
+      if (saved.address) setAadhaarAddress(saved.address);
+      if (saved.cityVillage || saved.city) setCityVillage(saved.cityVillage || saved.city);
+      if (saved.pincode) setPinCode(saved.pincode);
+      if (saved.phone) setPhoneNumber(saved.phone);
+      if (saved.age) setAge(saved.age);
+      if (saved.bloodGroup) setBloodGroup(saved.bloodGroup);
+      if (saved.gender) setGender(saved.gender);
+    } else {
+      // Real-time Aadhaar Auto-Fill from base database
+      const cleanNo = digitsOnly;
+      const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE[val];
+      if (found) {
+        setFullName(found.name);
+        setAadhaarAddress(found.address);
+        setCityVillage(found.city);
+        setPinCode(found.pincode);
+        if (found.gender) setGender(found.gender);
+        if (found.age) setAge(found.age);
+        if (found.bloodGroup) setBloodGroup(found.bloodGroup);
+      } else {
+        setFullName('');
+        setAadhaarAddress('');
+        setCityVillage('');
+        setPinCode('');
+        setAge('');
+        setBloodGroup('');
+        setGender('MALE');
+      }
     }
   };
 
@@ -94,7 +134,8 @@ export const OnboardingView = () => {
     setErrorMsg('');
     setInputError(false);
     const hasLetters = /[a-zA-Z@\-]/.test(val);
-    const isSpecialRole = hasLetters || val.toLowerCase().includes('doc') || val.toLowerCase().includes('care-') || val.includes('@');
+    const isDocMatch = val.toLowerCase().includes('doc') || val.toLowerCase().includes('care-') || val.toLowerCase().startsWith('dr') || val.toLowerCase().includes('doctor');
+    const isSpecialRole = hasLetters || isDocMatch || val.includes('@');
     let processed = val;
     if (!isSpecialRole) {
       processed = val.replace(/\D/g, '').slice(0, 12);
@@ -109,23 +150,59 @@ export const OnboardingView = () => {
       setInputError(false);
     }
 
-    if (clean.toLowerCase().includes('doc') || clean.toLowerCase().includes('care-')) {
+    // Check if account already exists in DB for this credential
+    const saved = lookupAccount ? lookupAccount(clean) : null;
+    if (saved) {
+      if (saved.role === 'Doctor') {
+        setSelectedRole('Doctor');
+        setDoctorId(saved.doctorId || clean);
+        return;
+      } else if (saved.role === 'Receptionist') {
+        setSelectedRole('Receptionist');
+        setReceptionistGmail(saved.receptionistGmail || clean);
+        return;
+      } else if (saved.role === 'Responder' || saved.role === 'Driver' || digitsOnly.length === 10) {
+        setSelectedRole('Responder');
+        setPhoneNumber(saved.phone || `+91 ${digitsOnly}`);
+        return;
+      } else {
+        setSelectedRole('User');
+        if (saved.name) setFullName(saved.name);
+        if (saved.address) setAadhaarAddress(saved.address);
+        if (saved.cityVillage || saved.city) setCityVillage(saved.cityVillage || saved.city);
+        if (saved.pincode) setPinCode(saved.pincode);
+        if (saved.phone) setPhoneNumber(saved.phone);
+        if (saved.age) setAge(saved.age);
+        if (saved.bloodGroup) setBloodGroup(saved.bloodGroup);
+        if (saved.gender) setGender(saved.gender);
+        if (saved.aadharNumber) setAadharNumber(saved.aadharNumber);
+        return;
+      }
+    }
+
+    if (isDocMatch) {
       setSelectedRole('Doctor');
       setDoctorId(clean);
     } else if (clean.includes('@')) {
       setSelectedRole('Receptionist');
       setReceptionistGmail(clean);
     } else if (digitsOnly.length === 10) {
+      setSelectedRole('Responder');
       setPhoneNumber(`+91 ${digitsOnly}`);
-      if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
-        setSelectedRole('User');
-      }
+      setFullName('');
+      setAadhaarAddress('');
+      setCityVillage('');
+      setPinCode('');
+      setAge('');
+      setBloodGroup('');
+      setGender('MALE');
+      setAadharNumber('');
     } else if (digitsOnly.length === 12) {
-      if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
-        setSelectedRole('User');
-      }
+      setSelectedRole('User');
       setAadharNumber(clean);
       handleAadhaarNumberChange(clean);
+    } else {
+      setSelectedRole('User');
     }
   };
 
@@ -135,7 +212,7 @@ export const OnboardingView = () => {
 
     if (authMode === 'login') {
       const clean = uniqueId.trim();
-      const isDoc = clean.toLowerCase().includes('doc') || clean.toLowerCase().includes('care-');
+      const isDoc = clean.toLowerCase().includes('doc') || clean.toLowerCase().includes('care-') || clean.toLowerCase().startsWith('dr') || clean.toLowerCase().includes('doctor');
       const isEmail = clean.includes('@');
       const digitsOnly = clean.replace(/\D/g, '');
 
@@ -152,16 +229,12 @@ export const OnboardingView = () => {
         }
 
         if (digitsOnly.length === 10) {
+          setSelectedRole('Responder');
           setPhoneNumber(`+91 ${digitsOnly}`);
-          if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
-            setSelectedRole('User');
-          }
         } else if (digitsOnly.length === 12) {
+          setSelectedRole('User');
           setAadharNumber(digitsOnly);
           handleAadhaarNumberChange(digitsOnly);
-          if (selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && selectedRole !== 'Responder') {
-            setSelectedRole('User');
-          }
         }
       } else if (isDoc) {
         setSelectedRole('Doctor');
@@ -172,90 +245,97 @@ export const OnboardingView = () => {
       }
 
       setErrorMsg('');
-      if (isEmail) {
-        setPin(['', '', '', '']);
-        setPinAutoFilled(false);
-        setPinTimer(8);
-        setAuthMode('pin');
-      } else {
-        setOtp(['', '', '', '']);
-        setOtpAutoFilled(false);
-        setOtpTimer(10);
-        setAuthMode('otp');
-      }
-    } else if (authMode === 'otp') {
-      const enteredOtp = otp.join('');
-      if (enteredOtp.length < 4 || otp.some(d => !d || d.trim() === '')) {
-        setErrorMsg('❌ Please enter the complete 4-digit OTP code before launching the app home page.');
-        return;
-      }
-
-      setErrorMsg('');
-      setIsLoggedIn(true);
-
-      if (selectedRole === 'Doctor' || selectedRole === 'Responder') {
-        switchRole(selectedRole);
-        updateUserProfile({ 
-          name: selectedRole === 'Doctor' ? 'Dr. Raghavendra' : undefined,
-          specialty: selectedRole === 'Doctor' ? 'General Physician' : undefined,
-          phone: selectedRole === 'Responder' ? uniqueId : phoneNumber, 
-          doctorId: uniqueId || 'DOCTOR-001',
-          responderPhone: uniqueId,
-          aadharNumber: uniqueId || aadharNumber 
-        });
-        navigateTo('doctor-dashboard', true);
-      } else if (selectedRole === 'Receptionist') {
-        switchRole('Receptionist');
-        updateUserProfile({ 
-          phone: phoneNumber, 
-          receptionistGmail: uniqueId,
-          aadharNumber: uniqueId || aadharNumber 
-        });
-        navigateTo('receptionist-dashboard', true);
-      } else {
-        const cleanNo = (uniqueId || aadharNumber).replace(/\D/g, '');
-        const found = AADHAAR_DATABASE[cleanNo] || AADHAAR_DATABASE['589241037621'];
-        updateUserProfile({
-          name: found ? found.name : fullName,
-          aadharNumber: uniqueId || aadharNumber,
-          gender: found ? found.gender : 'MALE',
-          address: found ? found.address : aadhaarAddress,
-          cityVillage: found ? found.city : cityVillage,
-          pincode: found ? found.pincode : pinCode,
-          location: found ? `${found.city}, AP` : `${cityVillage}, AP`,
-          phone: phoneNumber,
-          age: '', 
-          bloodGroup: '', 
-          prescriptionReport: null,
-          uploadedReports: []
-        });
-        switchRole('User');
-        navigateTo('dashboard', true);
-      }
+      setPin(['', '', '', '']);
+      setAuthMode('pin');
     } else if (authMode === 'pin') {
       const enteredPin = pin.join('');
       if (enteredPin.length < 4 || pin.some(d => !d || d.trim() === '')) {
-        setErrorMsg('❌ Please enter the complete 4-digit PIN before proceeding.');
+        setErrorMsg('❌ Please enter the complete 4-digit security PIN before proceeding.');
         return;
       }
 
       setErrorMsg('');
-      setIsLoggedIn(true);
-      switchRole('Receptionist');
-      updateUserProfile({ 
-        phone: phoneNumber, 
-        receptionistGmail: uniqueId,
-        aadharNumber: uniqueId || aadharNumber 
-      });
-      navigateTo('receptionist-dashboard', true);
+
+      if (selectedRole === 'Doctor') {
+        const docId = uniqueId || doctorId || 'DOCTOR-001';
+        if (loginWithAccount) {
+          loginWithAccount(docId, 'Doctor', {
+            name: 'Dr. Raghavendra',
+            specialty: 'General Physician',
+            phone: phoneNumber || '+91 94401 23456', 
+            doctorId: docId,
+            photo: '/doctor_raghavendra.jpg'
+          });
+        }
+        navigateTo('doctor-dashboard', true);
+      } else if (selectedRole === 'Receptionist') {
+        const recEmail = uniqueId || receptionistGmail || 'reception.narasaraopet@gmail.com';
+        if (loginWithAccount) {
+          loginWithAccount(recEmail, 'Receptionist', {
+            phone: phoneNumber, 
+            receptionistGmail: recEmail,
+            email: recEmail,
+            aadharNumber: uniqueId || aadharNumber 
+          });
+        }
+        navigateTo('receptionist-dashboard', true);
+      } else if (selectedRole === 'Responder' || (uniqueId && uniqueId.replace(/\D/g, '').length === 10)) {
+        const cleanNo = (uniqueId || phoneNumber || '9876510800').replace(/\D/g, '');
+        if (loginWithAccount) {
+          loginWithAccount(cleanNo, 'Responder', {
+            name: fullName || 'Ravi Kumar',
+            role: 'Responder',
+            driverRole: 'Ambulance Driver / Responder',
+            phone: `+91 ${cleanNo}`,
+            vehicleNo: 'AP 07 TE 1084',
+            vehicleType: 'ALS Advanced Cardiac ICU Fleet #04',
+            baseStation: 'Government General Hospital (GGH) Guntur Fleet Hub',
+            location: 'Hospital Express Highway • Sector 4',
+            isOnline: true
+          });
+        }
+        navigateTo('emergency', true);
+      } else {
+        const cleanNo = (uniqueId || aadharNumber).replace(/\D/g, '');
+        if (cleanNo.length === 10) {
+          if (loginWithAccount) {
+            loginWithAccount(cleanNo, 'Responder', {
+              name: fullName || 'Ravi Kumar',
+              role: 'Responder',
+              driverRole: 'Ambulance Driver / Responder',
+              phone: `+91 ${cleanNo}`,
+              vehicleNo: 'AP 07 TE 1084',
+              vehicleType: 'ALS Advanced Cardiac ICU Fleet #04',
+              baseStation: 'Government General Hospital (GGH) Guntur Fleet Hub',
+              location: 'Hospital Express Highway • Sector 4',
+              isOnline: true
+            });
+          }
+          navigateTo('emergency', true);
+        } else {
+          if (loginWithAccount) {
+            loginWithAccount(cleanNo, 'Patient', {
+              fullName: fullName || '',
+              aadhaarAddress: aadhaarAddress || '',
+              cityVillage: cityVillage || '',
+              pinCode: pinCode || '',
+              phoneNumber: phoneNumber || '',
+              gender: gender || 'MALE',
+              age: age || '',
+              bloodGroup: bloodGroup || ''
+            });
+          }
+          navigateTo('dashboard', true);
+        }
+      }
     }
   };
 
   const digitsOnlyId = (uniqueId || '').replace(/\D/g, '');
-  const is10DigitMobile = digitsOnlyId.length === 10 || (!aadharNumber && phoneNumber && uniqueId.replace(/\D/g, '').length === 10);
+  const is10DigitMobile = selectedRole === 'Responder' || digitsOnlyId.length === 10 || (!aadharNumber && phoneNumber && uniqueId.replace(/\D/g, '').length === 10);
   const displayPhone = is10DigitMobile && digitsOnlyId.length === 10
     ? `+91 ${digitsOnlyId}`
-    : (phoneNumber || '+91 9876543210');
+    : (phoneNumber || '+91 98765 10800');
 
   return (
     <div className="onboarding-container fade-in">
@@ -263,20 +343,24 @@ export const OnboardingView = () => {
         <h2 className="modal-title">
           {authMode === 'login' 
             ? 'Care Navigator Portal Login' 
-            : authMode === 'pin' 
-              ? 'Receptionist PIN Verification' 
-              : is10DigitMobile 
-                ? 'Mobile Phone OTP Verification' 
-                : 'Aadhaar Phone OTP Verification'}
+            : selectedRole === 'Doctor' 
+              ? 'Doctor Security PIN Verification' 
+              : selectedRole === 'Receptionist' 
+                ? 'Receptionist Security PIN Verification'
+                : is10DigitMobile 
+                  ? '108 Ambulance Driver PIN Verification' 
+                  : 'Patient Security PIN Verification'}
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
-            ? 'Enter your 10-digit Mobile Phone Number or 12-digit Aadhaar Card Number to receive verification OTP.'
-            : authMode === 'pin'
-              ? `Enter your 4-digit security PIN for ${receptionistGmail}`
-              : is10DigitMobile
-                ? `Enter 4-digit verification code sent via SMS to your Mobile Phone (${displayPhone})`
-                : `Enter 4-digit verification code sent via SMS to your Aadhaar-linked Mobile Phone (${displayPhone})`}
+            ? 'Enter your 10-digit Mobile Phone Number, 12-digit Aadhaar Card Number, Doctor ID, or Receptionist Email.'
+            : selectedRole === 'Doctor'
+              ? `Enter your 4-digit security PIN for Doctor ID (${doctorId || uniqueId || 'DOCTOR-001'})`
+              : selectedRole === 'Receptionist'
+                ? `Enter your 4-digit security PIN for Receptionist (${receptionistGmail || uniqueId})`
+                : is10DigitMobile
+                  ? `Enter your 4-digit security PIN for Mobile (${displayPhone}) to open 108 Responder Console`
+                  : `Enter your 4-digit security PIN for Aadhaar Card (${uniqueId || aadharNumber})`}
         </p>
 
         {errorMsg && (
@@ -333,82 +417,142 @@ export const OnboardingView = () => {
                   </div>
                 </div>
               )}
-              <label className="form-label">10-Digit Mobile Number / 12-Digit Aadhaar Number</label>
+
+              {is10DigitMobile && selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                  border: '1.5px solid #f87171',
+                  borderRadius: '16px',
+                  marginBottom: '16px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)'
+                }}>
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    background: '#dc2626',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.25)',
+                    flexShrink: 0
+                  }}>
+                    <Ambulance size={26} color="#ffffff" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#991b1b' }}>108 Ambulance Responder Detected</h4>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#7f1d1d' }}>Mobile Login • Driver Telemetry & Emergency Command Console</p>
+                  </div>
+                </div>
+              )}
+
+              <label className="form-label">
+                {selectedRole === 'Doctor'
+                  ? 'Doctor ID / Universal Registration ID'
+                  : selectedRole === 'Receptionist'
+                    ? 'Receptionist Email Address'
+                    : is10DigitMobile
+                      ? '10-Digit Mobile Phone Number (Ambulance Responder)'
+                      : '10-Digit Mobile Number / 12-Digit Aadhaar Number'}
+              </label>
               <div className={`input-group${inputError ? ' input-error' : ''}`}>
-                <CreditCard size={18} color={inputError ? '#dc2626' : '#0284c7'} />
+                <CreditCard size={18} color={inputError ? '#dc2626' : (is10DigitMobile ? '#dc2626' : '#0284c7')} />
                 <input
                   type="text"
-                  inputMode="numeric"
+                  inputMode={selectedRole === 'Doctor' || selectedRole === 'Receptionist' ? 'text' : 'numeric'}
                   value={uniqueId}
                   onChange={e => handleUniqueIdChange(e.target.value)}
-                  placeholder="Enter 10-Digit Mobile or 12-Digit Aadhaar"
+                  placeholder={
+                    selectedRole === 'Doctor'
+                      ? 'Enter Doctor ID (e.g. DOCTOR-001)'
+                      : selectedRole === 'Receptionist'
+                        ? 'Enter Receptionist Email'
+                        : is10DigitMobile
+                          ? 'Enter 10-Digit Mobile Number'
+                          : 'Enter 10-Digit Mobile or 12-Digit Aadhaar'
+                  }
                   required
                 />
               </div>
-              <span className="aadhar-help-text" style={{ color: '#0284c7' }}>
-                <ShieldCheck size={13} color="#0284c7" /> SMS OTP will be sent to your Mobile Phone. Accepts 10-Digit Mobile or 12-Digit Aadhaar.
+              <span className="aadhar-help-text" style={{ color: is10DigitMobile ? '#dc2626' : '#0284c7' }}>
+                <ShieldCheck size={13} color={is10DigitMobile ? '#dc2626' : '#0284c7'} />
+                {selectedRole === 'Doctor'
+                  ? 'Doctor credential detected. Proceed with 4-Digit Security PIN.'
+                  : selectedRole === 'Receptionist'
+                    ? 'Receptionist email detected. Proceed with 4-Digit Security PIN.'
+                    : is10DigitMobile
+                      ? '10-Digit Mobile Number detected: 108 Ambulance Responder console will open upon PIN verification.'
+                      : 'Enter your 10-Digit Mobile (Responder) or 12-Digit Aadhaar (Patient) to proceed with 4-Digit PIN.'}
               </span>
-            </>
-          )}
-
-          {authMode === 'otp' && (
-            <>
-              <div className="otp-container">
-                {otp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    maxLength="1"
-                    inputMode="numeric"
-                    className="otp-input"
-                    value={digit}
-                    onChange={e => {
-                      setErrorMsg('');
-                      const val = e.target.value;
-                      const newOtp = [...otp];
-                      newOtp[idx] = val;
-                      setOtp(newOtp);
-                    }}
-                  />
-                ))}
-              </div>
-              <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#64748b' }}>
-                {!otpAutoFilled ? (
-                  <span>📱 Waiting for SMS OTP... Auto-displaying code in <strong>{otpTimer}s</strong></span>
-                ) : (
-                  <span style={{ color: '#059669', fontWeight: '700' }}>✓ SMS OTP Code Received & Auto-Filled</span>
-                )}
-              </div>
             </>
           )}
 
           {authMode === 'pin' && (
             <>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                background: is10DigitMobile ? '#fef2f2' : '#f0f9ff',
+                border: `1.5px solid ${is10DigitMobile ? '#fca5a5' : '#bae6fd'}`,
+                borderRadius: '12px',
+                marginBottom: '18px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={18} color={is10DigitMobile ? '#dc2626' : '#0284c7'} />
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: is10DigitMobile ? '#991b1b' : '#0369a1' }}>
+                    Logging in as: <strong>{uniqueId || displayPhone}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setErrorMsg('');
+                    setPin(['', '', '', '']);
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Change
+                </button>
+              </div>
+
+              <label className="form-label" style={{ textAlign: 'center', marginBottom: '12px' }}>
+                ENTER 4-DIGIT SECURITY PIN
+              </label>
+
               <div className="otp-container">
                 {pin.map((digit, idx) => (
                   <input
                     key={idx}
+                    ref={el => pinInputRefs.current[idx] = el}
                     type="password"
                     maxLength="1"
                     inputMode="numeric"
                     className="otp-input"
                     value={digit}
-                    onChange={e => {
-                      setErrorMsg('');
-                      const val = e.target.value;
-                      const newPin = [...pin];
-                      newPin[idx] = val;
-                      setPin(newPin);
-                    }}
+                    onChange={e => handlePinChange(e.target.value, idx)}
+                    onKeyDown={e => handlePinKeyDown(e, idx)}
                   />
                 ))}
               </div>
-              <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#64748b' }}>
-                {!pinAutoFilled ? (
-                  <span>🔐 Verifying credentials... Auto-filling PIN in <strong>{pinTimer}s</strong></span>
-                ) : (
-                  <span style={{ color: '#059669', fontWeight: '700' }}>✓ PIN Verified & Auto-Filled</span>
-                )}
+
+              <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.82rem', color: '#64748b' }}>
+                Default Demo PIN: <strong>1234</strong> (or any 4 digits)
               </div>
             </>
           )}
@@ -417,10 +561,14 @@ export const OnboardingView = () => {
             <CheckCircle2 size={18} />
             <span>
               {authMode === 'login'
-                ? 'Send OTP to Linked Phone Number'
-                : authMode === 'pin'
-                  ? 'Verify PIN & Launch Receptionist Panel'
-                  : 'Verify OTP & Launch Home Page'}
+                ? 'Proceed to 4-Digit Security PIN'
+                : selectedRole === 'Doctor'
+                  ? 'Verify PIN & Launch Doctor Dashboard'
+                  : selectedRole === 'Receptionist'
+                    ? 'Verify PIN & Launch Receptionist Panel'
+                    : is10DigitMobile
+                      ? 'Verify PIN & Open Responder Console'
+                      : 'Verify PIN & Launch Patient Portal'}
             </span>
           </button>
         </form>
@@ -628,8 +776,16 @@ export const OnboardingView = () => {
           font-weight: 800;
           border-radius: 14px;
           background: #f8fafc;
-          border: 1px solid var(--border-light, #e2e8f0);
+          border: 1.5px solid #cbd5e1;
           color: var(--primary, #0284c7);
+          transition: all 0.2s ease;
+        }
+
+        .otp-input:focus {
+          border-color: #0284c7;
+          background: #ffffff;
+          box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.2);
+          outline: 2px solid #0284c7;
         }
 
         .btn-block {

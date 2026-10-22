@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CalendarCheck, QrCode, Clock, Stethoscope, Building2, AlertCircle, XCircle, CheckCircle2, ChevronRight, Plus } from 'lucide-react';
+import { QrCode, AlertCircle, XCircle, Plus } from 'lucide-react';
 
 export const AppointmentsView = () => {
-  const { appointments, cancelAppointment, navigateTo } = useApp();
+  const { appointments, cancelAppointment, navigateTo, user } = useApp();
   const [selectedQRModal, setSelectedQRModal] = useState(null);
 
   const activeApps = (appointments || []).filter(a => a.status === 'ACTIVE');
@@ -31,7 +31,7 @@ export const AppointmentsView = () => {
                   <div className="token-top-title">TOKEN #{app.tokenNumber}</div>
                   <h4 className="doctor-name">{app.doctorName}</h4>
                   <p className="hosp-name">{app.hospitalName}</p>
-                  <p className="slot-info">Patient: <strong>{app.patientName || 'Alex Johnson'}</strong> • {app.specialty} • {app.date} at {app.timeSlot}</p>
+                  <p className="slot-info">Patient: <strong>{app.patientName || user?.name || 'Patient'}</strong> • {app.specialty} • {app.date} at {app.timeSlot}</p>
                 </div>
                 <div className="token-info-right-bottom">
                   <span className="confirmed-badge-green">CONFIRMED</span>

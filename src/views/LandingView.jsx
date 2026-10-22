@@ -1,58 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   ShieldAlert, 
   Bot, 
   CalendarCheck, 
-  FolderHeart, 
-  Activity, 
   ArrowRight, 
   CheckCircle2, 
   UserCheck, 
-  Stethoscope, 
   Ambulance, 
   Building2, 
   ShieldCheck, 
-  Sparkles, 
-  Clock, 
-  MapPin, 
-  PhoneCall, 
-  ChevronRight, 
-  HeartPulse, 
   Zap, 
   Lock,
-  FileText,
   Menu,
-  X
+  X,
+  Clock
 } from 'lucide-react';
 
 export const LandingView = () => {
-  const { navigateTo, switchRole, user } = useApp();
+  const { navigateTo } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  useEffect(() => {
-    const handleFSChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFSChange);
-    return () => document.removeEventListener('fullscreenchange', handleFSChange);
-  }, []);
-
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(err => console.log(err));
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  const handleLaunchPortal = (role = 'Patient') => {
-    switchRole(role);
+  const handleLaunchPortal = () => {
     navigateTo('onboarding');
   };
 
@@ -76,7 +45,13 @@ export const LandingView = () => {
             <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Features</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
-            <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('User'); }}>
+            <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Patient'); }}>
+              <span>Sign In with Aadhaar</span>
+            </button>
+          </div>
+
+          <div className="landing-nav-actions desktop-only">
+            <button className="btn btn-primary btn-sm" onClick={() => handleLaunchPortal('Patient')}>
               <span>Sign In with Aadhaar</span>
             </button>
           </div>
@@ -250,8 +225,8 @@ export const LandingView = () => {
         <div className="steps-container">
           <div className="step-card glass-card">
             <div className="step-number">01</div>
-            <h4>Enter 12-Digit Aadhaar Number</h4>
-            <p>12-digit Aadhaar Card Number sends SMS OTP to your linked phone number, auto-filling identity and linking your digital health vault.</p>
+            <h4>Enter Mobile or Aadhaar Number</h4>
+            <p>Enter your 10-digit Mobile Number or 12-digit Aadhaar Card Number and 4-Digit Security PIN to instantly link your digital health vault.</p>
           </div>
 
           <div className="step-card glass-card">
@@ -276,7 +251,7 @@ export const LandingView = () => {
           <div className="cta-banner-buttons">
             <button className="btn btn-primary btn-hero" onClick={() => handleLaunchPortal('Patient')}>
               <CheckCircle2 size={20} />
-              <span>Get Started with Aadhaar & Phone OTP</span>
+              <span>Get Started with Security PIN</span>
               <ArrowRight size={18} />
             </button>
           </div>
@@ -417,6 +392,10 @@ export const LandingView = () => {
         }
 
         @media (max-width: 860px) {
+          .desktop-only {
+            display: none !important;
+          }
+
           .mobile-menu-toggle {
             display: flex;
           }

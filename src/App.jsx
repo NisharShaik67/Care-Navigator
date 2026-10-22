@@ -15,9 +15,10 @@ import { MedicalHistoryView } from './views/MedicalHistoryView';
 import { ProfileView } from './views/ProfileView';
 import { DoctorDashboardView } from './views/DoctorDashboardView';
 import { ReceptionistView } from './views/ReceptionistView';
+import { ResponderHomeView } from './views/ResponderHomeView';
 
 const MainContent = () => {
-  const { currentScreen } = useApp();
+  const { currentScreen, user } = useApp();
 
   const renderView = () => {
     switch (currentScreen) {
@@ -29,6 +30,8 @@ const MainContent = () => {
         return <DashboardView />;
       case 'emergency':
         return <EmergencyView />;
+      case 'responder':
+        return <ResponderHomeView />;
       case 'symptom-checker':
         return <SymptomCheckerView />;
       case 'hospitals':
@@ -61,6 +64,14 @@ const MainContent = () => {
 
   if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard') {
     return <ReceptionistView />;
+  }
+
+  if (currentScreen === 'doctor-dashboard') {
+    return <DoctorDashboardView />;
+  }
+
+  if (currentScreen === 'responder' || ((user?.role === 'Responder' || user?.role === 'Driver') && currentScreen !== 'landing' && currentScreen !== 'onboarding')) {
+    return <ResponderHomeView />;
   }
 
   return (
@@ -102,11 +113,9 @@ const MainContent = () => {
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(6px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
       `}</style>

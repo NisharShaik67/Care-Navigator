@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Maximize2, Minimize2, Bell, CheckCircle2, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Bell, CheckCircle2, X, Trash2 } from 'lucide-react';
 import { NotificationSwipeItem } from './NotificationSwipeItem';
 
 const TITLE_MAP = {
@@ -20,11 +20,10 @@ const TITLE_MAP = {
 
 export const Header = () => {
   const { currentScreen, screenHistory, goBack, user, switchRole, navigateTo } = useApp();
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   const completionScore = calculateProfileCompletion(user);
-  const isProfileIncomplete = user.role === 'Patient' && completionScore < 100;
+  const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
   const isComplete = completionScore === 100;
 
   const [headerNotifications, setHeaderNotifications] = useState([
@@ -67,14 +66,6 @@ export const Header = () => {
   };
 
   useEffect(() => {
-    const handleFSChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFSChange);
-    return () => document.removeEventListener('fullscreenchange', handleFSChange);
-  }, []);
-
-  useEffect(() => {
     if (!showNotifMenu) return;
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
@@ -87,27 +78,18 @@ export const Header = () => {
     return () => window.removeEventListener('keydown', handleEsc, true);
   }, [showNotifMenu]);
 
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(err => console.log(err));
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
+  const isDriver = user?.role === 'Responder' || user?.role === 'Driver';
   const defaultHome = user?.role === 'Doctor'
     ? 'doctor-dashboard'
     : user?.role === 'Receptionist'
       ? 'receptionist-dashboard'
-      : user?.role === 'Responder'
+      : isDriver
         ? 'emergency'
         : 'dashboard';
 
-  const title = TITLE_MAP[currentScreen] || 'Care Navigator';
+  const title = (currentScreen === 'emergency' && isDriver)
+    ? '108 Responder Command Console'
+    : (TITLE_MAP[currentScreen] || 'Care Navigator');
   const showBack = (screenHistory.length > 0 || currentScreen !== defaultHome) && currentScreen !== 'landing' && currentScreen !== 'onboarding';
 
   return (
@@ -140,21 +122,12 @@ export const Header = () => {
         <div className="header-title-container">
           <h1 className="header-title">{title}</h1>
           <p className="header-subtitle">
-            {user.role} Portal • {user.location}
+            {user?.role || 'Patient'} Portal • {user?.location || 'Narasaraopet, AP'}
           </p>
         </div>
       </div>
 
       <div className="header-right">
-        {/* Fullscreen Toggle Button */}
-        <button
-          className="btn-icon"
-          onClick={toggleFullScreen}
-          title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}
-        >
-          {isFullscreen ? <Minimize2 size={19} color="#0f172a" /> : <Maximize2 size={19} color="#0f172a" />}
-        </button>
-
         {/* Notification Bell Dropdown */}
         <div style={{ position: 'relative', zIndex: 250 }}>
           <button
@@ -307,10 +280,19 @@ export const Header = () => {
                 position: 'relative',
                 zIndex: 2,
                 boxShadow: isComplete ? '0 0 12px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
-                border: isComplete ? '2px solid #10b981' : '2px solid #ffffff'
+                border: isComplete ? '2px solid #10b981' : '2px solid #ffffff',
+                overflow: 'hidden'
               }}
             >
-              {(user?.name || 'User').split(' ').map(n => n[0]).join('')}
+              {user?.photo ? (
+                <img 
+                  src={user.photo} 
+                  alt={user?.name || 'User'} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : (
+                (user?.name || 'User').split(' ').map(n => n[0]).join('')
+              )}
             </div>
 
             {/* Percentage Badge */}

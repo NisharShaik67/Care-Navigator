@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
@@ -27,11 +27,13 @@ import {
   Edit2,
   LogOut,
   Save,
-  ArrowLeft
+  Camera,
+  Upload,
+  RotateCcw
 } from 'lucide-react';
 
 export const DoctorDashboardView = () => {
-  const { user, updateUserProfile, logout, goBack, screenHistory } = useApp();
+  const { user, updateUserProfile, logout } = useApp();
 
   // Active Bottom Tab
   const [activeTab, setActiveTab] = useState('home');
@@ -41,13 +43,16 @@ export const DoctorDashboardView = () => {
 
   // Active Modals state
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPhotoActionModal, setShowPhotoActionModal] = useState(false);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [showMenuDrawer, setShowMenuDrawer] = useState(false);
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const hasAnyModalOpen = showProfileModal || showEmergencyModal || showMenuDrawer || showNotifModal || !!selectedAppointment || !!selectedPatient;
+  const photoFileInputRef = useRef(null);
+
+  const hasAnyModalOpen = showProfileModal || showPhotoActionModal || showEmergencyModal || showMenuDrawer || showNotifModal || !!selectedAppointment || !!selectedPatient;
 
   // Close modals on ESC key press without navigating away from page
   useEffect(() => {
@@ -57,6 +62,7 @@ export const DoctorDashboardView = () => {
         e.stopPropagation();
         e.preventDefault();
         setShowProfileModal(false);
+        setShowPhotoActionModal(false);
         setShowEmergencyModal(false);
         setShowMenuDrawer(false);
         setShowNotifModal(false);
@@ -70,38 +76,123 @@ export const DoctorDashboardView = () => {
 
   // Doctor Name & Profile Edit State
   const [isEditingDoctor, setIsEditingDoctor] = useState(false);
-  const [doctorInfo, setDoctorInfo] = useState({
-    name: user?.name || 'Dr. Raghavendra',
-    title: 'Senior General Physician',
-    specialty: user?.specialty || 'General Physician',
-    hospital: 'ABC Hospital',
-    department: 'Department of General Medicine',
-    licenseNo: 'MCI-AP-89412',
-    opdRoom: 'Room No. 104, OPD Block A',
-    shiftHours: '09:00 AM - 05:00 PM',
-    experience: '12 Years',
-    qualifications: 'MBBS, MD (Internal Medicine)',
-    totalConsultationsToday: 7
+  const [doctorInfo, setDoctorInfo] = useState(() => {
+    return {
+      name: user?.name || 'Dr. Raghavendra',
+      title: user?.title || 'Senior General Physician',
+      specialty: user?.specialty || 'General Physician',
+      doctorId: user?.doctorId || 'DOCTOR-001',
+      hospital: user?.hospital || 'ABC Hospital',
+      department: user?.department || 'Department of General Medicine',
+      licenseNo: user?.licenseNo || 'MCI-AP-89412',
+      opdRoom: user?.opdRoom || 'Room No. 104, OPD Block A',
+      shiftHours: user?.shiftHours || '09:00 AM - 05:00 PM',
+      experience: user?.experience || '12 Years',
+      qualifications: user?.qualifications || 'MBBS, MD (Internal Medicine)',
+      totalConsultationsToday: 7,
+      photo: user?.photo !== undefined ? user?.photo : '/doctor_raghavendra.jpg'
+    };
   });
 
   const [tempDoctorName, setTempDoctorName] = useState(doctorInfo.name);
   const [tempSpecialty, setTempSpecialty] = useState(doctorInfo.specialty);
   const [tempHospital, setTempHospital] = useState(doctorInfo.hospital);
+  const [tempDoctorId, setTempDoctorId] = useState(doctorInfo.doctorId || 'DOCTOR-001');
+
+  // Synchronize doctorInfo and inputs when user changes
+  useEffect(() => {
+    if (!user) return;
+    setDoctorInfo(prev => ({
+      ...prev,
+      name: user.name || prev.name,
+      specialty: user.specialty || prev.specialty,
+      hospital: user.hospital || prev.hospital,
+      doctorId: user.doctorId || prev.doctorId,
+      photo: user.photo !== undefined ? user.photo : prev.photo
+    }));
+    setTempDoctorName(user.name || 'Dr. Raghavendra');
+    setTempSpecialty(user.specialty || 'General Physician');
+    setTempHospital(user.hospital || 'ABC Hospital');
+    setTempDoctorId(user.doctorId || 'DOCTOR-001');
+  }, [user]);
 
   const handleSaveDoctorName = (e) => {
     e.preventDefault();
     if (!tempDoctorName.trim()) return;
     const updatedName = tempDoctorName.trim();
+    const updatedDocId = tempDoctorId.trim() || 'DOCTOR-001';
+    const updatedSpecialty = tempSpecialty.trim();
+    const updatedHospital = tempHospital.trim();
     setDoctorInfo(prev => ({
       ...prev,
       name: updatedName,
-      specialty: tempSpecialty.trim(),
-      hospital: tempHospital.trim()
+      specialty: updatedSpecialty,
+      hospital: updatedHospital,
+      doctorId: updatedDocId
     }));
     if (updateUserProfile) {
-      updateUserProfile({ name: updatedName });
+      updateUserProfile({ 
+        name: updatedName, 
+        doctorId: updatedDocId,
+        specialty: updatedSpecialty,
+        hospital: updatedHospital 
+      });
     }
     setIsEditingDoctor(false);
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (e.g. JPG, PNG, WebP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setDoctorInfo(prev => ({ ...prev, photo: dataUrl }));
+      try {
+        localStorage.setItem('care_navigator_doctor_photo', dataUrl);
+      } catch {}
+      if (updateUserProfile) {
+        updateUserProfile({ photo: dataUrl });
+      }
+      setShowPhotoActionModal(false);
+      setConsultCompletedAlert('Doctor profile picture updated successfully!');
+      setTimeout(() => setConsultCompletedAlert(null), 3000);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleResetToDefaultPhoto = () => {
+    const defaultPhoto = '/doctor_raghavendra.jpg';
+    setDoctorInfo(prev => ({ ...prev, photo: defaultPhoto }));
+    try {
+      localStorage.setItem('care_navigator_doctor_photo', defaultPhoto);
+    } catch {}
+    if (updateUserProfile) {
+      updateUserProfile({ photo: defaultPhoto });
+    }
+    setShowPhotoActionModal(false);
+    setConsultCompletedAlert('Reset to official doctor photo.');
+    setTimeout(() => setConsultCompletedAlert(null), 3000);
+  };
+
+  const handleRemovePhoto = () => {
+    setDoctorInfo(prev => ({ ...prev, photo: null }));
+    try {
+      localStorage.setItem('care_navigator_doctor_photo', '');
+    } catch {}
+    if (updateUserProfile) {
+      updateUserProfile({ photo: null });
+    }
+    setShowPhotoActionModal(false);
+    setConsultCompletedAlert('Doctor profile picture removed.');
+    setTimeout(() => setConsultCompletedAlert(null), 3000);
   };
 
   // Search & Filter state for appointments
@@ -354,13 +445,26 @@ export const DoctorDashboardView = () => {
               <button className="nav-icon-btn" onClick={() => setShowMenuDrawer(true)} title="Open Menu">
                 <Menu size={22} color="#ffffff" />
               </button>
-              <div className="app-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <img 
-                  src="/Logo.jpeg" 
-                  alt="Care Navigator Logo" 
-                  style={{ width: '34px', height: '34px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} 
-                />
-                <div>
+              <div className="app-brand" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  background: '#ffffff',
+                  padding: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  flexShrink: 0
+                }}>
+                  <img 
+                    src="/Logo.jpeg" 
+                    alt="Care Navigator Logo" 
+                    style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }} 
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <h1 className="app-name">Care Navigator</h1>
                   <span className="gov-tag">HEALTH EMERGENCY SYSTEM</span>
                 </div>
@@ -444,17 +548,21 @@ export const DoctorDashboardView = () => {
                 {/* PROFILE SECTION CARD */}
                 <div className="profile-section-card fade-in hover-lift">
                   <div className="doctor-photo-wrap">
-                    <img
-                      src="/doctor_raghavendra.jpg"
-                      alt={doctorInfo.name}
-                      className="doctor-photo"
-                      onError={(e) => {
-                        // Fallback avatar if image fails to load
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="doctor-photo-fallback" style={{ display: 'none' }}>
+                    {doctorInfo.photo ? (
+                      <img
+                        src={doctorInfo.photo}
+                        alt={doctorInfo.name}
+                        className="doctor-photo"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className="doctor-photo-fallback" 
+                      style={{ display: doctorInfo.photo ? 'none' : 'flex' }}
+                    >
                       <User size={32} color="#1e3a8a" />
                     </div>
                   </div>
@@ -874,7 +982,34 @@ export const DoctorDashboardView = () => {
 
             <div className="modal-body" style={{ padding: '24px 28px' }}>
               <div className="profile-modal-head">
-                <img src="/doctor_raghavendra.jpg" alt={doctorInfo.name} className="modal-doc-photo" />
+                <div className="doc-avatar-wrapper">
+                  {doctorInfo.photo ? (
+                    <img 
+                      src={doctorInfo.photo} 
+                      alt={doctorInfo.name} 
+                      className="modal-doc-photo"
+                      onClick={() => setShowPhotoActionModal(true)}
+                      title="Click to edit, replace or remove picture"
+                    />
+                  ) : (
+                    <div 
+                      className="modal-doc-photo doc-photo-empty-fallback"
+                      onClick={() => setShowPhotoActionModal(true)}
+                      title="Click to add profile picture"
+                    >
+                      <User size={38} color="#0284c7" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="doc-photo-edit-badge"
+                    onClick={() => setShowPhotoActionModal(true)}
+                    title="Change, replace or remove picture"
+                    aria-label="Change Profile Picture"
+                  >
+                    <Camera size={14} color="#ffffff" />
+                  </button>
+                </div>
                 <div>
                   <div className="doc-name-edit-row">
                     <h3 className="doc-h3">{doctorInfo.name}</h3>
@@ -884,19 +1019,41 @@ export const DoctorDashboardView = () => {
                         setTempDoctorName(doctorInfo.name);
                         setTempSpecialty(doctorInfo.specialty);
                         setTempHospital(doctorInfo.hospital);
+                        setTempDoctorId(doctorInfo.doctorId || user?.doctorId || 'DOCTOR-001');
                         setIsEditingDoctor(true);
                       }}
-                      title="Edit Doctor's Name"
+                      title="Edit Doctor's Name & Details"
                     >
                       <Edit2 size={14} />
                     </button>
                   </div>
-                  <span className="specialty-badge">{doctorInfo.specialty}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', margin: '4px 0' }}>
+                    <span className="specialty-badge">{doctorInfo.specialty}</span>
+                    <span style={{
+                      background: '#e0f2fe',
+                      color: '#0369a1',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '8px',
+                      padding: '3px 9px',
+                      fontSize: '0.78rem',
+                      fontWeight: '800',
+                      letterSpacing: '0.02em',
+                      fontFamily: 'monospace'
+                    }}>
+                      ID: {doctorInfo.doctorId || user?.doctorId || 'DOCTOR-001'}
+                    </span>
+                  </div>
                   <p className="modal-hosp-name">{doctorInfo.hospital}</p>
                 </div>
               </div>
 
               <div className="info-grid">
+                <div className="info-item">
+                  <span className="lbl">Doctor ID</span>
+                  <span className="val mono" style={{ color: '#0284c7', fontWeight: '800' }}>
+                    {doctorInfo.doctorId || user?.doctorId || 'DOCTOR-001'}
+                  </span>
+                </div>
                 <div className="info-item">
                   <span className="lbl">Medical Council Registration</span>
                   <span className="val mono">{doctorInfo.licenseNo}</span>
@@ -927,6 +1084,188 @@ export const DoctorDashboardView = () => {
         </div>
       )}
 
+      {/* 1A. EDIT PROFILE PICTURE MODAL (REPLACE, UPLOAD, REMOVE) */}
+      {showPhotoActionModal && (
+        <div className="modal-overlay" style={{ zIndex: 1300 }} onClick={() => setShowPhotoActionModal(false)}>
+          <div 
+            className="modal-content glass-modal photo-action-dialog fade-in" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '440px', width: '92%', borderRadius: '20px', overflow: 'hidden', padding: 0 }}
+          >
+            <div className="modal-header" style={{ padding: '16px 22px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ background: '#e0f2fe', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Camera size={20} color="#0284c7" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>Profile Picture</h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>Update, replace, or remove doctor photo</p>
+                </div>
+              </div>
+              <button 
+                className="close-btn" 
+                onClick={() => setShowPhotoActionModal(false)}
+                style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#475569' }}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Photo Preview Circle */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div style={{ position: 'relative', width: '104px', height: '104px' }}>
+                  {doctorInfo.photo ? (
+                    <img 
+                      src={doctorInfo.photo} 
+                      alt="Doctor Profile Preview" 
+                      style={{
+                        width: '104px',
+                        height: '104px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #0284c7',
+                        boxShadow: '0 8px 24px rgba(2, 132, 199, 0.25)'
+                      }} 
+                    />
+                  ) : (
+                    <div style={{
+                      width: '104px',
+                      height: '104px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+                      border: '3px dashed #0284c7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <User size={52} color="#0284c7" />
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#0f172a' }}>{doctorInfo.name}</div>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    {doctorInfo.photo ? 'Active Profile Picture' : 'Default Avatar (No custom picture)'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={photoFileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handlePhotoUpload}
+              />
+
+              {/* Primary Actions */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* 1. Upload / Replace */}
+                <button
+                  type="button"
+                  onClick={() => photoFileInputRef.current?.click()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 18px',
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#0369a1'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#0284c7'}
+                >
+                  <Upload size={20} />
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ lineHeight: '1.2' }}>{doctorInfo.photo ? 'Replace Picture' : 'Upload New Picture'}</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.9, fontWeight: '500' }}>Select photo from device (JPG, PNG, WebP)</div>
+                  </div>
+                </button>
+
+                {/* 2. Reset to Official Default Picture */}
+                <button
+                  type="button"
+                  onClick={handleResetToDefaultPhoto}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '11px 18px',
+                    background: '#f0f9ff',
+                    color: '#0369a1',
+                    border: '1px solid #bae6fd',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#e0f2fe'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                >
+                  <RotateCcw size={18} />
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ lineHeight: '1.2' }}>Set Default Official Picture</div>
+                    <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: '500' }}>Restore default hospital photo</div>
+                  </div>
+                </button>
+
+                {/* 3. Remove Picture (only visible if photo exists) */}
+                {doctorInfo.photo && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '11px 18px',
+                      background: '#fef2f2',
+                      color: '#dc2626',
+                      border: '1px solid #fecaca',
+                      borderRadius: '12px',
+                      fontWeight: '700',
+                      fontSize: '0.86rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#fee2e2'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#fef2f2'}
+                  >
+                    <Trash2 size={18} />
+                    <div style={{ textAlign: 'left', flex: 1 }}>
+                      <div style={{ lineHeight: '1.2' }}>Remove Picture</div>
+                      <div style={{ fontSize: '0.72rem', color: '#b91c1c', fontWeight: '500' }}>Clear photo and use default profile avatar</div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ padding: '12px 22px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                className="btn-close-modal" 
+                onClick={() => setShowPhotoActionModal(false)}
+                style={{ padding: '8px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: '700', cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1B. EDIT DOCTOR NAME & PROFILE MODAL */}
       {isEditingDoctor && (
         <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={() => setIsEditingDoctor(false)}>
@@ -942,6 +1281,42 @@ export const DoctorDashboardView = () => {
             </div>
 
             <form onSubmit={handleSaveDoctorName} className="modal-body">
+              {/* Doctor Avatar Edit Quick Row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px', padding: '10px 14px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                  {doctorInfo.photo ? (
+                    <img src={doctorInfo.photo} alt="Doctor" style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0284c7' }} />
+                  ) : (
+                    <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #0284c7' }}>
+                      <User size={26} color="#0284c7" />
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#0f172a' }}>Profile Picture</span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingDoctor(false);
+                        setShowPhotoActionModal(true);
+                      }}
+                      style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: '6px', fontSize: '0.76rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Camera size={13} /> {doctorInfo.photo ? 'Replace' : 'Upload'}
+                    </button>
+                    {doctorInfo.photo && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: '6px', fontSize: '0.76rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Trash2 size={13} /> Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <label className="form-lbl">Doctor's Full Name</label>
               <input
                 type="text"
@@ -959,6 +1334,16 @@ export const DoctorDashboardView = () => {
                 value={tempSpecialty}
                 onChange={(e) => setTempSpecialty(e.target.value)}
                 placeholder="e.g. General Physician"
+                required
+              />
+
+              <label className="form-lbl">Doctor ID</label>
+              <input
+                type="text"
+                className="form-txt-input"
+                value={tempDoctorId}
+                onChange={(e) => setTempDoctorId(e.target.value)}
+                placeholder="e.g. DOCTOR-001"
                 required
               />
 
@@ -1173,7 +1558,13 @@ export const DoctorDashboardView = () => {
 
             <div className="drawer-body">
               <div className="drawer-doc-box">
-                <img src="/doctor_raghavendra.jpg" alt="Doctor" className="drawer-doc-img" />
+                {doctorInfo.photo ? (
+                  <img src={doctorInfo.photo} alt="Doctor" className="drawer-doc-img" />
+                ) : (
+                  <div className="drawer-doc-img" style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <User size={22} color="#0284c7" />
+                  </div>
+                )}
                 <div>
                   <h4>{doctorInfo.name}</h4>
                   <p>General Physician • ABC Hospital</p>
@@ -1328,14 +1719,15 @@ export const DoctorDashboardView = () => {
         .dark-navy-header {
           background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
           color: #ffffff;
-          height: 68px;
-          padding: 0 28px;
+          min-height: 80px;
+          padding: 12px 28px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           border-bottom: 1px solid rgba(255, 255, 255, 0.2);
           width: 100%;
           box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
+          box-sizing: border-box;
         }
 
         /* Header Dashboard Navigation Options Tabs */
@@ -1429,8 +1821,8 @@ export const DoctorDashboardView = () => {
 
         @media (max-width: 768px) {
           .dark-navy-header {
-            height: 60px;
-            padding: 0 16px;
+            min-height: 72px;
+            padding: 10px 16px;
           }
         }
 
@@ -1459,7 +1851,9 @@ export const DoctorDashboardView = () => {
 
         .app-brand {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
+          align-items: center;
+          gap: 12px;
         }
 
         .app-name {
@@ -1543,10 +1937,10 @@ export const DoctorDashboardView = () => {
         }
 
         .doctor-photo-wrap {
+          position: relative;
           width: 72px;
           height: 72px;
           border-radius: 50%;
-          overflow: hidden;
           border: 3px solid #1e3a8a;
           flex-shrink: 0;
           background: #e2e8f0;
@@ -1559,6 +1953,7 @@ export const DoctorDashboardView = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          border-radius: 50%;
         }
 
         .doctor-photo-fallback {
@@ -1568,6 +1963,7 @@ export const DoctorDashboardView = () => {
           align-items: center;
           justify-content: center;
           background: #dbeafe;
+          border-radius: 50%;
         }
 
         .doctor-details {
@@ -2105,12 +2501,67 @@ export const DoctorDashboardView = () => {
           gap: 14px;
         }
 
+        .doc-avatar-wrapper {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
         .modal-doc-photo {
           width: 64px;
           height: 64px;
           border-radius: 50%;
           object-fit: cover;
           border: 2px solid #1e3a8a;
+          cursor: pointer;
+          transition: filter 0.2s ease, transform 0.2s ease;
+        }
+
+        .modal-doc-photo:hover {
+          filter: brightness(0.94);
+        }
+
+        .doc-photo-empty-fallback {
+          background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+          border: 2px dashed #0284c7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .doc-photo-edit-badge {
+          position: absolute;
+          bottom: -2px;
+          right: -2px;
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: #0284c7;
+          color: #ffffff;
+          border: 2px solid #ffffff;
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 10;
+        }
+
+        .doc-photo-edit-badge:hover {
+          background: #0369a1;
+          transform: scale(1.15);
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45);
+        }
+
+        .doc-photo-edit-badge.dashboard-badge {
+          bottom: -2px;
+          right: -2px;
+          width: 24px;
+          height: 24px;
         }
 
         .doc-h3 {
@@ -2927,10 +3378,18 @@ export const DoctorDashboardView = () => {
           gap: 20px;
         }
 
-        .profile-modal-responsive .modal-doc-photo {
+        .profile-modal-responsive .modal-doc-photo,
+        .profile-modal-responsive .doc-photo-empty-fallback {
           width: 80px;
           height: 80px;
           border: 3px solid #0284c7;
+        }
+
+        .profile-modal-responsive .doc-photo-edit-badge {
+          width: 28px;
+          height: 28px;
+          bottom: -2px;
+          right: -2px;
         }
 
         .profile-modal-responsive .doc-h3 {
@@ -3020,9 +3479,15 @@ export const DoctorDashboardView = () => {
             gap: 12px;
           }
 
-          .profile-modal-responsive .modal-doc-photo {
+          .profile-modal-responsive .modal-doc-photo,
+          .profile-modal-responsive .doc-photo-empty-fallback {
             width: 60px;
             height: 60px;
+          }
+
+          .profile-modal-responsive .doc-photo-edit-badge {
+            width: 22px;
+            height: 22px;
           }
 
           .profile-modal-responsive .doc-h3 {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Bot, Send, ShieldAlert, AlertTriangle, CheckCircle, Stethoscope, Sparkles, ArrowRight, RefreshCw } from 'lucide-react';
+import { Bot, Send, ShieldAlert, AlertTriangle, CheckCircle, Stethoscope, Sparkles, ArrowRight, RefreshCw, PhoneCall } from 'lucide-react';
 
 const PRESET_SYMPTOMS = [
   "Chest pain and shortness of breath",
@@ -12,7 +12,7 @@ const PRESET_SYMPTOMS = [
 ];
 
 export const SymptomCheckerView = () => {
-  const { navigateTo, bookOPToken } = useApp();
+  const { navigateTo } = useApp();
   const [messages, setMessages] = useState([
     {
       id: 1,

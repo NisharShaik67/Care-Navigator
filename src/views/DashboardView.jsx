@@ -1,27 +1,17 @@
 import React from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
 import { 
-  ShieldAlert, 
   Bot, 
   CalendarCheck, 
   Building2, 
   FolderHeart, 
-  User, 
-  Activity, 
-  Heart, 
-  Clock, 
   ChevronRight, 
-  MapPin, 
-  CheckCircle2, 
-  AlertTriangle,
-  Sparkles,
-  PhoneCall,
-  Stethoscope,
-  Bell
+  Sparkles, 
+  Bell 
 } from 'lucide-react';
 
 export const DashboardView = () => {
-  const { user, navigateTo, appointments, hospitals, records } = useApp();
+  const { user, navigateTo, appointments } = useApp();
 
   const activeAppointments = (appointments || []).filter(a => a.status === 'ACTIVE');
   const completionScore = calculateProfileCompletion(user);
@@ -49,12 +39,17 @@ export const DashboardView = () => {
             <span>{user?.name || 'User'} 👋</span>
           </h2>
           <p className="subtitle">
-            {user.location}
+            {user?.location || 'Narasaraopet, Palnadu Dist, AP'}
           </p>
         </div>
 
         {/* Right Corner Circular Profile Picture */}
-        <div className="hero-right-profile" style={{ flexShrink: 0 }}>
+        <div 
+          className="hero-right-profile" 
+          style={{ flexShrink: 0, cursor: 'pointer' }}
+          onClick={() => navigateTo('profile')}
+          title="Click to view or change profile photo"
+        >
           <div style={{
             width: '115px',
             height: '115px',
@@ -68,7 +63,15 @@ export const DashboardView = () => {
             justifyContent: 'center'
           }}>
             <img 
-              src={user?.name?.includes('Raghavendra') || user?.role === 'Doctor' ? "/doctor_raghavendra.jpg" : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"} 
+              src={
+                user?.photo
+                  ? user.photo
+                  : (user?.name?.includes('Raghavendra') || user?.role === 'Doctor')
+                    ? "/doctor_raghavendra.jpg"
+                    : (user?.gender === 'FEMALE' || user?.name?.toLowerCase().includes('priya'))
+                      ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+                      : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300"
+              } 
               alt={user?.name || "Profile"} 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />

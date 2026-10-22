@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
   Users,
   Clock,
@@ -10,6 +11,7 @@ import {
   FileText,
   Search,
   Edit,
+  Edit2,
   Siren,
   CheckCircle2,
   PhoneCall,
@@ -29,11 +31,12 @@ import {
   Menu,
   Check,
   SlidersHorizontal,
-  LogOut
+  LogOut,
+  Trash2
 } from 'lucide-react';
 
 export const ReceptionistView = () => {
-  const { user, switchRole, navigateTo } = useApp();
+  const { user, switchRole, navigateTo, logout } = useApp();
 
   // Real-time Date and Time Ticker
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -62,6 +65,62 @@ export const ReceptionistView = () => {
   // Modal Control States
   const [activeModal, setActiveModal] = useState(null); // 'register' | 'book' | 'walkin' | 'check' | 'update' | 'emergency_desk' | 'emergency_details' | 'patient_call' | 'more'
   const [selectedPatientForAction, setSelectedPatientForAction] = useState(null);
+
+  // Receptionist Profile Edit States
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+
+  // Notification Menu Dropdown State
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [recNotifications, setRecNotifications] = useState([
+    {
+      id: 'rn-1',
+      title: 'Emergency Triage Alert',
+      text: 'Ambulance AP-07-TY-4912 en route to ER Bay 02. ETA 2.3 Mins.',
+      time: 'Just now',
+      urgent: true,
+      important: true
+    },
+    {
+      id: 'rn-2',
+      title: 'OP Token #WK-01 Arrived',
+      text: 'Venkatesh Rao checked in at Central OPD Counter. Waiting for General Medicine.',
+      time: '10m ago',
+      urgent: false,
+      important: false
+    },
+    {
+      id: 'rn-3',
+      title: 'Doctor Schedule Update',
+      text: 'Dr. K. Srinivas Rao (Cardiology) initiated OP Consultation for Token #11.',
+      time: '25m ago',
+      urgent: false,
+      important: false
+    }
+  ]);
+
+  const handleClearAllRecNotifs = () => {
+    setRecNotifications([]);
+  };
+
+  const handleDeleteRecNotif = (id) => {
+    setRecNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleToggleImportantRecNotif = (id) => {
+    setRecNotifications(prev => prev.map(n => n.id === id ? { ...n, important: !n.important } : n));
+  };
+
+  useEffect(() => {
+    if (!showNotifMenu) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowNotifMenu(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
+  }, [showNotifMenu]);
 
   // Notification Toast State
   const [toast, setToast] = useState(null);
@@ -420,11 +479,11 @@ export const ReceptionistView = () => {
   });
 
   const displayHospitalName = user?.hospitalName || 'Government General Hospital (GGH), Guntur';
-  const displayEmail = user?.receptionistGmail || user?.email || 'sneha.reddy@carenavigator.com';
-  const displayName = user?.name || 'Sneha Reddy';
+  const displayEmail = user?.receptionistGmail || user?.email || 'shaiksknishar@carenavigator.com';
+  const displayName = user?.name || 'GGH Reception Desk';
 
   return (
-    <div className="receptionist-page-root fade-in">
+    <div className="receptionist-page-root">
       {/* Toast Notification Banner */}
       {toast && (
         <div className={`reception-toast toast-${toast.type} slide-in-right`}>
@@ -435,12 +494,25 @@ export const ReceptionistView = () => {
         </div>
       )}
 
-      {/* TOP HEADER: Dark Navy Bar */}
+      {/* Click outside overlay to close notifications dropdown */}
+      {showNotifMenu && (
+        <div 
+          onClick={() => setShowNotifMenu(false)} 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 240,
+            background: 'transparent'
+          }}
+        />
+      )}
+
+      {/* TOP HEADER: Light Bar */}
       <header className="reception-top-navy-bar">
         <div className="navy-bar-left">
-          <button className="navy-icon-btn" title="Main Menu" onClick={() => setActiveModal('more')}>
-            <Menu size={20} color="#ffffff" />
-          </button>
           <div className="navy-brand-group">
             <div className="navy-logo-icon" style={{ overflow: 'hidden', padding: 0, borderRadius: '10px' }}>
               <img src="/Logo.jpeg" alt="Care Navigator Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -453,35 +525,110 @@ export const ReceptionistView = () => {
         </div>
 
         <div className="navy-bar-right">
-          {/* Notifications Dropdown trigger */}
-          <button
-            className="navy-icon-btn relative-btn"
-            title="Reception Alerts"
-            onClick={() => showToast('2 Emergency Triage Alerts active in ER Bay', 'info')}
-          >
-            <Bell size={20} color="#ffffff" />
-            <span className="navy-notif-dot" />
-          </button>
+          {/* Notifications Dropdown Container */}
+          <div style={{ position: 'relative', zIndex: 250 }}>
+            <button
+              className="navy-icon-btn relative-btn"
+              title="Reception Alerts"
+              onClick={() => setShowNotifMenu(!showNotifMenu)}
+              style={{ position: 'relative' }}
+            >
+              <Bell size={20} color="#0f172a" />
+              {recNotifications.length > 0 && <span className="navy-notif-dot" />}
+            </button>
 
-          {/* Receptionist Profile Badge */}
-          <div className="receptionist-user-badge">
+            {showNotifMenu && (
+              <div 
+                className="glass-panel fade-in"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 10px)',
+                  right: 0,
+                  width: '340px',
+                  maxWidth: '92vw',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  background: '#ffffff',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
+                  border: '1px solid #e2e8f0',
+                  zIndex: 260
+                }}
+              >
+                {/* Header row with Title and Clear All button with icon */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <strong style={{ fontSize: '0.92rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Bell size={16} color="#0284c7" /> Notifications
+                    </strong>
+                    <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>
+                      {recNotifications.length > 0 ? `${recNotifications.length} Active` : 'All Clear'}
+                    </span>
+                  </div>
+
+                  {/* Clear All Notifications Button */}
+                  <button
+                    onClick={handleClearAllRecNotifs}
+                    disabled={recNotifications.length === 0}
+                    style={{
+                      background: recNotifications.length === 0 ? '#f1f5f9' : '#fee2e2',
+                      border: '1px solid #fca5a5',
+                      color: recNotifications.length === 0 ? '#94a3b8' : '#dc2626',
+                      borderRadius: '8px',
+                      padding: '4px 10px',
+                      fontSize: '0.72rem',
+                      fontWeight: '700',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: recNotifications.length === 0 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="Clear All Notifications"
+                  >
+                    <Trash2 size={13} />
+                    <span>Clear All</span>
+                  </button>
+                </div>
+
+                {/* Notification List with Mobile Swipe Support */}
+                {recNotifications.length > 0 ? (
+                  <div>
+                    <div style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '2px' }}>
+                      {recNotifications.map(n => (
+                        <NotificationSwipeItem
+                          key={n.id}
+                          notification={n}
+                          onDelete={handleDeleteRecNotif}
+                          onToggleImportant={handleToggleImportantRecNotif}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
+                    <CheckCircle2 size={32} color="#10b981" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: '0 0 2px 0', fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>All Caught Up!</p>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b' }}>No pending notifications.</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Receptionist Profile Badge Button */}
+          <button
+            className="receptionist-user-badge"
+            onClick={() => setActiveModal('receptionist_profile')}
+            title="Click to view Receptionist Officer details & logout"
+            style={{ cursor: 'pointer', border: '1px solid #cbd5e1', background: '#f1f5f9', outline: 'none' }}
+          >
             <div className="rec-avatar-circle">
               {displayName.split(' ').map(n => n[0]).join('')}
             </div>
-            <div className="rec-user-details desktop-only">
+            <div className="rec-user-details desktop-only" style={{ textTransform: 'none', textAlign: 'left' }}>
               <span className="rec-user-name">{displayName}</span>
               <span className="rec-user-role">{displayEmail}</span>
             </div>
-          </div>
-
-          {/* Role Switcher */}
-          <button
-            className="navy-role-switch-btn"
-            onClick={() => switchRole('Doctor')}
-            title="Switch to Doctor View"
-          >
-            <Stethoscope size={15} />
-            <span>Doctor View</span>
           </button>
         </div>
       </header>
@@ -571,12 +718,12 @@ export const ReceptionistView = () => {
           </div>
         </section>
 
-        {/* RED "ACTIVE EMERGENCY" BANNER */}
+        {/* LIGHT "ACTIVE EMERGENCY" BANNER */}
         <section className="reception-active-emergency-banner">
           <div className="emergency-banner-left">
             <div className="emergency-alert-tag">
               <span className="red-pulse-beacon" />
-              <Siren size={20} color="#ffffff" />
+              <Siren size={20} color="#dc2626" />
               <strong className="emergency-tag-text">ACTIVE EMERGENCY ALERT</strong>
             </div>
 
@@ -1067,14 +1214,6 @@ export const ReceptionistView = () => {
         >
           <CalendarCheck size={20} />
           <span>Appointments</span>
-        </button>
-
-        <button
-          className="bottom-nav-item"
-          onClick={() => setActiveModal('more')}
-        >
-          <MoreHorizontal size={20} />
-          <span>More</span>
         </button>
       </nav>
 
@@ -1701,70 +1840,235 @@ export const ReceptionistView = () => {
         </div>
       )}
 
-      {/* MODAL 9: MORE MENU OPTIONS */}
-      {activeModal === 'more' && (
-        <div className="modal-backdrop-overlay fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-dialog-header">
-              <div className="modal-header-title">
-                <MoreHorizontal size={22} color="#0f172a" />
-                <h3>Reception Utilities & Desk Settings</h3>
+      {/* MODAL: RECEPTIONIST OFFICER PROFILE DETAILS */}
+      {activeModal === 'receptionist_profile' && (
+        <div
+          className="modal-backdrop-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15, 23, 42, 0.7)',
+            backdropFilter: 'blur(8px)',
+            padding: '20px 16px',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
+          }}
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="modal-card-dialog"
+            style={{
+              maxWidth: '720px',
+              width: '94vw',
+              maxHeight: '90vh',
+              margin: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              background: '#ffffff',
+              borderRadius: '20px',
+              border: '1px solid #cbd5e1',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-dialog-header" style={{ padding: '18px 24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div className="modal-header-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: '#e0f2fe', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Building2 size={24} color="#0284c7" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>Reception Desk Officer Details</h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>Government Health Department & Active Duty Information</p>
+                </div>
               </div>
-              <button className="btn-modal-close" onClick={() => setActiveModal(null)}>
-                <X size={18} />
-              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* Logout Button */}
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    logout();
+                  }}
+                  style={{
+                    background: '#fee2e2',
+                    border: '1px solid #fca5a5',
+                    color: '#dc2626',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0
+                  }}
+                  title="Logout"
+                  aria-label="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+
+                {/* Close Modal Cross Symbol Button */}
+                <button
+                  onClick={() => setActiveModal(null)}
+                  style={{
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#475569',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0
+                  }}
+                  title="Close Modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
-            <div className="modal-dialog-body">
-              <div className="more-menu-options-list">
-                <button
-                  className="more-opt-item"
-                  onClick={() => {
-                    switchRole('Doctor');
-                    setActiveModal(null);
-                  }}
-                >
-                  <Stethoscope size={18} color="#0284c7" />
-                  <div>
-                    <strong>Switch to Doctor Portal</strong>
-                    <span>Access Doctor Consultation Desk & Digital Rx</span>
+            <div className="modal-dialog-body" style={{ padding: '24px 28px', overflowY: 'auto', maxHeight: 'calc(88vh - 120px)' }}>
+              {/* Profile Card Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '20px 24px', borderRadius: '16px', marginBottom: '20px' }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#ffffff', fontSize: '1.5rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid #ffffff', boxShadow: '0 6px 16px rgba(2, 132, 199, 0.25)' }}>
+                    {displayName.split(' ').map(n => n[0]).join('')}
                   </div>
-                </button>
+                  <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '2.5px solid #ffffff' }} title="Duty Status: Active" />
+                </div>
 
-                <button
-                  className="more-opt-item"
-                  onClick={() => {
-                    switchRole('Patient');
-                    setActiveModal(null);
-                  }}
-                >
-                  <Users size={18} color="#10b981" />
-                  <div>
-                    <strong>Switch to Patient Portal</strong>
-                    <span>View Patient Mobile App Experience</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    {isEditingName ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            border: '1.5px solid #0284c7',
+                            fontSize: '1.05rem',
+                            fontWeight: '700',
+                            color: '#0f172a',
+                            outline: 'none',
+                            background: '#ffffff'
+                          }}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (editedName.trim()) {
+                                updateUserProfile({ name: editedName.trim() });
+                                showToast('Receptionist Name Updated!', 'success');
+                              }
+                              setIsEditingName(false);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            if (editedName.trim()) {
+                              updateUserProfile({ name: editedName.trim() });
+                              showToast('Receptionist Name Updated!', 'success');
+                            }
+                            setIsEditingName(false);
+                          }}
+                          style={{
+                            background: '#0284c7',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '7px 12px',
+                            fontSize: '0.82rem',
+                            fontWeight: '700',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Check size={16} />
+                          <span>Save</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{displayName}</h4>
+                        <button
+                          onClick={() => {
+                            setEditedName(displayName);
+                            setIsEditingName(true);
+                          }}
+                          style={{
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '8px',
+                            width: '28px',
+                            height: '28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: '#0284c7',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Edit Officer Name"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                    <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.72rem', fontWeight: '700', padding: '3px 10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>Active Duty</span>
                   </div>
-                </button>
-
-                <button
-                  className="more-opt-item"
-                  onClick={() => {
-                    navigateTo('onboarding');
-                    setActiveModal(null);
-                  }}
-                >
-                  <LogOut size={18} color="#dc2626" />
-                  <div>
-                    <strong>Lock Reception Desk & Re-login</strong>
-                    <span>Return to Login Screen</span>
-                  </div>
-                </button>
+                  <span style={{ fontSize: '0.88rem', color: '#0284c7', fontWeight: '700' }}>Senior Reception Officer • Counter #01</span>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{displayEmail}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="modal-dialog-footer">
-              <button className="btn-modal-sec" onClick={() => setActiveModal(null)}>
-                Close
-              </button>
+              {/* Grid of Official Details (Wider Desktop View) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px', borderRadius: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Employee Staff ID</span>
+                  <strong style={{ display: 'block', fontSize: '0.98rem', color: '#0f172a', marginTop: '4px' }}>EMP-GGH-882109</strong>
+                </div>
+
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px', borderRadius: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Assigned Hospital</span>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: '#0f172a', marginTop: '4px' }}>GGH Guntur (AP Govt)</strong>
+                </div>
+
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px', borderRadius: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Official Phone</span>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: '#0f172a', marginTop: '4px' }}>+91 98480 12345</strong>
+                </div>
+
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px', borderRadius: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Shift Hours</span>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: '#0f172a', marginTop: '4px' }}>Morning (08:00 - 16:00)</strong>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '14px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <ShieldAlert size={20} color="#0284c7" />
+                <span style={{ fontSize: '0.82rem', color: '#0369a1', fontWeight: '600' }}>
+                  ABHA & National Health Authority (NHA) Desk Credentials verified.
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -1801,17 +2105,17 @@ export const ReceptionistView = () => {
 
         .reception-top-navy-bar {
           height: 64px;
-          background: #0f172a;
-          color: #ffffff;
+          background: #ffffff;
+          color: #0f172a;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 0 24px;
-          border-bottom: 1px solid #1e293b;
+          border-bottom: 1px solid #e2e8f0;
           position: sticky;
           top: 0;
           z-index: 150;
-          box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
         .navy-bar-left { display: flex; align-items: center; gap: 16px; }
@@ -1820,15 +2124,15 @@ export const ReceptionistView = () => {
           width: 38px;
           height: 38px;
           border-radius: 10px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: #f1f5f9;
+          border: 1px solid #cbd5e1;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           transition: background 0.2s ease;
         }
-        .navy-icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .navy-icon-btn:hover { background: #e2e8f0; }
 
         .navy-brand-group { display: flex; align-items: center; gap: 12px; }
 
@@ -1837,27 +2141,28 @@ export const ReceptionistView = () => {
           height: 36px;
           border-radius: 10px;
           background: #ffffff;
+          border: 1px solid #0284c7;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .navy-app-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
-        .navy-app-subtitle { font-size: 0.72rem; color: #94a3b8; margin: 2px 0 0 0; }
+        .navy-app-title { font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
+        .navy-app-subtitle { font-size: 0.72rem; color: #64748b; margin: 2px 0 0 0; }
 
         .navy-bar-right { display: flex; align-items: center; gap: 14px; }
 
         .relative-btn { position: relative; }
-        .navy-notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 2px solid #0f172a; }
+        .navy-notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 2px solid #ffffff; }
 
         .receptionist-user-badge {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: rgba(255, 255, 255, 0.08);
+          background: #f1f5f9;
           padding: 4px 12px 4px 6px;
           border-radius: 30px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid #cbd5e1;
         }
 
         .rec-avatar-circle {
@@ -1874,8 +2179,8 @@ export const ReceptionistView = () => {
         }
 
         .rec-user-details { display: flex; flex-direction: column; }
-        .rec-user-name { font-size: 0.85rem; font-weight: 700; color: #ffffff; }
-        .rec-user-role { font-size: 0.68rem; color: #cbd5e1; }
+        .rec-user-name { font-size: 0.85rem; font-weight: 700; color: #0f172a; }
+        .rec-user-role { font-size: 0.68rem; color: #64748b; }
 
         .navy-role-switch-btn {
           display: inline-flex;
@@ -1959,16 +2264,16 @@ export const ReceptionistView = () => {
         .pulse-icon { animation: pulseGlow 1.5s infinite ease-in-out; }
 
         .reception-active-emergency-banner {
-          background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
-          color: #ffffff;
+          background: linear-gradient(135deg, #fef2f2 0%, #ffe4e6 100%);
+          color: #991b1b;
           padding: 18px 24px;
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 20px;
-          box-shadow: 0 8px 24px rgba(220, 38, 38, 0.25);
-          border: 1px solid #b91c1c;
+          box-shadow: 0 4px 16px rgba(220, 38, 38, 0.08);
+          border: 1.5px solid #fca5a5;
         }
 
         .emergency-banner-left { display: flex; align-items: center; gap: 24px; flex: 1; }
@@ -1977,39 +2282,41 @@ export const ReceptionistView = () => {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(0, 0, 0, 0.25);
+          background: #fee2e2;
           padding: 6px 14px;
           border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          border: 1px solid #fca5a5;
+          color: #dc2626;
           white-space: nowrap;
         }
 
-        .red-pulse-beacon { width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4); }
-        .emergency-tag-text { font-size: 0.8rem; letter-spacing: 0.04em; }
+        .red-pulse-beacon { width: 10px; height: 10px; border-radius: 50%; background: #dc2626; box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.25); }
+        .emergency-tag-text { font-size: 0.8rem; letter-spacing: 0.04em; color: #dc2626; }
 
         .emergency-details-inline { display: flex; align-items: center; gap: 16px; }
 
         .emergency-avg-time-box {
           display: flex;
           flex-direction: column;
-          background: rgba(255, 255, 255, 0.15);
+          background: #ffffff;
           padding: 6px 12px;
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid #fca5a5;
           text-align: center;
           white-space: nowrap;
         }
 
-        .time-val { font-size: 1.1rem; font-weight: 900; line-height: 1.1; }
-        .time-lbl { font-size: 0.65rem; text-transform: uppercase; opacity: 0.9; }
+        .time-val { font-size: 1.1rem; font-weight: 900; line-height: 1.1; color: #dc2626; }
+        .time-lbl { font-size: 0.65rem; text-transform: uppercase; color: #991b1b; opacity: 0.9; }
 
         .emergency-text-desc { display: flex; flex-direction: column; gap: 2px; }
-        .emergency-main-line { font-size: 0.95rem; margin: 0; font-weight: 500; }
-        .emergency-sub-line { font-size: 0.78rem; opacity: 0.9; margin: 0; }
+        .emergency-main-line { font-size: 0.95rem; margin: 0; font-weight: 500; color: #991b1b; }
+        .emergency-main-line strong { color: #881337; font-weight: 800; }
+        .emergency-sub-line { font-size: 0.78rem; color: #9f1239; margin: 0; }
 
         .btn-emergency-action {
-          background: #ffffff;
-          color: #dc2626;
+          background: #dc2626;
+          color: #ffffff;
           border: none;
           font-weight: 800;
           font-size: 0.9rem;
@@ -2019,11 +2326,11 @@ export const ReceptionistView = () => {
           align-items: center;
           gap: 8px;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
           transition: all 0.2s ease;
           white-space: nowrap;
         }
-        .btn-emergency-action:hover { background: #fecdd3; transform: translateY(-1px); }
+        .btn-emergency-action:hover { background: #b91c1c; transform: translateY(-1px); }
 
         .reception-grid-2col { display: grid; grid-template-columns: 1.35fr 1fr; gap: 24px; }
         .panel-header-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 12px; }
@@ -2059,9 +2366,10 @@ export const ReceptionistView = () => {
         .queue-patient-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); }
 
         .patient-card-left { display: flex; align-items: center; gap: 14px; }
-        .token-number-badge { width: 54px; height: 54px; border-radius: 12px; background: #0f172a; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
-        .token-label { font-size: 0.55rem; font-weight: 800; color: #94a3b8; }
-        .token-val { font-size: 1.05rem; font-weight: 900; color: #38bdf8; line-height: 1; }
+        .patient-card-left { display: flex; align-items: center; gap: 14px; }
+        .token-number-badge { width: 54px; height: 54px; border-radius: 12px; background: #e0f2fe; color: #0284c7; border: 1.5px solid #bae6fd; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+        .token-label { font-size: 0.55rem; font-weight: 800; color: #0369a1; }
+        .token-val { font-size: 1.05rem; font-weight: 900; color: #0284c7; line-height: 1; }
 
         .patient-info-block { display: flex; flex-direction: column; gap: 2px; }
         .patient-name-row { display: flex; align-items: baseline; gap: 6px; }
@@ -2127,7 +2435,7 @@ export const ReceptionistView = () => {
         }
         .quick-action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); }
 
-        .action-navy:hover { border-color: #0f172a; }
+        .action-navy:hover { border-color: #0284c7; }
         .action-blue:hover { border-color: #0284c7; }
         .action-teal:hover { border-color: #0d9488; }
         .action-sky:hover { border-color: #0284c7; }
@@ -2135,7 +2443,7 @@ export const ReceptionistView = () => {
         .action-red:hover { border-color: #dc2626; background: #fef2f2; }
 
         .action-icon-circle { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .icon-bg-navy { background: #0f172a; }
+        .icon-bg-navy { background: #0284c7; }
         .icon-bg-blue { background: #0284c7; }
         .icon-bg-teal { background: #0d9488; }
         .icon-bg-sky { background: #0284c7; }
@@ -2198,21 +2506,50 @@ export const ReceptionistView = () => {
           left: 0;
           right: 0;
           height: 64px;
-          background: #0f172a;
-          border-top: 1px solid #1e293b;
+          background: #ffffff;
+          border-top: 1px solid #e2e8f0;
           display: flex;
           align-items: center;
           justify-content: space-around;
           z-index: 200;
-          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
         }
 
-        .bottom-nav-item { background: none; border: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer; flex: 1; padding: 6px 0; }
-        .bottom-nav-item:hover { color: #ffffff; }
-        .bottom-nav-item.active { color: #38bdf8; }
+        .bottom-nav-item { background: none; border: none; color: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer; flex: 1; padding: 6px 0; }
+        .bottom-nav-item:hover { color: #0f172a; }
+        .modal-backdrop-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(15, 23, 42, 0.65);
+          backdrop-filter: blur(6px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          overflow-y: auto;
+          box-sizing: border-box;
+        }
 
-        .modal-backdrop-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .modal-card-dialog { background: #ffffff; width: 100%; max-width: 580px; border-radius: 18px; border: 1px solid #cbd5e1; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-card-dialog {
+          background: #ffffff;
+          width: 100%;
+          max-width: 580px;
+          border-radius: 18px;
+          border: 1px solid #cbd5e1;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          margin: auto;
+          position: relative;
+        }
 
         .border-red { border: 2px solid #dc2626; }
         .bg-red-header { background: #dc2626 !important; }
