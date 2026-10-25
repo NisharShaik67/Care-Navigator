@@ -622,7 +622,7 @@ export const OnboardingView = () => {
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
           {authMode === 'login' 
-            ? 'Care Navigator Portal Login' 
+            ? 'Sign In with Aadhaar Number' 
             : authMode === 'otp'
               ? 'Aadhaar UIDAI OTP Verification'
               : selectedRole === 'Doctor' 
@@ -637,7 +637,7 @@ export const OnboardingView = () => {
         </h2>
         <p className="modal-subtitle">
           {authMode === 'login'
-            ? 'Enter your 12-digit Aadhaar Card (SMS OTP), 10-digit Mobile (PIN), Doctor ID, or Receptionist Email.'
+            ? 'Select portal role or enter 12-digit Aadhaar Card, Doctor ID, or Receptionist Email.'
             : authMode === 'otp'
               ? `Enter the 4-digit OTP sent to mobile registered with Aadhaar (${aadharNumber || uniqueId}). Arriving automatically in 10 seconds.`
               : selectedRole === 'Doctor'
@@ -673,9 +673,20 @@ export const OnboardingView = () => {
           </div>
         )}
 
-        {/* Role Selector Tabs (Doctor, Receptionist, Patient, 108 Responder) */}
+        {/* Role Selector Tabs (Patient, Doctor, Receptionist, 108 Responder) */}
         {authMode === 'login' && (
           <div className="role-selector-cards">
+            <div 
+              className={`role-card role-user ${selectedRole === 'User' ? 'selected' : ''}`}
+              onClick={() => handleSelectRole('User')}
+              title="Patient Sign In with Aadhaar"
+            >
+              <div className="role-card-icon-wrapper">
+                <UserCheck size={22} />
+              </div>
+              <span>Patient (Aadhaar)</span>
+            </div>
+
             <div 
               className={`role-card role-doctor ${selectedRole === 'Doctor' ? 'selected' : ''}`}
               onClick={() => handleSelectRole('Doctor')}
@@ -696,17 +707,6 @@ export const OnboardingView = () => {
                 <Building2 size={22} />
               </div>
               <span>Receptionist</span>
-            </div>
-
-            <div 
-              className={`role-card role-user ${selectedRole === 'User' ? 'selected' : ''}`}
-              onClick={() => handleSelectRole('User')}
-              title="Patient Sign In with Aadhaar"
-            >
-              <div className="role-card-icon-wrapper">
-                <UserCheck size={22} />
-              </div>
-              <span>Patient</span>
             </div>
 
             <div 
@@ -1183,6 +1183,7 @@ export const OnboardingView = () => {
           justify-content: center;
           padding: 40px 20px;
           background: #f8fafc;
+          box-sizing: border-box;
         }
 
         .auth-card {
@@ -1193,6 +1194,7 @@ export const OnboardingView = () => {
           border: 1px solid var(--border-light, #e2e8f0);
           border-radius: 24px;
           box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+          box-sizing: border-box;
         }
 
         .modal-title {
@@ -1200,12 +1202,14 @@ export const OnboardingView = () => {
           font-weight: 800;
           margin-bottom: 6px;
           color: var(--text-main, #0f172a);
+          line-height: 1.3;
         }
 
         .modal-subtitle {
           font-size: 0.88rem;
           color: var(--text-muted, #64748b);
-          margin-bottom: 24px;
+          margin-bottom: 22px;
+          line-height: 1.4;
         }
 
         .form-label {
@@ -1221,12 +1225,48 @@ export const OnboardingView = () => {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 10px;
-          margin-bottom: 18px;
+          margin-bottom: 20px;
         }
 
-        @media (max-width: 520px) {
+        @media (max-width: 540px) {
+          .onboarding-container {
+            padding: 16px 12px;
+          }
+
+          .auth-card {
+            padding: 22px 16px;
+            border-radius: 20px;
+          }
+
+          .modal-title {
+            font-size: 1.25rem;
+          }
+
+          .modal-subtitle {
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+          }
+
           .role-selector-cards {
             grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+          }
+
+          .role-card {
+            padding: 10px 4px !important;
+            border-radius: 12px !important;
+            gap: 6px !important;
+          }
+
+          .role-card-icon-wrapper {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 10px !important;
+          }
+
+          .role-card span {
+            font-size: 0.74rem !important;
           }
         }
 
