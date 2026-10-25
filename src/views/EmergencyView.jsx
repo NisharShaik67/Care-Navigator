@@ -320,6 +320,17 @@ export const EmergencyView = () => {
           }
         }
 
+        @media (max-width: 640px) {
+          .emergency-view-container {
+            padding: 16px 12px 80px;
+            gap: 16px;
+          }
+
+          .sos-status-card {
+            padding: 16px;
+          }
+        }
+
         @media (max-width: 480px) {
           .onboard-equipment-grid {
             grid-template-columns: 1fr !important;

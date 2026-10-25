@@ -593,33 +593,20 @@ export const OnboardingView = () => {
 
   return (
     <div className="onboarding-container fade-in">
-      {/* Return back to Landing button */}
-      <div style={{ maxWidth: '580px', width: '100%', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-        <button
-          type="button"
-          onClick={() => navigateTo('landing')}
-          className="btn"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            borderRadius: '12px',
-            fontWeight: 700,
-            fontSize: '0.86rem',
-            background: '#ffffff',
-            border: '1.5px solid #cbd5e1',
-            color: '#1e293b',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
-          }}
-        >
-          <ArrowLeft size={16} strokeWidth={2.5} />
-          <span>Back to Landing Page</span>
-        </button>
-      </div>
+      <div className="onboarding-card-wrapper">
+        {/* Return back to Landing button */}
+        <div className="onboarding-top-bar">
+          <button
+            type="button"
+            onClick={() => navigateTo('landing')}
+            className="btn back-to-landing-btn"
+          >
+            <ArrowLeft size={16} strokeWidth={2.5} />
+            <span>Back to Landing Page</span>
+          </button>
+        </div>
 
-      <div className="auth-card glass-panel fade-in">
+        <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
           {authMode === 'login' 
             ? 'Sign In with Aadhaar Number' 
@@ -1174,22 +1161,66 @@ export const OnboardingView = () => {
           </button>
         </form>
       </div>
+    </div>
 
       <style>{`
         .onboarding-container {
           min-height: 100vh;
+          min-height: 100dvh;
+          width: 100%;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 40px 20px;
+          padding: 32px 16px;
           background: #f8fafc;
+          box-sizing: border-box;
+          overflow-x: hidden;
+        }
+
+        .onboarding-card-wrapper {
+          width: 100%;
+          max-width: 520px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+          margin: 0 auto;
           box-sizing: border-box;
         }
 
-        .auth-card {
-          max-width: 580px;
+        .onboarding-top-bar {
           width: 100%;
-          padding: 36px 32px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          box-sizing: border-box;
+        }
+
+        .back-to-landing-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.86rem;
+          background: #ffffff;
+          border: 1.5px solid #cbd5e1;
+          color: #1e293b;
+          cursor: pointer;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+          transition: all 0.2s ease;
+        }
+
+        .back-to-landing-btn:hover {
+          background: #f1f5f9;
+        }
+
+        .auth-card {
+          width: 100%;
+          max-width: 100%;
+          padding: 32px 28px;
           background: #ffffff;
           border: 1px solid var(--border-light, #e2e8f0);
           border-radius: 24px;
@@ -1231,26 +1262,38 @@ export const OnboardingView = () => {
         @media (max-width: 540px) {
           .onboarding-container {
             padding: 16px 12px;
+            justify-content: flex-start;
+          }
+
+          .onboarding-card-wrapper {
+            width: 100%;
+            max-width: 100%;
+            gap: 10px;
           }
 
           .auth-card {
-            padding: 22px 16px;
-            border-radius: 20px;
+            width: 100%;
+            padding: 20px 14px;
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
           }
 
           .modal-title {
-            font-size: 1.25rem;
+            font-size: 1.22rem;
+            line-height: 1.25;
+            margin-bottom: 4px;
           }
 
           .modal-subtitle {
-            font-size: 0.82rem;
-            margin-bottom: 16px;
+            font-size: 0.8rem;
+            margin-bottom: 14px;
+            line-height: 1.35;
           }
 
           .role-selector-cards {
             grid-template-columns: repeat(2, 1fr);
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
           }
 
           .role-card {
@@ -1266,7 +1309,16 @@ export const OnboardingView = () => {
           }
 
           .role-card span {
-            font-size: 0.74rem !important;
+            font-size: 0.72rem !important;
+          }
+
+          .input-group {
+            padding: 10px 12px;
+          }
+
+          .btn-block {
+            padding: 12px;
+            font-size: 0.92rem;
           }
         }
 
