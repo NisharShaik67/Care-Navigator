@@ -437,7 +437,7 @@ html, body {
 
 /* Layout Utilities */
 .app-container {
-  max-width: 1720px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 32px;
   width: 100%;
@@ -545,45 +545,71 @@ html, body, #root {
     font-size: 15px;
   }
 
-  /* Container & Screen Outer Padding */
+  /* Global View Container Sizing & Bottom Bar Clearance */
   .care-dashboard-container,
   .profile-view-container,
   .symptom-checker-container,
   .emergency-view-container,
   .hospitals-view-container,
   .booking-view-container,
+  .op-booking-view-container,
   .records-view-container,
-  .doctor-dashboard-container {
-    padding: 14px 12px !important;
+  .medical-history-container,
+  .appointments-view-container,
+  .doctor-dashboard-container,
+  .app-scroll-body,
+  .receptionist-dashboard-container,
+  .receptionist-page-root,
+  .reception-main-content,
+  .responder-dashboard-root,
+  .responder-main-viewport {
+    padding: 14px 12px 96px !important;
     gap: 14px !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Prevent any horizontal overflow */
+  body, #root, .care-navigator-app {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
   }
 
   /* Glass Panels & Card Padding */
   .hero-banner,
   .profile-card,
   .glass-panel,
-  .auth-card {
+  .auth-card,
+  .vault-header-card,
+  .sos-status-card {
     padding: 16px 14px !important;
     border-radius: 16px !important;
   }
 
   /* Headings & Title Fluid Scaling */
   h1, .hero-headline {
-    font-size: clamp(1.4rem, 5vw, 2.2rem) !important;
+    font-size: clamp(1.35rem, 5vw, 2rem) !important;
     line-height: 1.25 !important;
   }
 
   h2, .modal-title {
-    font-size: clamp(1.2rem, 4vw, 1.6rem) !important;
+    font-size: clamp(1.15rem, 4vw, 1.5rem) !important;
     line-height: 1.3 !important;
   }
 
   h3 {
-    font-size: clamp(1.05rem, 3.5vw, 1.3rem) !important;
+    font-size: clamp(1rem, 3.5vw, 1.25rem) !important;
   }
 
   /* Auto-Switch Grids to Single Column on Mobile */
   .services-grid,
+  .hospitals-mini-grid,
+  .records-grid,
+  .hospitals-grid,
+  .doctor-cards-grid,
+  .emergency-cards-grid,
+  .active-tokens-container,
   .medical-flags-grid,
   .precautions-alerts-grid,
   .contacts-list-grid,
@@ -592,9 +618,65 @@ html, body, #root {
   .steps-grid,
   .roles-grid,
   .dispatch-info-grid,
-  .profile-completion-grid {
+  .profile-completion-grid,
+  .driver-vehicle-section-grid,
+  .driver-patient-command-grid,
+  .reception-quick-stats-grid,
+  .reception-grid-2col,
+  .quick-action-grid-6,
+  .overview-stats-columns,
+  .stats-section,
+  .triage-info-grid,
+  .dual-action-buttons-grid,
+  .alert-metrics-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
+  }
+
+  /* Card Width Constraints on Mobile */
+  .hosp-mini-card,
+  .service-card,
+  .record-card,
+  .token-card,
+  .hospital-card,
+  .dash-token-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Queue Tracker & Stats Fluid Row on Mobile */
+  .token-queue-info,
+  .queue-metric-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-width: unset !important;
+    gap: 6px !important;
+  }
+
+  .q-stat, .metric {
+    flex: 1 !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  /* Horizontal Scrolling Category & Filter Tabs */
+  .filter-tabs-row,
+  .preset-chips-scroll,
+  .specialties-tags,
+  .time-slots-scroll,
+  .doctor-filter-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+    width: 100% !important;
+  }
+  .filter-tabs-row::-webkit-scrollbar,
+  .preset-chips-scroll::-webkit-scrollbar {
+    display: none !important;
   }
 
   /* Flex Rows Auto-Wrap on Mobile */
@@ -605,7 +687,11 @@ html, body, #root {
   .header-right,
   .cta-banner-buttons,
   .edit-form-action-row,
-  .modal-footer-btns {
+  .modal-footer-btns,
+  .hosp-card-footer,
+  .token-card-footer,
+  .alert-actions-row,
+  .active-actions-row {
     flex-wrap: wrap !important;
   }
 
@@ -613,43 +699,176 @@ html, body, #root {
   .edit-form-action-row button,
   .modal-footer-btns button,
   .cta-banner-buttons button,
-  .hero-cta-group button {
+  .hero-cta-group button,
+  .hosp-card-footer button,
+  .token-card-footer button,
+  .alert-actions-row button,
+  .active-actions-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+  }
+
+  /* OP Booking View Mobile Specific Refinements */
+  .compact-hosp-header-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .hosp-select-left {
+    width: 100% !important;
+  }
+
+  .hosp-quick-info-pills {
+    width: 100% !important;
+    justify-content: space-between !important;
+    margin-right: 0 !important;
+    gap: 8px !important;
+  }
+
+  .tap-to-book-btn {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 8px !important;
+    justify-content: center !important;
+  }
+
+  .doc-card-inner {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* Appointments View Token Card Mobile Refinements */
+  .token-card-footer {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .token-card-footer button {
     width: 100% !important;
     justify-content: center !important;
   }
 
-  /* Touch Input Target Heights */
+  .qr-pass-modal {
+    max-width: 92vw !important;
+    padding: 18px 14px !important;
+  }
+
+  .qr-big-box {
+    padding: 16px !important;
+  }
+
+  /* Emergency View En Route OP Banner Mobile Refinements */
+  .op-booking-banner-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 16px !important;
+    gap: 14px !important;
+  }
+
+  .op-booking-banner-card > div:last-child {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .op-booking-banner-card button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Receptionist Mobile Card Layouts */
+  .reception-greeting-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .live-clock-card {
+    text-align: left !important;
+    width: 100% !important;
+  }
+
+  .reception-active-emergency-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .emergency-banner-left {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  /* Touch Input Target Heights (16px avoids iOS automatic safari zooming) */
   .form-input,
   .input-group input,
   select.form-input,
-  .file-upload-dropzone {
+  .file-upload-dropzone,
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"] {
     min-height: 46px !important;
-    font-size: 0.92rem !important;
+    font-size: 16px !important;
+  }
+
+  /* Header Branding on Mobile */
+  .brand-tagline {
+    display: none !important;
+  }
+  .brand-name {
+    font-size: 1.12rem !important;
   }
 
   /* Modal Popups Responsive Sizing */
   .modal-content,
   .modal-panel,
-  .glass-panel.modal-content {
-    width: 94vw !important;
-    max-width: 520px !important;
+  .glass-panel.modal-content,
+  .modal-card-dialog,
+  .profile-modal-responsive,
+  .notif-modal-responsive {
+    width: 95vw !important;
+    max-width: 100% !important;
     max-height: 90vh !important;
+    max-height: 90dvh !important;
     overflow-y: auto !important;
-    padding: 20px 16px !important;
-    margin: 12px !important;
+    padding: 18px 14px !important;
+    margin: 8px !important;
   }
 
   /* Table Horizontal Momentum Scroll */
   .table-responsive,
   .appointments-table-wrap,
-  .records-table-wrap {
+  .records-table-wrap,
+  .table-responsive-wrapper {
     width: 100% !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
 
   table {
-    min-width: 540px !important;
+    min-width: 500px !important;
+  }
+
+  /* Fixed Navigation Bottom Bar Mobile Safe Area Padding */
+  .app-navigation,
+  .responder-bottom-nav,
+  .reception-bottom-nav {
+    height: 64px !important;
+    padding: 0 6px max(6px, env(safe-area-inset-bottom, 0px)) !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
   }
 }
 
@@ -659,25 +878,32 @@ html, body, #root {
     font-size: 14px;
   }
 
-  /* OTP Code Boxes sizing for compact mobile screens */
+  /* Security PIN & OTP Code Boxes sizing for compact mobile screens */
   .otp-input {
-    width: 44px !important;
-    height: 48px !important;
-    font-size: 1.15rem !important;
+    width: 48px !important;
+    height: 52px !important;
+    font-size: 1.25rem !important;
   }
 
   .otp-container {
-    gap: 8px !important;
+    gap: 10px !important;
+    justify-content: center !important;
   }
 
-  /* Fixed Navigation Bottom Bar Mobile Safe Area Padding */
-  .app-navigation {
-    height: 64px !important;
-    padding: 0 6px env(safe-area-inset-bottom, 0px) !important;
+  /* 108 Emergency Fleet Metrics Bar on compact mobile */
+  .fleet-metrics-strip {
+    grid-template-columns: 1fr !important;
   }
 
   .tab-label {
     font-size: 0.68rem !important;
+  }
+
+  /* Modals on very small screens */
+  .modal-card-dialog,
+  .modal-content {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
   }
 }
 

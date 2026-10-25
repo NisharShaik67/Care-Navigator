@@ -205,9 +205,12 @@ export const SymptomCheckerView = () => {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          padding: 24px;
+          padding: 24px 32px 80px;
           height: 100%;
           overflow: hidden;
+          max-width: 1100px;
+          margin: 0 auto;
+          width: 100%;
         }
 
         .ai-header-card {

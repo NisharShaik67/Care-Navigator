@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { ArrowLeft, Activity, ShieldAlert, User, Stethoscope, AlertTriangle, ChevronDown, Bell, CheckCircle2, X, Trash2 } from 'lucide-react';
+import { 
+  ShieldAlert, 
+  AlertTriangle, 
+  Bell, 
+  CheckCircle2, 
+  X, 
+  Trash2,
+  Copy,
+  Check,
+  ExternalLink,
+  RefreshCw,
+  Database,
+  ArrowLeft
+} from 'lucide-react';
 import { NotificationSwipeItem } from './NotificationSwipeItem';
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
   'onboarding': 'Welcome to Care Navigator',
   'dashboard': 'Care Navigator Home',
-  'emergency': 'Emergency Ambulance & Hospitals',
+  'emergency': '108 Emergency Ambulance Tracker',
   'symptom-checker': 'AI Health Symptom Triage',
   'hospitals': 'Nearby Hospitals & Emergency Beds',
+  'icu': 'ICU & Critical Care Bed Matrix',
   'op-booking': 'Book OP Token Appointment',
   'appointments': 'My OP Tokens & Live Queue',
   'records': 'Digital Health Vault & EHR',
@@ -19,8 +33,41 @@ const TITLE_MAP = {
 };
 
 export const Header = () => {
-  const { currentScreen, screenHistory, goBack, user, switchRole, navigateTo } = useApp();
+  const { 
+    currentScreen, 
+    user, 
+    navigateTo, 
+    goBack,
+    firestoreStatus, 
+    refreshFirestoreStatus,
+    initializeDatabase,
+    isDbInitializing,
+    dbInitProgress,
+    dbInitResult
+  } = useApp();
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showFirestoreModal, setShowFirestoreModal] = useState(false);
+  const [isTestingFs, setIsTestingFs] = useState(false);
+  const [copiedRules, setCopiedRules] = useState(false);
+
+  const handleTestFirestore = async () => {
+    setIsTestingFs(true);
+    await refreshFirestoreStatus?.();
+    setIsTestingFs(false);
+  };
+
+  const handleInitDb = async () => {
+    if (typeof initializeDatabase === 'function') {
+      await initializeDatabase(true);
+    }
+  };
+
+  const handleCopyRules = () => {
+    const rulesText = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}`;
+    navigator.clipboard?.writeText(rulesText);
+    setCopiedRules(true);
+    setTimeout(() => setCopiedRules(false), 3000);
+  };
 
   const completionScore = calculateProfileCompletion(user);
   const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
@@ -90,7 +137,32 @@ export const Header = () => {
   const title = (currentScreen === 'emergency' && isDriver)
     ? '108 Responder Command Console'
     : (TITLE_MAP[currentScreen] || 'Care Navigator');
-  const showBack = (screenHistory.length > 0 || currentScreen !== defaultHome) && currentScreen !== 'landing' && currentScreen !== 'onboarding';
+
+  const logoClicksRef = useRef({ count: 0, timer: null });
+
+  const handleLogoClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    logoClicksRef.current.count += 1;
+    if (logoClicksRef.current.timer) {
+      clearTimeout(logoClicksRef.current.timer);
+    }
+
+    if (logoClicksRef.current.count >= 3) {
+      logoClicksRef.current.count = 0;
+      try {
+        sessionStorage.removeItem('cn_admin_unlocked');
+      } catch {}
+      navigateTo('admin');
+      return;
+    }
+
+    logoClicksRef.current.timer = setTimeout(() => {
+      logoClicksRef.current.count = 0;
+      navigateTo(defaultHome);
+    }, 950);
+  };
 
   return (
     <header className="app-header">
@@ -111,11 +183,23 @@ export const Header = () => {
       )}
 
       <div className="header-left">
+        {currentScreen !== defaultHome && (
+          <button 
+            type="button"
+            className="header-back-btn"
+            onClick={goBack}
+            title="Go back to previous page"
+            aria-label="Back"
+          >
+            <ArrowLeft size={18} strokeWidth={2.5} />
+            <span className="header-back-label">Back</span>
+          </button>
+        )}
         <div 
           className="brand-logo" 
-          onClick={() => {
-            navigateTo(defaultHome);
-          }}
+          onClick={handleLogoClick}
+          title="Care Navigator (Click 3 times to open Admin Page)"
+          style={{ cursor: 'pointer', userSelect: 'none' }}
         >
           <img src="/Logo.jpeg" alt="Care Navigator Logo" className="header-logo-img" />
         </div>
@@ -128,6 +212,36 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
+        {/* Cloud Firestore Status & Database Modal Trigger */}
+        <button
+          className="btn-icon db-indicator-btn"
+          onClick={() => setShowFirestoreModal(true)}
+          title={`Cloud Firestore: ${firestoreStatus?.status || 'OFFLINE'} - Click to manage & initialize`}
+          style={{
+            position: 'relative',
+            background: firestoreStatus?.connected ? '#ecfdf5' : '#f8fafc',
+            border: `1.5px solid ${firestoreStatus?.connected ? '#a7f3d0' : '#e2e8f0'}`,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+        >
+          <Database size={18} color={firestoreStatus?.connected ? '#059669' : '#0284c7'} />
+          <span 
+            style={{ 
+              position: 'absolute', 
+              top: '4px', 
+              right: '4px', 
+              width: '8px', 
+              height: '8px', 
+              background: firestoreStatus?.connected ? '#10b981' : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#f59e0b' : '#ef4444'), 
+              borderRadius: '50%',
+              border: '1.5px solid #ffffff' 
+            }} 
+          />
+        </button>
+
         {/* Notification Bell Dropdown */}
         <div style={{ position: 'relative', zIndex: 250 }}>
           <button
@@ -291,7 +405,7 @@ export const Header = () => {
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                 />
               ) : (
-                (user?.name || 'User').split(' ').map(n => n[0]).join('')
+                String(user?.name || 'User').trim().split(/\s+/).filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
               )}
             </div>
 
@@ -319,6 +433,351 @@ export const Header = () => {
         </button>
       </div>
 
+      {/* Cloud Firestore Diagnostic & Setup Modal */}
+      {showFirestoreModal && (
+        <div 
+          className="modal-overlay fade-in"
+          onClick={() => setShowFirestoreModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+        >
+          <div 
+            className="glass-panel"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              maxWidth: '560px',
+              width: '100%',
+              boxShadow: '0 20px 45px rgba(0,0,0,0.25)',
+              border: '1.5px solid #e2e8f0',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+              color: '#ffffff',
+              padding: '18px 22px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Database size={20} color="#38bdf8" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', letterSpacing: '-0.02em', color: '#ffffff' }}>
+                    Cloud Firestore Database
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                    Project: <code style={{ color: '#38bdf8', background: 'rgba(56,189,248,0.12)', padding: '2px 6px', borderRadius: '4px' }}>care-navigator-a8a2d</code>
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowFirestoreModal(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  color: '#ffffff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '20px 22px', maxHeight: '78vh', overflowY: 'auto' }}>
+              {/* Status Banner */}
+              <div style={{
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: firestoreStatus?.connected 
+                  ? '#ecfdf5' 
+                  : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#fffbeb' : '#fef2f2'),
+                border: `1.5px solid ${firestoreStatus?.connected ? '#10b981' : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#f59e0b' : '#ef4444')}`,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                marginBottom: '18px'
+              }}>
+                {firestoreStatus?.connected ? (
+                  <CheckCircle2 size={24} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                ) : (
+                  <AlertTriangle size={24} color={firestoreStatus?.status === 'PERMISSION_DENIED' ? '#d97706' : '#dc2626'} style={{ flexShrink: 0, marginTop: '2px' }} />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <strong style={{
+                      fontSize: '0.92rem',
+                      color: firestoreStatus?.connected 
+                        ? '#065f46' 
+                        : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#92400e' : '#991b1b')
+                    }}>
+                      {firestoreStatus?.connected 
+                        ? 'Connected & Synchronized' 
+                        : (firestoreStatus?.status === 'PERMISSION_DENIED' ? 'Security Rules Locked (Action Needed)' : 'Connection Warning')}
+                    </strong>
+                    <span style={{
+                      fontSize: '0.7rem',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                      background: firestoreStatus?.connected ? '#d1fae5' : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#fef3c7' : '#fee2e2'),
+                      color: firestoreStatus?.connected ? '#047857' : (firestoreStatus?.status === 'PERMISSION_DENIED' ? '#b45309' : '#b91c1c')
+                    }}>
+                      {firestoreStatus?.status || 'OFFLINE'}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#475569', lineHeight: 1.45 }}>
+                    {firestoreStatus?.message}
+                  </p>
+                </div>
+              </div>
+
+              {/* Instructions if rules are locked */}
+              {firestoreStatus?.status === 'PERMISSION_DENIED' && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '18px'
+                }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.88rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldAlert size={16} color="#0284c7" />
+                    How to unlock your Firestore Database in 2 Steps:
+                  </h4>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: '#475569' }}>
+                    Firebase Firestore was created in locked mode by default. Copy these standard open development rules and paste them into your Firebase Console:
+                  </p>
+
+                  <div style={{
+                    position: 'relative',
+                    background: '#0f172a',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '12px',
+                    fontFamily: 'Consolas, monospace',
+                    fontSize: '0.78rem',
+                    color: '#38bdf8'
+                  }}>
+                    <button
+                      onClick={handleCopyRules}
+                      style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        background: copiedRules ? '#10b981' : 'rgba(255,255,255,0.15)',
+                        border: 'none',
+                        color: '#ffffff',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {copiedRules ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedRules ? 'Copied!' : 'Copy Rules'}</span>
+                    </button>
+                    <pre style={{ margin: 0, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}`}
+                    </pre>
+                  </div>
+
+                  <a
+                    href="https://console.firebase.google.com/project/care-navigator-a8a2d/firestore/rules"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: '#0284c7',
+                      color: '#ffffff',
+                      textDecoration: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 14px',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)'
+                    }}
+                  >
+                    <span>Open Firebase Rules Tab</span>
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+              )}
+
+              {/* Collections Active Table */}
+              <div style={{ marginBottom: '18px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Synchronized Collections
+                </span>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '8px',
+                  marginTop: '8px'
+                }}>
+                  {[
+                    { name: 'care_navigator_users', desc: 'Patient & Staff Profiles' },
+                    { name: 'care_navigator_accounts', desc: 'Unified Credential Vault' },
+                    { name: 'care_navigator_appointments', desc: 'OP Tokens & Live Queues' },
+                    { name: 'care_navigator_emergencies', desc: '108 Ambulance Telemetry' },
+                    { name: 'care_navigator_reports', desc: 'Digital Health Records & Vault' }
+                  ].map(c => (
+                    <div key={c.name} style={{
+                      padding: '8px 12px',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}>
+                      <code style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>{c.name}</code>
+                      <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{c.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Database Initialization Status / Progress Banner */}
+              {(isDbInitializing || dbInitResult) && (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  background: isDbInitializing ? '#f0f9ff' : (dbInitResult?.success ? '#ecfdf5' : '#fef2f2'),
+                  border: `1.5px solid ${isDbInitializing ? '#38bdf8' : (dbInitResult?.success ? '#10b981' : '#f87171')}`,
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isDbInitializing ? '8px' : '4px' }}>
+                    <strong style={{ fontSize: '0.82rem', color: isDbInitializing ? '#0369a1' : (dbInitResult?.success ? '#065f46' : '#991b1b') }}>
+                      {isDbInitializing ? 'Initializing Cloud Database...' : (dbInitResult?.success ? 'Database Initialized Successfully' : 'Initialization Note')}
+                    </strong>
+                    {dbInitProgress && isDbInitializing && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0284c7' }}>
+                        {dbInitProgress.percent}%
+                      </span>
+                    )}
+                  </div>
+                  {isDbInitializing && dbInitProgress && (
+                    <div style={{ width: '100%', height: '6px', background: '#e0f2fe', borderRadius: '4px', overflow: 'hidden', marginBottom: '6px' }}>
+                      <div style={{ width: `${dbInitProgress.percent}%`, height: '100%', background: '#0284c7', transition: 'width 0.3s ease' }} />
+                    </div>
+                  )}
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
+                    {isDbInitializing ? dbInitProgress?.message : dbInitResult?.message}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                <button
+                  onClick={handleInitDb}
+                  disabled={isDbInitializing || !firestoreStatus?.connected}
+                  title={!firestoreStatus?.connected ? 'Connect Firestore first' : 'Seed default accounts, hospitals, and doctors'}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: isDbInitializing ? '#94a3b8' : (firestoreStatus?.connected ? '#0284c7' : '#cbd5e1'),
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    color: '#ffffff',
+                    fontWeight: '700',
+                    fontSize: '0.82rem',
+                    cursor: (isDbInitializing || !firestoreStatus?.connected) ? 'not-allowed' : 'pointer',
+                    boxShadow: firestoreStatus?.connected ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none'
+                  }}
+                >
+                  <Database size={14} className={isDbInitializing ? 'spin-icon' : ''} />
+                  <span>{isDbInitializing ? 'Initializing DB...' : 'Initialize / Seed Database'}</span>
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={handleTestFirestore}
+                    disabled={isTestingFs}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: '#f1f5f9',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      color: '#0f172a',
+                      fontWeight: '700',
+                      fontSize: '0.82rem',
+                      cursor: isTestingFs ? 'wait' : 'pointer'
+                    }}
+                  >
+                    <RefreshCw size={14} className={isTestingFs ? 'spin-icon' : ''} />
+                    <span>{isTestingFs ? 'Testing...' : 'Test Connection'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowFirestoreModal(false)}
+                    style={{
+                      background: '#0f172a',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '8px 16px',
+                      color: '#ffffff',
+                      fontWeight: '700',
+                      fontSize: '0.82rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .app-header {
           min-height: 72px;
@@ -337,6 +796,117 @@ export const Header = () => {
           top: 0;
           z-index: 100;
           width: 100%;
+        }
+
+        .header-back-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 10px;
+          border: 1.5px solid #cbd5e1;
+          background: #f8fafc;
+          color: #0f172a;
+          font-weight: 700;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-back-btn:hover {
+          background: #e2e8f0;
+          border-color: #94a3b8;
+          color: #0284c7;
+          transform: translateX(-2px);
+        }
+
+        .header-back-btn:active {
+          transform: scale(0.96);
+        }
+
+        .firestore-pill-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          font-size: 0.76rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1.5px solid transparent;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+          white-space: nowrap;
+        }
+
+        .fs-online {
+          background: #ecfdf5;
+          border-color: #a7f3d0;
+          color: #065f46;
+        }
+
+        .fs-online:hover {
+          background: #d1fae5;
+          border-color: #6ee7b7;
+          transform: translateY(-1px);
+        }
+
+        .fs-locked {
+          background: #fffbeb;
+          border-color: #fde68a;
+          color: #92400e;
+        }
+
+        .fs-locked:hover {
+          background: #fef3c7;
+          border-color: #fcd34d;
+          transform: translateY(-1px);
+        }
+
+        .fs-offline {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+          color: #475569;
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .dot-green {
+          background: #10b981;
+          box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+        }
+
+        .dot-amber {
+          background: #f59e0b;
+          box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+          animation: pulse-amber 1.8s infinite;
+        }
+
+        .dot-red {
+          background: #ef4444;
+          box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+        }
+
+        @keyframes pulse-amber {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .spin-icon {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .header-left {
@@ -601,6 +1171,17 @@ export const Header = () => {
             gap: 8px;
           }
 
+          .header-back-btn {
+            padding: 6px;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+          }
+
+          .header-back-label {
+            display: none;
+          }
+
           .header-left {
             gap: 8px;
           }
@@ -643,6 +1224,14 @@ export const Header = () => {
             width: 34px;
             height: 34px;
             font-size: 0.8rem;
+          }
+
+          .fs-pill-text {
+            display: none;
+          }
+
+          .firestore-pill-btn {
+            padding: 6px 8px;
           }
         }
 

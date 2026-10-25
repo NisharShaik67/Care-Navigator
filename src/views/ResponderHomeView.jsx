@@ -10,29 +10,15 @@ import {
   Menu, 
   X, 
   CheckCircle2, 
-  AlertTriangle, 
-  AlertOctagon, 
   Clock, 
-  Users, 
-  ArrowRight, 
-  Radio, 
-  Star, 
-  FileText, 
   ChevronRight, 
-  Check, 
-  Search, 
   RefreshCw, 
-  Power, 
-  ShieldCheck, 
-  Map, 
+  Map as MapIcon, 
   History, 
   User, 
-  HeartPulse, 
   ExternalLink, 
   Info, 
   LogOut, 
-  Building2, 
-  Gauge, 
   Compass
 } from 'lucide-react';
 import { 
@@ -42,7 +28,7 @@ import {
 } from '../firebase/firestoreService';
 
 export const ResponderHomeView = () => {
-  const { user, updateUserProfile, logout, navigateTo, hospitals } = useApp();
+  const { user, logout } = useApp();
 
   // Active Bottom Navigation Tab: 'home', 'history', 'map', 'profile'
   const [activeTab, setActiveTab] = useState('home');
@@ -53,7 +39,6 @@ export const ResponderHomeView = () => {
   const [viewDetailsModal, setViewDetailsModal] = useState(null);
   const [viewAllCallsModal, setViewAllCallsModal] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
-  const [alarmPlaying, setAlarmPlaying] = useState(true);
 
 
   const showToast = (msg) => {
@@ -63,8 +48,8 @@ export const ResponderHomeView = () => {
 
   // Device GPS Location State
   const [gpsActive, setGpsActive] = useState(false);
-  const [gpsError, setGpsError] = useState('');
-  const [userCoords, setUserCoords] = useState({ lat: 16.1519, lng: 80.0494 });
+  const [_gpsError, setGpsError] = useState('');
+  const [_userCoords, setUserCoords] = useState({ lat: 16.1519, lng: 80.0494 });
 
   const requestGpsLocation = () => {
     if (!navigator.geolocation) {
@@ -81,7 +66,7 @@ export const ResponderHomeView = () => {
         setGpsActive(true);
         showToast(`📍 Live GPS Locked: ${position.coords.latitude.toFixed(4)}°N, ${position.coords.longitude.toFixed(4)}°E`);
       },
-      (error) => {
+      (_error) => {
         setGpsError('GPS permission denied or unavailable. Using base station coordinates.');
         showToast('⚠️ GPS location permission denied. Using station coordinates.');
       },
@@ -181,7 +166,7 @@ export const ResponderHomeView = () => {
   ]);
 
   // Notifications List
-  const [notifications, setNotifications] = useState([
+  const [notifications] = useState([
     {
       id: 'notif-1',
       title: '🚨 High Priority Dispatch Assigned',
@@ -210,12 +195,14 @@ export const ResponderHomeView = () => {
     const unsub = subscribeEmergenciesFromFirestore((list) => {
       if (list && list.length > 0) {
         setEmergencyCalls(prev => {
-          const map = new Map();
-          list.forEach(item => map.set(item.id, item));
-          prev.forEach(item => {
-            if (!map.has(item.id)) map.set(item.id, item);
+          const callMap = {};
+          (list || []).forEach(item => {
+            if (item && item.id) callMap[item.id] = item;
           });
-          return Array.from(map.values());
+          (prev || []).forEach(item => {
+            if (item && item.id && !callMap[item.id]) callMap[item.id] = item;
+          });
+          return Object.values(callMap);
         });
       }
     });
@@ -293,7 +280,7 @@ export const ResponderHomeView = () => {
     if (currentEmergency?.id) {
       try {
         updateEmergencyDispatchInFirestore(currentEmergency.id, { status: 'ARRIVED' });
-      } catch (e) {}
+      } catch {}
     }
   };
 
@@ -311,7 +298,7 @@ export const ResponderHomeView = () => {
     if (currentEmergency?.id) {
       try {
         updateEmergencyDispatchInFirestore(currentEmergency.id, { status: 'TRANSPORTING' });
-      } catch (e) {}
+      } catch {}
     }
   };
 
@@ -324,7 +311,7 @@ export const ResponderHomeView = () => {
     if (emgId) {
       try {
         updateEmergencyDispatchInFirestore(emgId, { status: 'COMPLETED' });
-      } catch (e) {}
+      } catch {}
     }
   };
 
@@ -337,7 +324,7 @@ export const ResponderHomeView = () => {
   };
 
   // Phone Call Launcher
-  const handleCallPatient = (phone) => {
+  const _handleCallPatient = (phone) => {
     const clean = String(phone || '').replace(/\D/g, '');
     if (clean) {
       window.location.href = `tel:${clean}`;
@@ -656,53 +643,50 @@ export const ResponderHomeView = () => {
                   </div>
                 </div>
 
-                {/* Patient Essential Details (Secure Role-Based Access) */}
-                <div className="patient-triage-details-card">
-                  <div className="patient-summary-header">
-                    <div className="patient-avatar-initials">
-                      {currentEmergency.patientName.split(' ').map(n => n[0]).join('')}
+                {/* Ambulance Dispatch & Telemetry Details */}
+                <div className="patient-triage-details-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Ambulance size={22} color="#0284c7" />
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                          Ambulance Unit #04 • ALS Cardiac ICU
+                        </h4>
+                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Vehicle Reg: <strong>AP 07 TE 1084</strong></span>
+                      </div>
                     </div>
-                    <div className="patient-meta">
-                      <h4 className="patient-name">{currentEmergency.patientName}</h4>
-                      <p className="patient-submeta">
-                        Age: <strong>{currentEmergency.patientAge}</strong> • Gender: <strong>{currentEmergency.patientGender}</strong> • Blood Group: <strong className="text-red">{currentEmergency.patientBlood}</strong>
-                      </p>
-                    </div>
-                    <span className="verified-ehr-badge">
-                      <ShieldCheck size={14} color="#10b981" />
-                      EHR Verified
+                    <span className="badge badge-bullish" style={{ fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid #10b981' }}>
+                      Active Dispatch
                     </span>
                   </div>
 
                   <div className="triage-info-grid">
                     <div className="triage-info-item full-width">
-                      <span className="triage-lbl">PICKUP LOCATION & ADDRESS</span>
+                      <span className="triage-lbl">AMBULANCE LOCATION & ROUTE</span>
                       <p className="triage-val-address">
-                        <MapPin size={15} color="#dc2626" className="inline-icon" />
-                        {currentEmergency.pickupAddress}
+                        <MapPin size={15} color="#0284c7" className="inline-icon" />
+                        {currentEmergency.pickupAddress || 'Hospital Express Highway • Sector 4'}
                       </p>
                     </div>
 
                     <div className="triage-info-item">
-                      <span className="triage-lbl">REGISTERED CONTACT NUMBER</span>
-                      <strong className="triage-val-phone">{currentEmergency.patientPhone}</strong>
+                      <span className="triage-lbl">DRIVER NAME</span>
+                      <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>{user?.name || 'K. Rambabu'}</strong>
                     </div>
 
                     <div className="triage-info-item">
+                      <span className="triage-lbl">CONTACT NUMBER</span>
+                      <strong className="triage-val-phone" style={{ color: '#0284c7', fontSize: '0.92rem' }}>{user?.phone || '+91 98765 10800'}</strong>
+                    </div>
+
+                    <div className="triage-info-item full-width">
                       <span className="triage-lbl">DESTINATION ER TRAUMA HUB</span>
-                      <strong className="triage-val-hospital">{currentEmergency.targetHospital}</strong>
-                    </div>
-
-                    <div className="triage-info-item full-width alert-box-yellow">
-                      <span className="triage-lbl text-amber">⚠️ MEDICAL ALLERGIES & PRECAUTIONS</span>
-                      <p className="triage-val-warning">
-                        Allergies: <strong>{currentEmergency.allergies}</strong>. {currentEmergency.precautions}
-                      </p>
+                      <strong className="triage-val-hospital">{currentEmergency.targetHospital || 'Government General Hospital (GGH) Guntur'}</strong>
                     </div>
                   </div>
 
-                  {/* Two Main Functional Action Buttons: Navigate & Call Patient */}
-                  <div className="dual-action-buttons-grid">
+                  {/* Two Main Functional Action Buttons: Navigate & Call Ambulance Control */}
+                  <div className="dual-action-buttons-grid" style={{ marginTop: '16px' }}>
                     <button 
                       className="btn-action-navigate"
                       onClick={handleOpenGoogleMaps}
@@ -716,17 +700,18 @@ export const ResponderHomeView = () => {
                       <ExternalLink size={18} className="btn-arrow-icon" />
                     </button>
 
-                    <button 
+                    <a 
+                      href="tel:108"
                       className="btn-action-call"
-                      onClick={() => handleCallPatient(currentEmergency.patientPhone)}
-                      title="Initiate phone call to patient"
+                      style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Direct call to 108 Emergency Control"
                     >
                       <PhoneCall size={20} />
                       <div className="btn-text-col">
-                        <span className="btn-main-label">CALL PATIENT DIRECTLY</span>
-                        <span className="btn-sub-label">{currentEmergency.patientPhone}</span>
+                        <span className="btn-main-label">CALL 108 HELPLINE</span>
+                        <span className="btn-sub-label">24/7 Emergency Dispatch</span>
                       </div>
-                    </button>
+                    </a>
                   </div>
 
                   {/* Driver Mission Flow Action Progression */}
@@ -1042,7 +1027,7 @@ export const ResponderHomeView = () => {
           className={`nav-item-btn ${activeTab === 'map' ? 'active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
-          <Map size={20} />
+          <MapIcon size={20} />
           <span>Map</span>
         </button>
 
@@ -1093,7 +1078,7 @@ export const ResponderHomeView = () => {
                 <span>Shift Dispatch History</span>
               </button>
               <button className="drawer-link-btn" onClick={() => { setActiveTab('map'); setMenuOpen(false); }}>
-                <Map size={18} color="#0284c7" />
+                <MapIcon size={18} color="#0284c7" />
                 <span>GPS Route & Hospital Beds</span>
               </button>
               <button className="drawer-link-btn" onClick={() => { setActiveTab('profile'); setMenuOpen(false); }}>

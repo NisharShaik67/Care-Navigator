@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   saveUserToFirestore, 
-  getUserFromFirestore, 
   subscribeUserFromFirestore, 
   syncAccountToFirestore, 
   subscribeAccountsFromFirestore, 
   saveAppointmentToFirestore, 
   updateAppointmentInFirestore, 
   subscribeAppointmentsFromFirestore, 
-  saveMedicalRecordToFirestore 
+  saveMedicalRecordToFirestore,
+  checkFirestoreConnection,
+  initFirebaseDatabase,
+  isDatabaseInitialized,
+  checkAndAutoInitDatabase
 } from '../firebase/firestoreService';
 import { isFirebaseConfigured, firebaseConfig } from '../firebase/config';
 
@@ -42,7 +45,7 @@ export const calculateProfileCompletion = (user) => {
   let score = 60; // Base Aadhaar Details (Name, Aadhaar Number, Address, Gender)
   if (user.age && String(user.age).trim() !== '') score += 15;
   if (user.bloodGroup && String(user.bloodGroup).trim() !== '') score += 15;
-  if (user.prescriptionReport || (user.uploadedReports && user.uploadedReports.length > 0)) score += 10;
+  if (user.prescriptionReport || (Array.isArray(user.uploadedReports) && user.uploadedReports.length > 0)) score += 10;
   return Math.min(100, score);
 };
 
@@ -221,6 +224,16 @@ export const SEED_ACCOUNTS = {
     location: 'Hospital Express Highway • Sector 4',
     isOnline: true,
     aliases: ['responder:9876510800', '9876510800', 'phone:9876510800', '108', 'responder', 'ravi', 'ravikumar']
+  },
+  'acc_admin': {
+    accountId: 'acc_admin',
+    name: 'Dr. Ramesh Kumar',
+    role: 'Super Admin',
+    designation: 'Director of Health & Emergency Control',
+    phone: '+91 94400 00108',
+    email: 'admin.director@carenavigator.ap.gov.in',
+    location: 'State Emergency Command Center, Guntur, AP',
+    aliases: ['admin', 'admin-001', 'superadmin', 'administrator', 'director']
   }
 };
 
@@ -370,6 +383,7 @@ export const persistUserDataToDb = (userToSave, extraData = {}) => {
       userToSave.role === 'Doctor' ? `acc_doctor_${Date.now()}` :
       userToSave.role === 'Receptionist' ? `acc_reception_${Date.now()}` :
       (userToSave.role === 'Responder' || userToSave.role === 'Driver') ? `acc_resp_${Date.now()}` :
+      (userToSave.role === 'Admin' || userToSave.role === 'Super Admin') ? `acc_admin_${Date.now()}` :
       `acc_patient_${Date.now()}`
     );
 
@@ -551,6 +565,32 @@ export const findOrCreateAccount = (identifier, roleHint, initialDefaults = {}) 
   return persistUserDataToDb(newAcc);
 };
 
+export const DEFAULT_DOCTOR_AVATARS = {
+  'doc-gen-4': 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+  'doc-402': 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300', // Dr. P. Anitha
+  'doc-gen-2': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-3': 'https://images.unsplash.com/photo-1594824813508-62a21e64627d?auto=format&fit=crop&q=80&w=300', // Dr. S. Meenakshi
+  'doc-4': 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300', // Dr. R. V. Ramana
+  'doc-501': 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+  'doc-502': 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&q=80&w=300', // Dr. K. Sunitha
+  'doc-gen-1': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-1': 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300', // Dr. K. Srinivas Rao
+  'doc-2': 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&q=80&w=300', // Dr. M. Lakshmi Prasanna
+  'doc-gen-6': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-601': 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300', // Dr. N. Chandra Sekhar
+  'doc-602': 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300', // Dr. B. Swapna
+  'doc-gen-7': 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+  'doc-701': 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300', // Dr. G. Ravi Teja
+  'doc-gen-3': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-5': 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300', // Dr. P. Ramesh Babu
+  'doc-gen-8': 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+  'doc-801': 'https://images.unsplash.com/photo-1594824813508-62a21e64627d?auto=format&fit=crop&q=80&w=300', // Dr. D. Sailaja
+  'doc-gen-9': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-901': 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300', // Dr. A. Vikram Dev
+  'doc-gen-10': 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+  'doc-1001': 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300' // Dr. S. K. Mukherjee
+};
+
 export const AppProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedInState] = useState(() => {
     try {
@@ -573,14 +613,33 @@ export const AppProvider = ({ children }) => {
 
   const [currentScreen, setCurrentScreenState] = useState(() => {
     try {
-      const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
-      const saved = localStorage.getItem('cn_currentScreen');
       const isAuth = localStorage.getItem('cn_isLoggedIn') === 'true';
-      const screen = hash || saved || 'landing';
-      if (!isAuth && screen !== 'landing' && screen !== 'onboarding') {
-        return 'landing';
+      const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+      if (isAuth) {
+        if (hash && hash !== 'landing' && hash !== 'onboarding') {
+          if (hash === 'admin' || hash.startsWith('admin/') || hash.startsWith('admin-')) {
+            return 'admin';
+          }
+          return hash;
+        }
+        const savedScreen = localStorage.getItem('cn_currentScreen');
+        if (savedScreen && savedScreen !== 'landing' && savedScreen !== 'onboarding') {
+          return savedScreen;
+        }
+        const uRaw = localStorage.getItem('cn_user');
+        const role = uRaw ? JSON.parse(uRaw)?.role : 'Patient';
+        return role === 'Doctor' ? 'doctor-dashboard' : role === 'Receptionist' ? 'receptionist-dashboard' : 'dashboard';
       }
-      return screen;
+      if (hash && hash !== 'landing') {
+        if (hash === 'onboarding' || hash === 'admin' || hash.startsWith('admin')) {
+          if (hash === 'admin' || hash.startsWith('admin/') || hash.startsWith('admin-')) {
+            return 'admin';
+          }
+          return hash;
+        }
+      }
+      // On app start for unauthenticated users, present the App Overview ('landing') screen
+      return 'landing';
     } catch {
       return 'landing';
     }
@@ -588,8 +647,18 @@ export const AppProvider = ({ children }) => {
 
   const [screenHistory, setScreenHistory] = useState(() => {
     try {
+      const isAuth = localStorage.getItem('cn_isLoggedIn') === 'true';
       const saved = localStorage.getItem('cn_screenHistory');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          if (isAuth) {
+            return parsed.filter(s => s && s !== 'landing' && s !== 'onboarding');
+          }
+          return parsed;
+        }
+      }
+      return [];
     } catch {
       return [];
     }
@@ -621,7 +690,15 @@ export const AppProvider = ({ children }) => {
       return DEFAULT_RECORDS;
     }
   });
-  const [hospitals] = useState([
+
+  const [hospitals, setHospitals] = useState(() => {
+    let savedAvatars = {};
+    try {
+      const s = localStorage.getItem('cn_doctor_avatars');
+      if (s) savedAvatars = JSON.parse(s);
+    } catch {}
+
+    const baseList = [
     {
       id: 'hosp-4',
       name: 'Apollo Primary Clinic & OPD Center',
@@ -925,7 +1002,29 @@ export const AppProvider = ({ children }) => {
         { id: 'doc-1001', name: 'Dr. S. K. Mukherjee', title: 'MD, DM (Pulmonology)', specialty: 'Pulmonology', experience: '28 yrs', roomNo: 'Apex OPD Block-A', fee: '₹100', available: 'Available Today', rating: 5.0 }
       ]
     }
-  ]);
+    ];
+
+    return baseList.map(hosp => {
+      const icuUnits = hosp.icuBeds !== undefined ? hosp.icuBeds : (hosp.icuAvailable || 0);
+      const specs = Array.isArray(hosp.specialties) ? [...hosp.specialties] : [];
+      if (icuUnits > 0 && !specs.some(s => s.toLowerCase().includes('icu'))) {
+        specs.push('ICU & Critical Care');
+      }
+      return {
+        ...hosp,
+        address: hosp.address || hosp.location || 'Narasaraopet, AP',
+        bedsAvailable: hosp.bedsAvailable !== undefined ? hosp.bedsAvailable : (hosp.emergencyBeds || 6),
+        icuAvailable: icuUnits,
+        emergencyQueue: hosp.emergencyQueue || (hosp.opQueueCount ? `${hosp.opQueueCount} Waiting in Queue` : '4-6 min triage'),
+        reviews: hosp.reviews || Math.floor((hosp.rating || 4.5) * 46),
+        specialties: specs,
+        doctors: (hosp.doctors || []).map(doc => ({
+          ...doc,
+          avatar: savedAvatars[doc.id] || DEFAULT_DOCTOR_AVATARS[doc.id] || doc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"
+        }))
+      };
+    });
+  });
 
   // LocalStorage Persistence Synchronization
   useEffect(() => {
@@ -944,9 +1043,24 @@ export const AppProvider = ({ children }) => {
     try {
       if (isLoggedIn && user && user.accountId) {
         localStorage.setItem('cn_user', JSON.stringify(user));
+        if (user.role === 'Patient') {
+          localStorage.setItem('cn_last_patient_account', JSON.stringify({
+            ...user,
+            appointments: appointments || [],
+            records: records || []
+          }));
+        }
       }
     } catch {}
-  }, [user, isLoggedIn]);
+  }, [user, isLoggedIn, appointments, records]);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('cn_last_patient_account')) {
+        localStorage.setItem('cn_last_patient_account', JSON.stringify(SEED_ACCOUNTS['acc_alex']));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     try {
@@ -959,6 +1073,65 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem('cn_records', JSON.stringify(records));
     } catch {}
   }, [records]);
+
+  // Cloud Firestore Status & Live Diagnostics
+  const [firestoreStatus, setFirestoreStatus] = useState({
+    connected: false,
+    status: isFirebaseConfigured ? 'CONNECTING' : 'UNCONFIGURED',
+    projectId: 'care-navigator-a8a2d',
+    message: isFirebaseConfigured ? 'Connecting to Cloud Firestore...' : 'Firebase is not configured.'
+  });
+
+  const [isDbInitializing, setIsDbInitializing] = useState(false);
+  const [dbInitProgress, setDbInitProgress] = useState(null);
+  const [dbInitResult, setDbInitResult] = useState(null);
+
+  const refreshFirestoreStatus = async () => {
+    try {
+      const res = await checkFirestoreConnection();
+      setFirestoreStatus(res);
+      return res;
+    } catch (e) {
+      const errRes = {
+        connected: false,
+        status: 'OFFLINE',
+        projectId: 'care-navigator-a8a2d',
+        message: e?.message || 'Error checking Cloud Firestore'
+      };
+      setFirestoreStatus(errRes);
+      return errRes;
+    }
+  };
+
+  const initializeDatabase = async (force = false) => {
+    setIsDbInitializing(true);
+    setDbInitProgress({ percent: 5, message: 'Starting database initialization...' });
+    try {
+      const result = await initFirebaseDatabase({
+        force,
+        onProgress: (prog) => setDbInitProgress(prog)
+      });
+      setDbInitResult(result);
+      await refreshFirestoreStatus();
+      return result;
+    } catch (err) {
+      const res = { success: false, message: err?.message || 'Database initialization error' };
+      setDbInitResult(res);
+      return res;
+    } finally {
+      setIsDbInitializing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isFirebaseConfigured) {
+      refreshFirestoreStatus().then((statusRes) => {
+        if (statusRes?.connected) {
+          checkAndAutoInitDatabase();
+        }
+      });
+    }
+  }, []);
 
   // Real-time Cloud Firestore synchronization
   useEffect(() => {
@@ -986,14 +1159,17 @@ export const AppProvider = ({ children }) => {
 
     // 2. Listen to OP Token Appointments in Firestore
     const unsubAppointments = subscribeAppointmentsFromFirestore((firestoreAppts) => {
-      if (firestoreAppts && firestoreAppts.length > 0) {
+      if (Array.isArray(firestoreAppts) && firestoreAppts.length > 0) {
         setAppointments(prev => {
-          const map = new Map();
-          firestoreAppts.forEach(a => map.set(a.id, a));
-          prev.forEach(a => {
-            if (!map.has(a.id)) map.set(a.id, a);
+          const apptMap = {};
+          firestoreAppts.forEach(a => {
+            if (a && a.id) apptMap[a.id] = a;
           });
-          return Array.from(map.values());
+          const prevList = Array.isArray(prev) ? prev : [];
+          prevList.forEach(a => {
+            if (a && a.id && !apptMap[a.id]) apptMap[a.id] = a;
+          });
+          return Object.values(apptMap);
         });
       }
     });
@@ -1023,49 +1199,210 @@ export const AppProvider = ({ children }) => {
   }, [isLoggedIn, user?.accountId]);
 
   const navigateTo = (screen, resetHistory = false) => {
+    // Check authentication reliably from React state OR localStorage
+    const isAuth = isLoggedIn || (() => {
+      try {
+        return localStorage.getItem('cn_isLoggedIn') === 'true';
+      } catch {
+        return false;
+      }
+    })();
+
+    const userRole = user?.role || (() => {
+      try {
+        const u = JSON.parse(localStorage.getItem('cn_user') || '{}');
+        return u?.role || 'Patient';
+      } catch {
+        return 'Patient';
+      }
+    })();
+
+    const defaultHome = userRole === 'Doctor'
+      ? 'doctor-dashboard'
+      : userRole === 'Receptionist'
+        ? 'receptionist-dashboard'
+        : 'dashboard';
+
     // If not authenticated and trying to access protected screens, redirect to onboarding
-    if (!isLoggedIn && screen !== 'landing' && screen !== 'onboarding') {
+    if (!isAuth && screen !== 'landing' && screen !== 'onboarding' && screen !== 'admin' && !screen?.startsWith('admin')) {
       setCurrentScreenState('onboarding');
       return;
     }
 
-    if (screen !== currentScreen) {
-      if (resetHistory) {
-        setScreenHistory([currentScreen]);
-      } else {
-        setScreenHistory(prev => [...prev, currentScreen]);
-      }
-      setCurrentScreenState(screen);
+    // If already authenticated and trying to navigate to landing or onboarding without logout, keep on defaultHome
+    if (isAuth && (screen === 'landing' || screen === 'onboarding')) {
+      setCurrentScreenState(defaultHome);
       try {
-        window.history.pushState({ screen }, '', `#${screen}`);
+        window.history.replaceState({ screen: defaultHome }, '', `#${defaultHome}`);
+      } catch {}
+      return;
+    }
+
+    const targetScreen = (screen === 'admin' || (typeof screen === 'string' && screen.startsWith('admin'))) ? 'admin' : screen;
+
+    if (targetScreen !== currentScreen) {
+      if (resetHistory) {
+        setScreenHistory([]);
+      } else {
+        setScreenHistory(prev => {
+          if (isAuth) {
+            const clean = prev.filter(s => s && s !== 'landing' && s !== 'onboarding');
+            if (currentScreen && currentScreen !== 'landing' && currentScreen !== 'onboarding') {
+              return [...clean, currentScreen];
+            }
+            return clean;
+          }
+          return [...prev, currentScreen];
+        });
+      }
+      setCurrentScreenState(targetScreen);
+      try {
+        window.history.pushState({ screen: targetScreen }, '', `#${targetScreen}`);
       } catch {
         // ignore
       }
     }
   };
 
-  const goBack = () => {
-    if (screenHistory.length > 0) {
-      const prevScreen = screenHistory[screenHistory.length - 1];
-      setScreenHistory(prev => prev.slice(0, -1));
-      setCurrentScreenState(prevScreen);
-    } else if (currentScreen !== 'landing') {
-      setCurrentScreenState('landing');
-    }
-  };
+  const goBack = React.useCallback(() => {
+    const isAuth = isLoggedIn || (() => {
+      try {
+        return localStorage.getItem('cn_isLoggedIn') === 'true';
+      } catch {
+        return false;
+      }
+    })();
+
+    const userRole = user?.role || (() => {
+      try {
+        const u = JSON.parse(localStorage.getItem('cn_user') || '{}');
+        return u?.role || 'Patient';
+      } catch {
+        return 'Patient';
+      }
+    })();
+
+    const defaultHome = userRole === 'Doctor'
+      ? 'doctor-dashboard'
+      : userRole === 'Receptionist'
+        ? 'receptionist-dashboard'
+        : 'dashboard';
+
+    setScreenHistory(prev => {
+      if (isAuth) {
+        // Filter out any invalid screens, landing, onboarding, or current screen duplicates
+        const cleanHistory = prev.filter(s => s && s !== 'landing' && s !== 'onboarding' && s !== currentScreen);
+        if (cleanHistory.length > 0) {
+          const prevScreen = cleanHistory[cleanHistory.length - 1];
+          setCurrentScreenState(prevScreen);
+          try {
+            window.history.replaceState({ screen: prevScreen }, '', `#${prevScreen}`);
+          } catch {}
+          return cleanHistory.slice(0, -1);
+        } else {
+          // If no history remains, stay on or return to default home (e.g. 'dashboard')
+          // NEVER log out or go to landing!
+          setCurrentScreenState(defaultHome);
+          try {
+            window.history.replaceState({ screen: defaultHome }, '', `#${defaultHome}`);
+          } catch {}
+          return [];
+        }
+      } else {
+        if (prev.length > 0) {
+          const prevScreen = prev[prev.length - 1];
+          setCurrentScreenState(prevScreen);
+          try {
+            window.history.replaceState({ screen: prevScreen }, '', `#${prevScreen}`);
+          } catch {}
+          return prev.slice(0, -1);
+        } else {
+          setCurrentScreenState('landing');
+          try {
+            window.history.replaceState({ screen: 'landing' }, '', `#landing`);
+          } catch {}
+          return [];
+        }
+      }
+    });
+  }, [isLoggedIn, user?.role, currentScreen]);
 
   useEffect(() => {
+    const userRole = user?.role || (() => {
+      try { return JSON.parse(localStorage.getItem('cn_user') || '{}')?.role || 'Patient'; } catch { return 'Patient'; }
+    })();
+    const defaultHome = userRole === 'Doctor'
+      ? 'doctor-dashboard'
+      : userRole === 'Receptionist'
+        ? 'receptionist-dashboard'
+        : 'dashboard';
+
     const handlePopState = (event) => {
-      if (event.state && event.state.screen) {
-        setCurrentScreenState(event.state.screen);
-        setScreenHistory(prev => (prev.length > 0 ? prev.slice(0, -1) : []));
-      } else if (screenHistory.length > 0) {
-        goBack();
+      const auth = isLoggedIn || (localStorage.getItem('cn_isLoggedIn') === 'true');
+      let targetScreen = (event.state && event.state.screen) ? event.state.screen : null;
+      if (!targetScreen) {
+        const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+        targetScreen = hash;
+      }
+
+      if (auth) {
+        // If logged in and popping back to landing, onboarding, or empty/root:
+        // Do NOT log out! Navigate to defaultHome and protect the user session!
+        if (!targetScreen || targetScreen === 'landing' || targetScreen === 'onboarding') {
+          setCurrentScreenState(defaultHome);
+          setScreenHistory([]);
+          try {
+            window.history.replaceState({ screen: defaultHome }, '', `#${defaultHome}`);
+          } catch {}
+          return;
+        }
+
+        const normalized = (targetScreen === 'admin' || (typeof targetScreen === 'string' && targetScreen.startsWith('admin'))) ? 'admin' : targetScreen;
+        setCurrentScreenState(normalized);
+        setScreenHistory(prev => {
+          const clean = prev.filter(s => s && s !== 'landing' && s !== 'onboarding');
+          return clean.length > 0 ? clean.slice(0, -1) : [];
+        });
+      } else {
+        if (targetScreen) {
+          const normalized = (targetScreen === 'admin' || (typeof targetScreen === 'string' && targetScreen.startsWith('admin'))) ? 'admin' : targetScreen;
+          setCurrentScreenState(normalized);
+          setScreenHistory(prev => (prev.length > 0 ? prev.slice(0, -1) : []));
+        } else {
+          goBack();
+        }
       }
     };
+
+    const handleHashChange = () => {
+      const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+      const auth = isLoggedIn || (localStorage.getItem('cn_isLoggedIn') === 'true');
+      if (auth) {
+        if (!hash || hash === 'landing' || hash === 'onboarding') {
+          // Keep user safely on home screen if hash is landing/onboarding or empty
+          setCurrentScreenState(defaultHome);
+          try {
+            window.history.replaceState({ screen: defaultHome }, '', `#${defaultHome}`);
+          } catch {}
+          return;
+        }
+        const normalized = (hash === 'admin' || (typeof hash === 'string' && hash.startsWith('admin'))) ? 'admin' : hash;
+        setCurrentScreenState(normalized);
+      } else {
+        if (hash) {
+          const normalized = (hash === 'admin' || (typeof hash === 'string' && hash.startsWith('admin'))) ? 'admin' : hash;
+          setCurrentScreenState(normalized);
+        }
+      }
+    };
+
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [screenHistory, currentScreen]);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [goBack, isLoggedIn, user?.role]);
 
   const updateUserProfile = (updates) => {
     setUser(prev => {
@@ -1073,6 +1410,9 @@ export const AppProvider = ({ children }) => {
       persistUserDataToDb(updated);
       try {
         localStorage.setItem('cn_user', JSON.stringify(updated));
+        if (updated.role === 'Patient') {
+          localStorage.setItem('cn_last_patient_account', JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1088,16 +1428,103 @@ export const AppProvider = ({ children }) => {
     setUser(account);
     if (account.appointments && Array.isArray(account.appointments)) {
       setAppointments(account.appointments);
+    } else {
+      setAppointments(prev => Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_APPOINTMENTS);
     }
     if (account.records && Array.isArray(account.records)) {
       setRecords(account.records);
+    } else {
+      setRecords(prev => Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_RECORDS);
     }
     setIsLoggedIn(true);
     try {
       localStorage.setItem('cn_isLoggedIn', 'true');
       localStorage.setItem('cn_user', JSON.stringify(account));
+      if (account.role === 'Patient' || roleHint === 'Patient') {
+        localStorage.setItem('cn_last_patient_account', JSON.stringify({
+          ...account,
+          appointments: account.appointments || DEFAULT_APPOINTMENTS,
+          records: account.records || DEFAULT_RECORDS
+        }));
+      }
     } catch {}
     return account;
+  };
+
+  const returnToPatientPortal = () => {
+    try {
+      let patientAccount = null;
+      try {
+        const raw = localStorage.getItem('cn_last_patient_account');
+        if (raw) patientAccount = JSON.parse(raw);
+      } catch {}
+
+      if (!patientAccount) {
+        const db = getAccountDb();
+        const found = Object.values(db).find(acc => acc && acc.role === 'Patient');
+        if (found) patientAccount = found;
+      }
+
+      if (!patientAccount) {
+        patientAccount = SEED_ACCOUNTS['acc_alex'] || DEFAULT_USER;
+      }
+
+      patientAccount = { ...patientAccount, role: 'Patient' };
+
+      // Set user & auth state
+      setUser(patientAccount);
+      setIsLoggedIn(true);
+
+      // Restore appointments
+      if (Array.isArray(patientAccount.appointments) && patientAccount.appointments.length > 0) {
+        setAppointments(patientAccount.appointments);
+        try { localStorage.setItem('cn_appointments', JSON.stringify(patientAccount.appointments)); } catch {}
+      } else {
+        try {
+          const savedApps = localStorage.getItem('cn_appointments');
+          if (savedApps) {
+            setAppointments(JSON.parse(savedApps));
+          } else {
+            setAppointments(DEFAULT_APPOINTMENTS);
+          }
+        } catch {
+          setAppointments(DEFAULT_APPOINTMENTS);
+        }
+      }
+
+      // Restore records
+      if (Array.isArray(patientAccount.records) && patientAccount.records.length > 0) {
+        setRecords(patientAccount.records);
+        try { localStorage.setItem('cn_records', JSON.stringify(patientAccount.records)); } catch {}
+      } else {
+        try {
+          const savedRecs = localStorage.getItem('cn_records');
+          if (savedRecs) {
+            setRecords(JSON.parse(savedRecs));
+          } else {
+            setRecords(DEFAULT_RECORDS);
+          }
+        } catch {
+          setRecords(DEFAULT_RECORDS);
+        }
+      }
+
+      try {
+        localStorage.setItem('cn_user', JSON.stringify(patientAccount));
+        localStorage.setItem('cn_isLoggedIn', 'true');
+        localStorage.setItem('cn_last_patient_account', JSON.stringify(patientAccount));
+        sessionStorage.removeItem('cn_admin_unlocked');
+      } catch {}
+
+      setCurrentScreenState('dashboard');
+      try {
+        window.history.pushState({ screen: 'dashboard' }, '', '#dashboard');
+      } catch {}
+      return patientAccount;
+    } catch (err) {
+      console.error('Failed to return to patient portal:', err);
+      setCurrentScreenState('dashboard');
+    }
   };
 
   const switchRole = (role) => {
@@ -1115,16 +1542,21 @@ export const AppProvider = ({ children }) => {
       setCurrentScreenState('receptionist-dashboard');
     } else if (role === 'Responder' || role === 'Driver') {
       setCurrentScreenState('emergency');
+    } else if (role === 'Admin' || role === 'Super Admin') {
+      setCurrentScreenState('admin');
     } else {
       setCurrentScreenState('dashboard');
     }
   };
 
   const logout = () => {
-    // Preserve the active user's latest saved data, appointments, and records in cn_accounts_db
+    // Preserve the active user's latest saved data, appointments, and records in cn_accounts_db and cn_last_patient_account
     try {
       if (isLoggedIn && user && user.accountId) {
         persistUserDataToDb(user, { appointments, records });
+        if (user.role === 'Patient') {
+          localStorage.setItem('cn_last_patient_account', JSON.stringify({ ...user, appointments, records }));
+        }
       }
     } catch {}
 
@@ -1141,7 +1573,11 @@ export const AppProvider = ({ children }) => {
     setUser(DEFAULT_USER);
     setAppointments(DEFAULT_APPOINTMENTS);
     setRecords(DEFAULT_RECORDS);
+    setScreenHistory([]);
     setCurrentScreenState('landing');
+    try {
+      window.history.replaceState({ screen: 'landing' }, '', '#landing');
+    } catch {}
   };
 
   const bookOPToken = (tokenData) => {
@@ -1162,6 +1598,11 @@ export const AppProvider = ({ children }) => {
       const updated = [newToken, ...prev];
       if (user) {
         persistUserDataToDb(user, { appointments: updated });
+        if (user.role === 'Patient') {
+          try {
+            localStorage.setItem('cn_last_patient_account', JSON.stringify({ ...user, appointments: updated }));
+          } catch {}
+        }
       }
       return updated;
     });
@@ -1181,6 +1622,11 @@ export const AppProvider = ({ children }) => {
       const updated = prev.map(app => app.id === id ? { ...app, status: 'CANCELLED' } : app);
       if (user) {
         persistUserDataToDb(user, { appointments: updated });
+        if (user.role === 'Patient') {
+          try {
+            localStorage.setItem('cn_last_patient_account', JSON.stringify({ ...user, appointments: updated }));
+          } catch {}
+        }
       }
       return updated;
     });
@@ -1198,6 +1644,11 @@ export const AppProvider = ({ children }) => {
       const updated = [record, ...prev];
       if (user) {
         persistUserDataToDb(user, { records: updated });
+        if (user.role === 'Patient') {
+          try {
+            localStorage.setItem('cn_last_patient_account', JSON.stringify({ ...user, records: updated }));
+          } catch {}
+        }
       }
       return updated;
     });
@@ -1212,8 +1663,25 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const updateDoctorAvatar = (_id, _newAvatarUrl) => {
-    // optional helper
+  const updateDoctorAvatar = (docId, newAvatarUrl) => {
+    try {
+      let savedAvatars = {};
+      const s = localStorage.getItem('cn_doctor_avatars');
+      if (s) savedAvatars = JSON.parse(s);
+      savedAvatars[docId] = newAvatarUrl;
+      localStorage.setItem('cn_doctor_avatars', JSON.stringify(savedAvatars));
+    } catch (err) {
+      console.warn('Failed to save doctor avatar to localStorage:', err);
+    }
+
+    setHospitals(prevHospitals => 
+      prevHospitals.map(hosp => ({
+        ...hosp,
+        doctors: (hosp.doctors || []).map(doc => 
+          doc.id === docId ? { ...doc, avatar: newAvatarUrl } : doc
+        )
+      }))
+    );
   };
 
   return (
@@ -1230,6 +1698,7 @@ export const AppProvider = ({ children }) => {
         updateUserProfile,
         switchRole,
         logout,
+        returnToPatientPortal,
         appointments,
         bookOPToken,
         cancelAppointment,
@@ -1241,7 +1710,14 @@ export const AppProvider = ({ children }) => {
         lookupAccount,
         getStoredAccounts: getAccountDb,
         isFirebaseConfigured,
-        firebaseConfig
+        firebaseConfig,
+        firestoreStatus,
+        refreshFirestoreStatus,
+        initializeDatabase,
+        isDbInitializing,
+        dbInitProgress,
+        dbInitResult,
+        isDatabaseInitialized
       }}
     >
       {children}

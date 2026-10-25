@@ -267,10 +267,13 @@ export const MedicalHistoryView = () => {
         .medical-history-container {
           flex: 1;
           overflow-y: auto;
-          padding: 24px;
+          padding: 24px 32px 80px;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
+          max-width: 1440px;
+          margin: 0 auto;
+          width: 100%;
         }
 
         .vault-header-card {
@@ -332,15 +335,23 @@ export const MedicalHistoryView = () => {
 
         .records-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
           gap: 20px;
+        }
+
+        @media (min-width: 1200px) {
+          .records-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
         .record-card {
           padding: 24px;
           display: flex;
           flex-direction: column;
+          justify-content: space-between;
           gap: 12px;
+          height: 100%;
         }
 
         .rec-top {

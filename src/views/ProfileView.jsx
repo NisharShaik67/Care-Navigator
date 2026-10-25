@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
-import { User, Phone, ShieldCheck, Heart, AlertTriangle, FileText, QrCode, Edit3, Plus, CheckCircle2, UserPlus, LogOut, Upload, Camera, Trash2, X, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Phone, ShieldCheck, Heart, AlertTriangle, FileText, Edit3, CheckCircle2, UserPlus, LogOut, Upload, Camera, Trash2, X, Sparkles } from 'lucide-react';
 
 export const ProfileView = () => {
   const { user, updateUserProfile, logout } = useApp();
@@ -715,10 +715,13 @@ export const ProfileView = () => {
         .profile-view-container {
           flex: 1;
           overflow-y: auto;
-          padding: 24px;
+          padding: 24px 32px 80px;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
+          max-width: 1440px;
+          margin: 0 auto;
+          width: 100%;
         }
 
         .profile-card {
@@ -873,8 +876,14 @@ export const ProfileView = () => {
 
         .medical-flags-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 16px;
+        }
+
+        @media (max-width: 900px) {
+          .medical-flags-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .flag-card {
@@ -1052,9 +1061,15 @@ export const ProfileView = () => {
 
         .precautions-alerts-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          grid-template-columns: 1fr 1fr;
           gap: 20px;
           margin-bottom: 24px;
+        }
+
+        @media (max-width: 900px) {
+          .precautions-alerts-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .precautions-card, .alerts-card {

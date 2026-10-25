@@ -322,6 +322,233 @@ export const AmbulanceRouteMap = ({ sosState, onSpeedChange }) => {
           />
         </div>
       </div>
+
+      <style>{`
+        .ambulance-map-wrapper {
+          background: #ffffff;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+          position: relative;
+        }
+
+        .map-hud-header {
+          background: #ffffff;
+          padding: 14px 18px;
+          border-bottom: 1px solid #e2e8f0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .hud-left {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .hud-status-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .live-dot.pulse-red {
+          background: #ef4444;
+          box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+          animation: mapSirenPulse 1.2s infinite ease-in-out;
+        }
+
+        .live-dot.green {
+          background: #10b981;
+          box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+        }
+
+        @keyframes mapSirenPulse {
+          0% { transform: scale(0.9); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; }
+          100% { transform: scale(0.9); opacity: 0.8; }
+        }
+
+        .hud-street-name {
+          font-size: 0.84rem;
+          color: #334155;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .hud-street-name strong {
+          color: #0284c7;
+        }
+
+        .hud-metrics {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .metric-box {
+          background: #f8fafc;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          padding: 6px 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          min-width: 70px;
+        }
+
+        .metric-box.highlighted {
+          background: #fef2f2;
+          border-color: #fca5a5;
+        }
+
+        .m-label {
+          font-size: 0.62rem;
+          font-weight: 800;
+          color: #64748b;
+          letter-spacing: 0.5px;
+        }
+
+        .m-val {
+          font-size: 1.05rem;
+          font-weight: 900;
+          line-height: 1.1;
+        }
+
+        .m-val small {
+          font-size: 0.65rem;
+          font-weight: 700;
+        }
+
+        .map-canvas-container {
+          position: relative;
+          width: 100%;
+          background: #0f172a;
+          overflow: hidden;
+          transition: transform 0.2s ease;
+        }
+
+        .map-svg {
+          width: 100%;
+          height: auto;
+          display: block;
+          max-height: 420px;
+        }
+
+        .map-controls-bar {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          padding: 6px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 10;
+        }
+
+        .map-ctrl-btn {
+          background: rgba(255, 255, 255, 0.12);
+          border: none;
+          color: #ffffff;
+          padding: 6px 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          transition: all 0.2s ease;
+        }
+
+        .map-ctrl-btn:hover {
+          background: rgba(255, 255, 255, 0.25);
+        }
+
+        .map-ctrl-btn.speed-btn.active {
+          background: rgba(245, 158, 11, 0.3);
+          color: #fef08a;
+          border: 1px solid #f59e0b;
+        }
+
+        .map-route-progress {
+          padding: 12px 18px;
+          background: #ffffff;
+          border-top: 1px solid #e2e8f0;
+        }
+
+        .progress-label-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.78rem;
+          color: #475569;
+          margin-bottom: 6px;
+        }
+
+        .progress-track {
+          height: 6px;
+          background: #e2e8f0;
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #0284c7 0%, #10b981 100%);
+          border-radius: 999px;
+          transition: width 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+          .map-hud-header {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px 14px;
+          }
+
+          .hud-metrics {
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .metric-box {
+            flex: 1;
+          }
+
+          .metric-box.hide-mobile {
+            display: none;
+          }
+
+          .map-controls-bar {
+            bottom: 8px;
+            right: 8px;
+            transform: scale(0.9);
+            transform-origin: bottom right;
+          }
+        }
+      `}</style>
     </div>
   );
 };

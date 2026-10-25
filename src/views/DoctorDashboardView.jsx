@@ -33,7 +33,28 @@ import {
 } from 'lucide-react';
 
 export const DoctorDashboardView = () => {
-  const { user, updateUserProfile, logout } = useApp();
+  const { user, updateUserProfile, logout, navigateTo } = useApp();
+  const logoClicksRef = useRef({ count: 0, timer: null });
+
+  const handleLogoTripleClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    logoClicksRef.current.count += 1;
+    if (logoClicksRef.current.timer) {
+      clearTimeout(logoClicksRef.current.timer);
+    }
+
+    if (logoClicksRef.current.count >= 3) {
+      logoClicksRef.current.count = 0;
+      navigateTo('admin');
+      return;
+    }
+
+    logoClicksRef.current.timer = setTimeout(() => {
+      logoClicksRef.current.count = 0;
+    }, 550);
+  };
 
   // Active Bottom Tab
   const [activeTab, setActiveTab] = useState('home');
@@ -205,7 +226,7 @@ export const DoctorDashboardView = () => {
   const [isEmergencyAccepted, setIsEmergencyAccepted] = useState(false);
 
   // Emergency Alert Data
-  const [emergencyAlert, setEmergencyAlert] = useState({
+  const [emergencyAlert] = useState({
     id: 'EMG-9021',
     count: 1,
     patientName: 'Ramesh Gupta',
@@ -445,7 +466,12 @@ export const DoctorDashboardView = () => {
               <button className="nav-icon-btn" onClick={() => setShowMenuDrawer(true)} title="Open Menu">
                 <Menu size={22} color="#ffffff" />
               </button>
-              <div className="app-brand" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+              <div 
+                className="app-brand" 
+                onClick={handleLogoTripleClick} 
+                title="Care Navigator (Click 3 times to open Admin Page)"
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', cursor: 'pointer', userSelect: 'none' }}
+              >
                 <div style={{
                   width: '42px',
                   height: '42px',

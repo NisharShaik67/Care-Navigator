@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   ShieldAlert, 
@@ -7,31 +7,61 @@ import {
   ArrowRight, 
   CheckCircle2, 
   UserCheck, 
+  Stethoscope,
   Ambulance, 
   Building2, 
   ShieldCheck, 
   Zap, 
   Lock,
+  Clock,
   Menu,
-  X,
-  Clock
+  X
 } from 'lucide-react';
 
 export const LandingView = () => {
   const { navigateTo } = useApp();
+  const [activeRoleTab, setActiveRoleTab] = useState('User');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLaunchPortal = () => {
     navigateTo('onboarding');
   };
 
+  const handleLogoTripleClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    logoClicksRef.current.count += 1;
+    if (logoClicksRef.current.timer) {
+      clearTimeout(logoClicksRef.current.timer);
+    }
+
+    if (logoClicksRef.current.count >= 3) {
+      logoClicksRef.current.count = 0;
+      try {
+        sessionStorage.removeItem('cn_admin_unlocked');
+      } catch {}
+      navigateTo('admin');
+      return;
+    }
+
+    logoClicksRef.current.timer = setTimeout(() => {
+      logoClicksRef.current.count = 0;
+    }, 950);
+  };
 
   return (
     <div className="landing-page-container fade-in">
       {/* Navigation Header */}
       <nav className="landing-navbar glass-panel">
         <div className="landing-nav-inner">
-          <div className="landing-brand" onClick={() => navigateTo('landing')}>
+          <div 
+            className="landing-brand" 
+            onClick={handleLogoTripleClick} 
+            title="Care Navigator (Click 3 times to open Admin Page)"
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
             <div className="brand-icon-box">
               <img src="/Logo.jpeg" alt="Care Navigator Logo" className="brand-logo-img" />
             </div>
@@ -42,7 +72,9 @@ export const LandingView = () => {
           </div>
 
           <div className={`landing-nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <a href="#overview" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Overview</a>
             <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Features</a>
+            <a href="#roles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Role Portals</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
             <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Patient'); }}>
@@ -50,13 +82,14 @@ export const LandingView = () => {
             </button>
           </div>
 
-          <div className="landing-nav-actions desktop-only">
+          <div className="landing-nav-actions desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button className="btn btn-primary btn-sm" onClick={() => handleLaunchPortal('Patient')}>
               <span>Sign In with Aadhaar</span>
             </button>
           </div>
 
           <button 
+            type="button"
             className="mobile-menu-toggle" 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle navigation menu"
@@ -67,7 +100,7 @@ export const LandingView = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="landing-hero">
+      <section id="overview" className="landing-hero">
         <div className="hero-content">
           <h1 className="hero-headline">
             Universal Aadhaar Healthcare <br />
@@ -213,7 +246,186 @@ export const LandingView = () => {
         </div>
       </section>
 
+      {/* Role Showcase Tabs */}
+      <section id="roles" className="landing-roles-section">
+        <div className="section-header text-center">
+          <span className="section-tag">ROLE-BASED PORTALS OVERVIEW</span>
+          <h2 className="section-title">Designed for Every Stakeholder in Healthcare</h2>
+          <p className="section-desc">Unified digital healthcare infrastructure tailored for patients, doctors, receptionists, 108 first responders, and central health administration.</p>
+        </div>
 
+        <div className="role-tabs-container">
+          <div className="role-tabs-header">
+            <button 
+              type="button"
+              className={`role-tab-btn ${activeRoleTab === 'User' || activeRoleTab === 'Patient' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('User')}
+            >
+              <UserCheck size={18} />
+              <span>Patient</span>
+            </button>
+            <button 
+              type="button"
+              className={`role-tab-btn ${activeRoleTab === 'Doctor' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('Doctor')}
+            >
+              <Stethoscope size={18} />
+              <span>Doctor</span>
+            </button>
+            <button 
+              type="button"
+              className={`role-tab-btn ${activeRoleTab === 'Receptionist' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('Receptionist')}
+            >
+              <Building2 size={18} />
+              <span>Receptionist</span>
+            </button>
+            <button 
+              type="button"
+              className={`role-tab-btn ${activeRoleTab === 'Responder' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('Responder')}
+            >
+              <Ambulance size={18} />
+              <span><span className="mobile-hide">First </span>Responder</span>
+            </button>
+            <button 
+              type="button"
+              className={`role-tab-btn ${activeRoleTab === 'Admin' ? 'active' : ''}`}
+              onClick={() => setActiveRoleTab('Admin')}
+            >
+              <ShieldAlert size={18} />
+              <span>Admin</span>
+            </button>
+          </div>
+
+          <div className="role-tab-content glass-card fade-in">
+            {(activeRoleTab === 'User' || activeRoleTab === 'Patient') && (
+              <div className="role-content-body">
+                <div className="role-text">
+                  <span className="role-badge green">Patient Portal</span>
+                  <h3>Complete Control Over Your Personal Health Journey</h3>
+                  <ul>
+                    <li><CheckCircle2 size={16} color="#10b981" /> 1-Tap Aadhaar Login with auto-filled profile and ABHA health ID.</li>
+                    <li><CheckCircle2 size={16} color="#10b981" /> Book OP tokens and monitor live doctor queue numbers from home.</li>
+                    <li><CheckCircle2 size={16} color="#10b981" /> Store lifetime medical records, prescriptions, and allergy alerts.</li>
+                    <li><CheckCircle2 size={16} color="#10b981" /> Instant 108 Ambulance helpline and emergency responder guidelines.</li>
+                  </ul>
+                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Patient')}>
+                    <span>Enter Patient Portal</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="role-preview-card glass-panel">
+                  <UserCheck size={48} color="#10b981" />
+                  <h4>Patient Dashboard</h4>
+                  <p>Aadhaar ID: 5892 4103 7621</p>
+                  <div className="mini-badge" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>Active Token #14 • GGH Cardiology</div>
+                </div>
+              </div>
+            )}
+
+            {activeRoleTab === 'Doctor' && (
+              <div className="role-content-body">
+                <div className="role-text">
+                  <span className="role-badge sky">Doctor Consultation Portal</span>
+                  <h3>Effortless Patient Consultations & Digital Prescriptions</h3>
+                  <ul>
+                    <li><CheckCircle2 size={16} color="#0284c7" /> Instant access to patient EHR history via Aadhaar scan.</li>
+                    <li><CheckCircle2 size={16} color="#0284c7" /> Real-time OPD patient queue manager and next token caller.</li>
+                    <li><CheckCircle2 size={16} color="#0284c7" /> AI triage recommendations & allergy warning indicators.</li>
+                    <li><CheckCircle2 size={16} color="#0284c7" /> Digital e-prescription generation with automatic pharmacy sync.</li>
+                  </ul>
+                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Doctor')}>
+                    <span>Enter Doctor Portal</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="role-preview-card glass-panel">
+                  <Stethoscope size={48} color="#0284c7" />
+                  <h4>Doctor Queue Desk</h4>
+                  <p>Dr. K. Srinivas Rao, MD</p>
+                  <div className="mini-badge" style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' }}>3 Patients Waiting in Queue</div>
+                </div>
+              </div>
+            )}
+
+            {activeRoleTab === 'Receptionist' && (
+              <div className="role-content-body">
+                <div className="role-text">
+                  <span className="role-badge amber">Receptionist Desk</span>
+                  <h3>Rapid Patient Lookup & OPD Token Generation</h3>
+                  <ul>
+                    <li><CheckCircle2 size={16} color="#f59e0b" /> Search patient by 12-digit Aadhaar number or phone for 2-second check-in.</li>
+                    <li><CheckCircle2 size={16} color="#f59e0b" /> Issue instant OP tokens for General Triage or Specialty departments.</li>
+                    <li><CheckCircle2 size={16} color="#f59e0b" /> Monitor live Emergency, ICU, and Ventilator bed availability.</li>
+                    <li><CheckCircle2 size={16} color="#f59e0b" /> Handle emergency walk-ins with priority triage routing.</li>
+                  </ul>
+                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Receptionist')}>
+                    <span>Enter Receptionist Desk</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="role-preview-card glass-panel">
+                  <Building2 size={48} color="#f59e0b" />
+                  <h4>Receptionist Desk</h4>
+                  <p>Government General Hospital Desk #1</p>
+                  <div className="mini-badge" style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' }}>14 Emergency Beds Available</div>
+                </div>
+              </div>
+            )}
+
+            {activeRoleTab === 'Responder' && (
+              <div className="role-content-body">
+                <div className="role-text">
+                  <span className="role-badge red">108 Responder Console</span>
+                  <h3>Live Emergency Telemetry & Dispatch Management</h3>
+                  <ul>
+                    <li><CheckCircle2 size={16} color="#ef4444" /> Real-time GPS navigation to victim location with optimal hospital routing.</li>
+                    <li><CheckCircle2 size={16} color="#ef4444" /> Pre-fetch patient blood group, allergies, and emergency contacts via Aadhaar.</li>
+                    <li><CheckCircle2 size={16} color="#ef4444" /> Transmit pre-hospital vital telemetry to receiving trauma center.</li>
+                    <li><CheckCircle2 size={16} color="#ef4444" /> Direct 1-tap phone communication with victim and emergency room.</li>
+                  </ul>
+                  <button className="btn btn-primary" onClick={() => handleLaunchPortal('Responder')}>
+                    <span>Enter Responder Console</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="role-preview-card glass-panel">
+                  <Ambulance size={48} color="#ef4444" />
+                  <h4>108 Ambulance Unit</h4>
+                  <p>Vehicle: AP 07 AP 1082</p>
+                  <div className="mini-badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>En Route • ETA 5 Mins</div>
+                </div>
+              </div>
+            )}
+
+            {activeRoleTab === 'Admin' && (
+              <div className="role-content-body">
+                <div className="role-text">
+                  <span className="role-badge purple" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#7c3aed' }}>Central Command Admin</span>
+                  <h3>State Healthcare Oversight & Multi-Facility Control</h3>
+                  <ul>
+                    <li><CheckCircle2 size={16} color="#8b5cf6" /> Live monitoring of statewide OPD queues, hospitals, and ambulances.</li>
+                    <li><CheckCircle2 size={16} color="#8b5cf6" /> Real-time Cloud Firestore synchronization and diagnostic audits.</li>
+                    <li><CheckCircle2 size={16} color="#8b5cf6" /> Role management, hospital bed matrix allocations, and alert broadcasts.</li>
+                    <li><CheckCircle2 size={16} color="#8b5cf6" /> Analytics telemetry across GGH and district area health networks.</li>
+                  </ul>
+                  <button className="btn btn-primary" onClick={() => navigateTo('admin')}>
+                    <span>Open Admin Dashboard</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="role-preview-card glass-panel">
+                  <ShieldAlert size={48} color="#8b5cf6" />
+                  <h4>Command Center</h4>
+                  <p>Director of Health & Emergency Control</p>
+                  <div className="mini-badge" style={{ background: '#ede9fe', color: '#6d28d9', border: '1px solid #c4b5fd' }}>AP State Command Live</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* How It Works */}
       <section id="how-it-works" className="landing-how-section">
@@ -261,15 +473,22 @@ export const LandingView = () => {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="footer-inner">
-          <div className="footer-brand">
+          <div 
+            className="footer-brand" 
+            onClick={handleLogoTripleClick} 
+            style={{ cursor: 'pointer', userSelect: 'none' }} 
+            title="Care Navigator"
+          >
             <div className="brand-icon-box">
               <img src="/Logo.jpeg" alt="Care Navigator Logo" className="brand-logo-img" />
             </div>
             <span className="brand-name">Care Navigator</span>
           </div>
-          <p className="footer-copy">
-            © 2026 Ranbidge Solutions Private Limited.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <p className="footer-copy" style={{ margin: 0 }}>
+              © 2026 Ranbidge Solutions Private Limited.
+            </p>
+          </div>
         </div>
       </footer>
 

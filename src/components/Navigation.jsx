@@ -5,8 +5,10 @@ import { Home, ShieldAlert, Bot, CalendarCheck, FolderHeart, Building2, User } f
 export const Navigation = () => {
   const { currentScreen, navigateTo, appointments, user } = useApp();
 
-  const activeAppointmentsCount = appointments.filter(a => a.status === 'ACTIVE').length;
-  const isDoctor = user?.role === 'Doctor' || user?.name?.includes('Raghavendra');
+  const activeAppointmentsCount = Array.isArray(appointments)
+    ? appointments.filter(a => a && a.status === 'ACTIVE').length
+    : 0;
+  const isDoctor = user?.role === 'Doctor' || String(user?.name || '').includes('Raghavendra');
   const isResponder = user?.role === 'Responder' || user?.role === 'Driver';
 
   const navItems = isResponder ? [
@@ -16,6 +18,7 @@ export const Navigation = () => {
     { id: 'profile', label: 'Profile', icon: User }
   ] : [
     { id: 'dashboard', label: 'Home', icon: Home },
+    { id: 'emergency', label: '108 Ambulance', icon: ShieldAlert },
     ...(!isDoctor ? [{ id: 'op-booking', label: 'Book OP', icon: CalendarCheck, badge: activeAppointmentsCount > 0 ? activeAppointmentsCount : null }] : []),
     { id: 'records', label: 'Health Vault', icon: FolderHeart },
     { id: 'symptom-checker', label: 'AI Symptom', icon: Bot }
@@ -32,7 +35,7 @@ export const Navigation = () => {
         return (
           <button
             key={item.id}
-            className={`nav-tab ${isActive ? 'active' : ''}`}
+            className={`nav-tab ${isActive ? 'active' : ''} ${item.id === 'emergency' ? 'emergency-nav-tab' : ''}`}
             onClick={() => navigateTo(item.id)}
           >
             <div className="icon-wrapper">
@@ -89,6 +92,11 @@ export const Navigation = () => {
         .nav-tab.active {
           color: #059669;
           background: rgba(16, 185, 129, 0.12);
+        }
+
+        .nav-tab.emergency-nav-tab.active {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.12);
         }
 
         .nav-tab.middle-sos-tab {

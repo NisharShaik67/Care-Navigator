@@ -7,13 +7,17 @@ import {
   FolderHeart, 
   ChevronRight, 
   Sparkles, 
-  Bell 
+  Bell,
+  HeartPulse,
+  ShieldAlert
 } from 'lucide-react';
 
 export const DashboardView = () => {
   const { user, navigateTo, appointments } = useApp();
 
-  const activeAppointments = (appointments || []).filter(a => a.status === 'ACTIVE');
+  const activeAppointments = Array.isArray(appointments)
+    ? appointments.filter(a => a && a.status === 'ACTIVE')
+    : [];
   const completionScore = calculateProfileCompletion(user);
   const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
 
@@ -66,9 +70,9 @@ export const DashboardView = () => {
               src={
                 user?.photo
                   ? user.photo
-                  : (user?.name?.includes('Raghavendra') || user?.role === 'Doctor')
+                  : (String(user?.name || '').includes('Raghavendra') || user?.role === 'Doctor')
                     ? "/doctor_raghavendra.jpg"
-                    : (user?.gender === 'FEMALE' || user?.name?.toLowerCase().includes('priya'))
+                    : (user?.gender === 'FEMALE' || String(user?.name || '').toLowerCase().includes('priya'))
                       ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
                       : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300"
               } 
@@ -161,6 +165,34 @@ export const DashboardView = () => {
           <ChevronRight size={20} className="arrow" />
         </div>
 
+        <div className="service-card card-icu" onClick={() => navigateTo('icu')}>
+          <div className="card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+            <HeartPulse size={28} />
+          </div>
+          <div className="card-info">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h4 style={{ margin: 0 }}>ICU & Critical Care Matrix</h4>
+              <span style={{ fontSize: '0.68rem', fontWeight: '800', background: '#dcfce7', color: '#16a34a', padding: '2px 8px', borderRadius: '6px' }}>29 Beds Ready</span>
+            </div>
+            <p>Live ventilator units, cardiac CCU status, and direct emergency bed reservation.</p>
+          </div>
+          <ChevronRight size={20} className="arrow" />
+        </div>
+
+        <div className="service-card card-ambulance" onClick={() => navigateTo('emergency')} style={{ cursor: 'pointer' }}>
+          <div className="card-icon" style={{ background: '#fee2e2', color: '#dc2626' }}>
+            <ShieldAlert size={28} />
+          </div>
+          <div className="card-info">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h4 style={{ margin: 0 }}>108 Ambulance Dispatch</h4>
+              <span style={{ fontSize: '0.68rem', fontWeight: '800', background: '#fee2e2', color: '#dc2626', padding: '2px 8px', borderRadius: '6px' }}>Live Tracker</span>
+            </div>
+            <p>Live GPS ambulance tracking, assigned driver details, vehicle specs & 108 direct call.</p>
+          </div>
+          <ChevronRight size={20} className="arrow" />
+        </div>
+
         <div className="service-card card-records" onClick={() => navigateTo('records')}>
           <div className="card-icon icon-amber">
             <FolderHeart size={28} />
@@ -182,25 +214,25 @@ export const DashboardView = () => {
       {activeAppointments.length > 0 ? (
         <div className="active-tokens-container">
           {activeAppointments.map(app => (
-            <div key={app.id} className="dash-token-card glass-panel" onClick={() => navigateTo('appointments')}>
+            <div key={app?.id || app?.tokenNumber || Math.random()} className="dash-token-card glass-panel" onClick={() => navigateTo('appointments')}>
               <div className="token-left">
-                <div className="token-top-title">TOKEN #{app.tokenNumber}</div>
-                <h4>{app.doctorName}</h4>
-                <p className="sub">{app.hospitalName} • {app.specialty}</p>
+                <div className="token-top-title">TOKEN #{app?.tokenNumber || '—'}</div>
+                <h4>{app?.doctorName || 'Doctor Consultation'}</h4>
+                <p className="sub">{app?.hospitalName || 'Area Hospital'} • {app?.specialty || 'General OPD'}</p>
               </div>
 
               <div className="token-queue-info">
                 <div className="q-stat q-stat-left">
                   <span className="lbl">NOW SERVING</span>
-                  <span className="val text-emerald">#{app.currentServing}</span>
+                  <span className="val text-emerald">#{app?.currentServing || '—'}</span>
                 </div>
                 <div className="q-stat q-stat-center">
                   <span className="lbl">AHEAD OF YOU</span>
-                  <span className="val text-sky">{app.queueAhead} patients</span>
+                  <span className="val text-sky">{(app?.queueAhead ?? 0)} patients</span>
                 </div>
                 <div className="q-stat q-stat-right">
                   <span className="lbl">ESTIMATED WAIT</span>
-                  <span className="val">{app.queueAhead * 4} mins</span>
+                  <span className="val">{((app?.queueAhead ?? 0) * 4)} mins</span>
                 </div>
               </div>
             </div>
@@ -219,10 +251,16 @@ export const DashboardView = () => {
 
       <style>{`
         .care-dashboard-container {
-          padding: 24px 32px;
-          max-width: 1720px;
+          padding: 24px 32px 80px;
+          max-width: 1440px;
           margin: 0 auto;
           width: 100%;
+        }
+
+        @media (max-width: 768px) {
+          .care-dashboard-container {
+            padding: 16px 14px 96px;
+          }
         }
 
         .hero-banner {
@@ -384,6 +422,12 @@ export const DashboardView = () => {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 16px;
+        }
+
+        @media (min-width: 1200px) {
+          .services-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
         .service-card {
@@ -612,6 +656,12 @@ export const DashboardView = () => {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 16px;
+        }
+
+        @media (min-width: 1200px) {
+          .hospitals-mini-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
         .hosp-mini-card {

@@ -2,6 +2,7 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { LandingView } from './views/LandingView';
 import { OnboardingView } from './views/OnboardingView';
@@ -16,6 +17,7 @@ import { ProfileView } from './views/ProfileView';
 import { DoctorDashboardView } from './views/DoctorDashboardView';
 import { ReceptionistView } from './views/ReceptionistView';
 import { ResponderHomeView } from './views/ResponderHomeView';
+import { AdminDashboardView } from './views/AdminDashboardView';
 
 const MainContent = () => {
   const { currentScreen, user } = useApp();
@@ -26,16 +28,24 @@ const MainContent = () => {
         return <LandingView />;
       case 'onboarding':
         return <OnboardingView />;
+      case 'admin':
+      case 'admin-dashboard':
+        return <AdminDashboardView />;
       case 'dashboard':
         return <DashboardView />;
       case 'emergency':
         return <EmergencyView />;
       case 'responder':
-        return <ResponderHomeView />;
+        return <EmergencyView />;
       case 'symptom-checker':
         return <SymptomCheckerView />;
       case 'hospitals':
         return <HospitalsView />;
+      case 'icu':
+      case 'icu-tracker':
+      case 'icu-bed-tracker':
+      case 'icu-matrix':
+        return <HospitalsView initialFilter="ICU" />;
       case 'op-booking':
         return <OPBookingView />;
       case 'appointments':
@@ -50,6 +60,18 @@ const MainContent = () => {
       case 'receptionist-dashboard':
         return <ReceptionistView />;
       default:
+        if (typeof currentScreen === 'string' && currentScreen.startsWith('admin')) {
+          return <AdminDashboardView />;
+        }
+        if (user?.role === 'Doctor' && (currentScreen === 'dashboard' || !currentScreen)) {
+          return <DoctorDashboardView />;
+        }
+        if (user?.role === 'Receptionist' && (currentScreen === 'dashboard' || !currentScreen)) {
+          return <ReceptionistView />;
+        }
+        if ((user?.role === 'Responder' || user?.role === 'Driver') && (currentScreen === 'dashboard' || !currentScreen)) {
+          return <ResponderHomeView />;
+        }
         return <DashboardView />;
     }
   };
@@ -62,25 +84,53 @@ const MainContent = () => {
     return <OnboardingView />;
   }
 
+  const isAdminScreen = 
+    currentScreen === 'admin' || 
+    currentScreen === 'admin-dashboard' || 
+    (typeof currentScreen === 'string' && currentScreen.startsWith('admin'));
+
+  if (isAdminScreen) {
+    return (
+      <ErrorBoundary>
+        <AdminDashboardView />
+      </ErrorBoundary>
+    );
+  }
+
   if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard') {
-    return <ReceptionistView />;
+    return (
+      <ErrorBoundary>
+        <ReceptionistView />
+      </ErrorBoundary>
+    );
   }
 
   if (currentScreen === 'doctor-dashboard') {
-    return <DoctorDashboardView />;
+    return (
+      <ErrorBoundary>
+        <DoctorDashboardView />
+      </ErrorBoundary>
+    );
   }
 
-  if (currentScreen === 'responder' || ((user?.role === 'Responder' || user?.role === 'Driver') && currentScreen !== 'landing' && currentScreen !== 'onboarding')) {
-    return <ResponderHomeView />;
+  if (currentScreen === 'responder') {
+    return (
+      <ErrorBoundary>
+        <ResponderHomeView />
+      </ErrorBoundary>
+    );
   }
 
   return (
-    <div className="care-navigator-app">
-      <Header />
-      <main className="care-main-viewport">
-        {renderView()}
-      </main>
-      <Navigation />
+    <ErrorBoundary>
+      <div className="care-navigator-app">
+        <Header />
+        <main className="care-main-viewport">
+          <ErrorBoundary>
+            {renderView()}
+          </ErrorBoundary>
+        </main>
+        <Navigation />
 
       <style>{`
         .care-navigator-app {
@@ -119,7 +169,8 @@ const MainContent = () => {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 

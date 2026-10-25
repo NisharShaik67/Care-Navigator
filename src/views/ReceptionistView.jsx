@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
@@ -25,10 +25,8 @@ import {
   Printer,
   ArrowRight,
   RefreshCw,
-  MoreHorizontal,
   Home,
   Bell,
-  Menu,
   Check,
   SlidersHorizontal,
   LogOut,
@@ -36,7 +34,28 @@ import {
 } from 'lucide-react';
 
 export const ReceptionistView = () => {
-  const { user, switchRole, navigateTo, logout } = useApp();
+  const { user, logout, navigateTo } = useApp();
+  const logoClicksRef = useRef({ count: 0, timer: null });
+
+  const handleLogoTripleClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    logoClicksRef.current.count += 1;
+    if (logoClicksRef.current.timer) {
+      clearTimeout(logoClicksRef.current.timer);
+    }
+
+    if (logoClicksRef.current.count >= 3) {
+      logoClicksRef.current.count = 0;
+      navigateTo('admin');
+      return;
+    }
+
+    logoClicksRef.current.timer = setTimeout(() => {
+      logoClicksRef.current.count = 0;
+    }, 550);
+  };
 
   // Real-time Date and Time Ticker
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -65,6 +84,31 @@ export const ReceptionistView = () => {
   // Modal Control States
   const [activeModal, setActiveModal] = useState(null); // 'register' | 'book' | 'walkin' | 'check' | 'update' | 'emergency_desk' | 'emergency_details' | 'patient_call' | 'more'
   const [selectedPatientForAction, setSelectedPatientForAction] = useState(null);
+  const [selectedSlip, setSelectedSlip] = useState(null);
+
+  const handlePrintSlip = (patientData) => {
+    if (!patientData) return;
+    const slip = {
+      uhid: patientData.uhid || `UHID-${Math.floor(100000 + Math.random() * 900000)}`,
+      token: patientData.token || patientData.tokenNo || `OP-${Math.floor(10 + Math.random() * 89)}`,
+      name: patientData.name || patientData.patientName || 'Patient',
+      ageGender: patientData.ageGender || `${patientData.age || 35} / ${(patientData.gender || 'Male').slice(0, 1)}`,
+      aadhaar: patientData.aadhaar || '5892 4103 7621',
+      phone: patientData.phone || '+91 98765 43210',
+      dept: patientData.dept || patientData.department || 'General Medicine',
+      doctor: patientData.doctor || patientData.doctorName || 'Dr. K. Srinivas Rao, MD',
+      room: patientData.room || patientData.roomNo || 'OPD Block A • Room 104',
+      type: patientData.type || 'Walk-in OP',
+      fee: patientData.fee || '₹50 (Govt Subsidized) • Paid',
+      registeredAt: patientData.registeredAt || patientData.arrivedAt || `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Today`,
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      hospital: 'Government General Hospital (GGH), Guntur',
+      address: patientData.address || 'Door No 4-12, Main Road, Palnadu Dist, Narasaraopet, AP',
+      barcode: `*${patientData.uhid || 'UHID-993041'}*`,
+      abhaId: `ABHA-${(patientData.aadhaar ? patientData.aadhaar.replace(/\s+/g, '').slice(-8) : '91024821')}`
+    };
+    setSelectedSlip(slip);
+  };
 
   // Receptionist Profile Edit States
   const [isEditingName, setIsEditingName] = useState(false);
@@ -414,6 +458,7 @@ export const ReceptionistView = () => {
 
     setQueueList(prev => [newPatientObj, ...prev]);
     setActiveModal(null);
+    handlePrintSlip(newPatientObj);
     showToast(`Instant Walk-in Token ${newToken} issued to ${walkinForm.name}!`, 'success');
     setWalkinForm({
       name: '',
@@ -513,7 +558,12 @@ export const ReceptionistView = () => {
       {/* TOP HEADER: Light Bar */}
       <header className="reception-top-navy-bar">
         <div className="navy-bar-left">
-          <div className="navy-brand-group">
+          <div 
+            className="navy-brand-group" 
+            onClick={handleLogoTripleClick} 
+            title="Care Navigator (Click 3 times to open Admin Page)"
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
             <div className="navy-logo-icon" style={{ overflow: 'hidden', padding: 0, borderRadius: '10px' }}>
               <img src="/Logo.jpeg" alt="Care Navigator Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
@@ -1167,7 +1217,7 @@ export const ReceptionistView = () => {
                         <td style={{ textAlign: 'right' }}>
                           <button
                             className="btn-tbl-action"
-                            onClick={() => showToast(`Printed OP Slip for ${reg.name} (${reg.uhid})`, 'success')}
+                            onClick={() => handlePrintSlip(reg)}
                             title="Print OP Slip"
                           >
                             <Printer size={14} />
@@ -2074,6 +2124,195 @@ export const ReceptionistView = () => {
         </div>
       )}
 
+      {/* AUTHENTIC PRINTABLE OP REGISTRATION SLIP MODAL */}
+      {selectedSlip && (
+        <div className="modal-backdrop-overlay print-modal-overlay fade-in" style={{ zIndex: 99999 }}>
+          <div className="print-slip-dialog glass-panel" style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '680px',
+            width: '100%',
+            padding: '28px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.3)',
+            border: '2px solid #0284c7',
+            maxHeight: '92vh',
+            overflowY: 'auto'
+          }}>
+            {/* Header controls (hidden in print) */}
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Printer size={20} color="#0284c7" />
+                <strong style={{ fontSize: '1.05rem', color: '#0f172a' }}>Official OPD Registration Slip</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => window.print()}
+                  className="btn-modal-pri"
+                  style={{ padding: '8px 18px', background: '#0284c7', borderRadius: '8px', fontSize: '0.88rem' }}
+                >
+                  <Printer size={16} />
+                  <span>Print Slip</span>
+                </button>
+                <button
+                  onClick={() => setSelectedSlip(null)}
+                  className="btn-modal-sec"
+                  style={{ padding: '8px 14px', borderRadius: '8px', fontSize: '0.88rem' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* PRINTABLE SLIP BODY (Target of print) */}
+            <div id="printable-op-slip" className="printable-op-slip-area" style={{
+              border: '2px dashed #0284c7',
+              borderRadius: '12px',
+              padding: '24px',
+              background: '#ffffff',
+              color: '#0f172a',
+              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            }}>
+              {/* Slip Official Header */}
+              <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '12px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.08em', color: '#0369a1', textTransform: 'uppercase' }}>
+                  GOVERNMENT OF ANDHRA PRADESH • HEALTH, MEDICAL & FAMILY WELFARE
+                </div>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: '900', color: '#0f172a', margin: '4px 0 2px 0' }}>
+                  {selectedSlip.hospital}
+                </h2>
+                <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                  Collectorate Road, Guntur, AP • National Health Mission (NHM) • NABH Accredited
+                </div>
+                <div style={{ marginTop: '8px', display: 'inline-block', background: '#0f172a', color: '#ffffff', padding: '3px 14px', borderRadius: '999px', fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.05em' }}>
+                  OUTPATIENT CONSULTATION & TRIAGE SLIP (OPD)
+                </div>
+              </div>
+
+              {/* Token & UHID Highlight Row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: '10px', padding: '12px 18px', marginBottom: '18px' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', display: 'block' }}>OP TOKEN NUMBER</span>
+                  <strong style={{ fontSize: '1.9rem', color: '#0284c7', fontWeight: '900', letterSpacing: '0.02em', lineHeight: 1 }}>
+                    #{selectedSlip.token}
+                  </strong>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', letterSpacing: '3px', fontWeight: '900', color: '#0f172a' }}>
+                    ||| | |||| | | |||| |||
+                  </div>
+                  <strong style={{ fontSize: '0.85rem', color: '#0f172a', letterSpacing: '0.05em' }}>
+                    {selectedSlip.uhid}
+                  </strong>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', display: 'block' }}>DATE & TIME</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>{selectedSlip.date}</strong>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{selectedSlip.registeredAt}</div>
+                </div>
+              </div>
+
+              {/* Patient Demographics & Doctor Details Table */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '18px', fontSize: '0.85rem' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.8rem', color: '#0369a1', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+                    Patient Demographics
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '4px', lineHeight: 1.5 }}>
+                    <span style={{ color: '#64748b' }}>Name:</span>
+                    <strong style={{ color: '#0f172a' }}>{selectedSlip.name}</strong>
+                    <span style={{ color: '#64748b' }}>Age / Sex:</span>
+                    <span>{selectedSlip.ageGender}</span>
+                    <span style={{ color: '#64748b' }}>Mobile:</span>
+                    <span>{selectedSlip.phone}</span>
+                    <span style={{ color: '#64748b' }}>Aadhaar:</span>
+                    <span>XXXX XXXX {(selectedSlip.aadhaar || '7621').slice(-4)}</span>
+                    <span style={{ color: '#64748b' }}>ABHA ID:</span>
+                    <span style={{ color: '#0284c7', fontWeight: '700' }}>{selectedSlip.abhaId}</span>
+                    <span style={{ color: '#64748b' }}>Address:</span>
+                    <span style={{ fontSize: '0.78rem' }}>{selectedSlip.address}</span>
+                  </div>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.8rem', color: '#0369a1', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+                    Consultation & Desk
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '95px 1fr', gap: '4px', lineHeight: 1.5 }}>
+                    <span style={{ color: '#64748b' }}>Department:</span>
+                    <strong style={{ color: '#0f172a' }}>{selectedSlip.dept}</strong>
+                    <span style={{ color: '#64748b' }}>Consultant:</span>
+                    <strong style={{ color: '#0369a1' }}>{selectedSlip.doctor}</strong>
+                    <span style={{ color: '#64748b' }}>Room No:</span>
+                    <strong style={{ color: '#16a34a' }}>{selectedSlip.room}</strong>
+                    <span style={{ color: '#64748b' }}>Category:</span>
+                    <span>{selectedSlip.type}</span>
+                    <span style={{ color: '#64748b' }}>Fee Status:</span>
+                    <strong style={{ color: '#16a34a' }}>{selectedSlip.fee}</strong>
+                    <span style={{ color: '#64748b' }}>Counter Desk:</span>
+                    <span>Central OPD Counter #01</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinical Vitals & Doctor Prescription Lines */}
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '18px', background: '#fafafa' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#475569', textTransform: 'uppercase' }}>
+                  Nursing Triage Vitals Recording:
+                </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#334155', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px' }}>
+                  <span>BP: ________ mmHg</span>
+                  <span>Pulse: ________ bpm</span>
+                  <span>SpO2: ________ %</span>
+                  <span>Temp: ________ °F</span>
+                  <span>Weight: ________ kg</span>
+                </div>
+
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px', fontWeight: '700' }}>
+                  Doctor's Clinical Notes & Rx:
+                </div>
+                <div style={{ height: '70px', borderBottom: '1px dotted #94a3b8', marginBottom: '14px' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>
+                  <span>Diagnosis / Chief Complaints</span>
+                  <span>Consultant Signature & Stamp: _______________________</span>
+                </div>
+              </div>
+
+              {/* Bottom Instructions & Security Note */}
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b' }}>
+                <div>
+                  • Valid for 7 days from date of issue. Present at Room 104 when token is called.<br />
+                  • Free generic medicines provided under Dr. YSR Aarogyasri at Pharmacy Counter #03.
+                </div>
+                <div style={{ textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
+                  Care Navigator AP System Verified<br />
+                  <span style={{ color: '#16a34a' }}>● Official Digital Copy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions for user (hidden in print) */}
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '18px' }}>
+              <button
+                onClick={() => setSelectedSlip(null)}
+                className="btn-modal-sec"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="btn-modal-pri"
+                style={{ background: '#0284c7' }}
+              >
+                <Printer size={16} />
+                <span>Print Registration Slip</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* STYLES */}
       <style>{`
         .receptionist-page-root {
@@ -2628,6 +2867,31 @@ export const ReceptionistView = () => {
           .reception-active-emergency-banner { flex-direction: column; align-items: flex-start; }
           .emergency-banner-left { flex-direction: column; align-items: flex-start; }
           .modal-form-grid { grid-template-columns: 1fr; }
+        @media print {
+          body, html { background: #ffffff !important; }
+          .no-print, .reception-top-navy-bar, .reception-bottom-nav, .reception-active-emergency-banner, .reception-quick-stats-grid, .reception-grid-2col, .modal-backdrop-overlay:not(.print-modal-overlay) {
+            display: none !important;
+          }
+          .print-modal-overlay {
+            position: static !important;
+            background: none !important;
+            padding: 0 !important;
+            backdrop-filter: none !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          .print-slip-dialog {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .printable-op-slip-area {
+            border: 2px solid #000000 !important;
+            padding: 20px !important;
+            page-break-inside: avoid;
+          }
         }
       `}</style>
     </div>

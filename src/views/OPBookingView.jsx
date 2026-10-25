@@ -18,7 +18,14 @@ import {
 export const OPBookingView = () => {
   const { hospitals, user, bookOPToken, updateDoctorAvatar } = useApp();
 
-  const [selectedHospital, setSelectedHospital] = useState(hospitals?.[0] || null);
+  const [selectedHospitalId, setSelectedHospitalId] = useState(() => hospitals?.[0]?.id || 'hosp-4');
+  const [toastMsg, setToastMsg] = useState('');
+
+  // Dynamically derive current selected hospital from hospitals state
+  const selectedHospital = useMemo(() => {
+    return (hospitals || []).find(h => h.id === selectedHospitalId) || hospitals?.[0] || null;
+  }, [hospitals, selectedHospitalId]);
+
   const [docSearchQuery, setDocSearchQuery] = useState('');
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
 
@@ -69,8 +76,14 @@ export const OPBookingView = () => {
   };
 
   const handleImageUpload = (e, docId) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (uploadEvent) => {
       const newAvatarUrl = uploadEvent.target.result;
@@ -78,8 +91,11 @@ export const OPBookingView = () => {
       if (bookingModalDoc && bookingModalDoc.id === docId) {
         setBookingModalDoc(prev => ({ ...prev, avatar: newAvatarUrl }));
       }
+      setToastMsg('Doctor photo updated successfully!');
+      setTimeout(() => setToastMsg(''), 3500);
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleFinalSubmitBooking = (e) => {
@@ -107,6 +123,30 @@ export const OPBookingView = () => {
 
   return (
     <div className="op-booking-view-container fade-in">
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 99999,
+          background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: '12px',
+          boxShadow: '0 8px 24px rgba(2, 132, 199, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontWeight: 700,
+          fontSize: '0.9rem',
+          border: '1.5px solid rgba(255, 255, 255, 0.3)'
+        }} className="fade-in">
+          <Sparkles size={18} color="#ffffff" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
       {/* Sleek Hospital Selector Bar */}
       <div className="compact-hosp-header-bar glass-panel fade-in">
         <div className="hosp-select-left">
@@ -119,8 +159,7 @@ export const OPBookingView = () => {
               className="hosp-dropdown-select"
               value={selectedHospital ? selectedHospital.id : ''}
               onChange={(e) => {
-                const hosp = hospitals.find(h => h.id === e.target.value);
-                if (hosp) setSelectedHospital(hosp);
+                setSelectedHospitalId(e.target.value);
               }}
             >
               {hospitals.map(h => (
@@ -287,7 +326,27 @@ export const OPBookingView = () => {
 
             {/* Selected Doctor Summary Header */}
             <div className="modal-doc-summary-chip glass-card">
-              <img src={bookingModalDoc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} alt="Doc" className="mini-doc-img" />
+              <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
+                <img 
+                  src={bookingModalDoc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} 
+                  alt="Doc" 
+                  className="mini-doc-img" 
+                  style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }}
+                />
+                <label 
+                  className="photo-upload-overlay" 
+                  title="Upload / Change Doctor Picture"
+                  style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px' }}
+                >
+                  <Camera size={11} color="#ffffff" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => handleImageUpload(e, bookingModalDoc.id)}
+                  />
+                </label>
+              </div>
               <div>
                 <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>{bookingModalDoc.name}</h4>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#0284c7', fontWeight: '600' }}>{bookingModalDoc.specialty}</p>
@@ -440,13 +499,13 @@ export const OPBookingView = () => {
 
       <style>{`
         .op-booking-view-container {
-          padding: 24px 32px;
-          max-width: 1720px;
+          padding: 24px 32px 80px;
+          max-width: 1440px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
         }
 
         .hospitals-section-container {
@@ -653,9 +712,15 @@ export const OPBookingView = () => {
         }
 
         .doctor-cards-grid {
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: 1fr;
           gap: 16px;
+        }
+
+        @media (min-width: 1100px) {
+          .doctor-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         .doc-card {
@@ -665,6 +730,10 @@ export const OPBookingView = () => {
           position: relative;
           background: #ffffff;
           border: 1px solid #e2e8f0;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
 
         .doc-card:hover {
@@ -729,14 +798,23 @@ export const OPBookingView = () => {
           position: absolute;
           bottom: 2px;
           right: 2px;
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
-          background: rgba(2, 132, 199, 0.2);
+          background: #0284c7;
+          border: 2px solid #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+          transition: transform 0.2s ease, background 0.2s ease;
+          z-index: 5;
+        }
+
+        .photo-upload-overlay:hover {
+          background: #0369a1;
+          transform: scale(1.1);
         }
 
         .doc-details {

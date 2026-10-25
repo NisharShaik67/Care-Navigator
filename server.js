@@ -112,6 +112,55 @@ app.post('/api/verify-aadhaar', (req, res) => {
   res.json({ success: true, user: data });
 });
 
+// -----------------------------------------------------------------------------
+// Admin Dashboard REST API Endpoints
+// -----------------------------------------------------------------------------
+
+app.get('/api/admin/stats', (req, res) => {
+  res.json({
+    totalPatients: 4280,
+    verifiedHospitals: HOSPITALS.length,
+    pendingHospitals: 2,
+    verifiedDoctors: HOSPITALS.reduce((acc, h) => acc + (h.doctors ? h.doctors.length : 0), 0) + 12,
+    totalApptsToday: 54,
+    servingAppts: 18,
+    pendingAppts: 31,
+    cancelledAppts: 5,
+    activeEmergencies: 3,
+    resolvedEmergencies: 28,
+    totalEmergencyBeds: HOSPITALS.reduce((acc, h) => acc + (h.emergencyBeds || 0), 0),
+    totalIcuBeds: HOSPITALS.reduce((acc, h) => acc + (h.icuBeds || 0), 0),
+    totalVentilators: HOSPITALS.reduce((acc, h) => acc + (h.ventilators || 0), 0)
+  });
+});
+
+app.get('/api/admin/hospitals', (req, res) => {
+  res.json(HOSPITALS);
+});
+
+app.post('/api/admin/hospitals', (req, res) => {
+  const newHospital = { id: `hosp-${Date.now()}`, ...req.body };
+  HOSPITALS.push(newHospital);
+  res.status(201).json(newHospital);
+});
+
+app.put('/api/admin/hospitals/:id', (req, res) => {
+  const idx = HOSPITALS.findIndex(h => h.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Hospital not found' });
+  HOSPITALS[idx] = { ...HOSPITALS[idx], ...req.body };
+  res.json(HOSPITALS[idx]);
+});
+
+app.get('/api/admin/system-health', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    database: 'Firestore / Postgres Connected',
+    gateway: 'Care Navigator Admin Gateway v2.4'
+  });
+});
+
 // Serve built static files from Vite
 app.use(express.static(path.join(__dirname, 'dist')));
 

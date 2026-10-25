@@ -147,10 +147,13 @@ export const AppointmentsView = () => {
         .appointments-view-container {
           flex: 1;
           overflow-y: auto;
-          padding: 24px;
+          padding: 24px 32px 80px;
           display: flex;
           flex-direction: column;
           gap: 24px;
+          max-width: 1440px;
+          margin: 0 auto;
+          width: 100%;
         }
 
         .section-header {
@@ -195,6 +198,14 @@ export const AppointmentsView = () => {
           display: flex;
           flex-direction: column;
           gap: 20px;
+        }
+
+        @media (min-width: 1100px) {
+          .active-tokens-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+            gap: 24px;
+          }
         }
 
         .token-card {

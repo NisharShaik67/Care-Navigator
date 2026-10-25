@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Care Navigator Health Portal Security Rules
+    match /care_navigator_users/{userId} {
+      allow read, write: if true;
+    }
+    match /care_navigator_accounts/{accountId} {
+      allow read, write: if true;
+    }
+    match /care_navigator_appointments/{appointmentId} {
+      allow read, write: if true;
+    }
+    match /care_navigator_emergencies/{emergencyId} {
+      allow read, write: if true;
+    }
+    match /care_navigator_reports/{reportId} {
+      allow read, write: if true;
+    }
+    match /care_navigator_system/{docId} {
+      allow read, write: if true;
+    }
+    
+    // Default open access for web development and patient care workflows
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
