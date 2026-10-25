@@ -12,7 +12,10 @@ import {
   ExternalLink,
   RefreshCw,
   Database,
-  ArrowLeft
+  ArrowLeft,
+  Stethoscope,
+  Building2,
+  UserCheck
 } from 'lucide-react';
 import { NotificationSwipeItem } from './NotificationSwipeItem';
 
@@ -38,6 +41,7 @@ export const Header = () => {
     user, 
     navigateTo, 
     goBack,
+    switchRole,
     firestoreStatus, 
     refreshFirestoreStatus,
     initializeDatabase,
@@ -45,6 +49,7 @@ export const Header = () => {
     dbInitProgress,
     dbInitResult
   } = useApp();
+  const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showFirestoreModal, setShowFirestoreModal] = useState(false);
   const [isTestingFs, setIsTestingFs] = useState(false);
@@ -212,6 +217,153 @@ export const Header = () => {
       </div>
 
       <div className="header-right">
+        {/* Quick Portal Switcher (Doctor, Receptionist, Patient) */}
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            className="portal-badge-btn"
+            onClick={() => setShowRoleMenu(!showRoleMenu)}
+            title="Switch Portal: Doctor, Receptionist, Patient"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '12px',
+              border: '1.5px solid #cbd5e1',
+              background: user?.role === 'Doctor' ? '#f0f9ff' : user?.role === 'Receptionist' ? '#fffbeb' : '#f8fafc',
+              color: user?.role === 'Doctor' ? '#0369a1' : user?.role === 'Receptionist' ? '#b45309' : '#0f172a',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}
+          >
+            {user?.role === 'Doctor' ? (
+              <Stethoscope size={16} color="#0284c7" />
+            ) : user?.role === 'Receptionist' ? (
+              <Building2 size={16} color="#f59e0b" />
+            ) : (
+              <UserCheck size={16} color="#10b981" />
+            )}
+            <span className="portal-badge-text">{user?.role || 'Patient'}</span>
+            <span style={{ fontSize: '0.68rem', color: '#64748b' }}>▼</span>
+          </button>
+
+          {showRoleMenu && (
+            <div
+              className="glass-panel fade-in"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                width: '230px',
+                padding: '8px',
+                borderRadius: '16px',
+                background: '#ffffff',
+                boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
+                border: '1px solid #e2e8f0',
+                zIndex: 300,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}
+            >
+              <div style={{ padding: '4px 8px', fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                Switch Health Portal:
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRoleMenu(false);
+                  if (typeof switchRole === 'function') switchRole('Doctor');
+                  else navigateTo('doctor-dashboard');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: user?.role === 'Doctor' ? '1.5px solid #7dd3fc' : '1px solid transparent',
+                  background: user?.role === 'Doctor' ? '#f0f9ff' : '#f8fafc',
+                  color: '#0369a1',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <Stethoscope size={18} color="#0284c7" />
+                <div>
+                  <div>Doctor Portal</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>Dr. Raghavendra</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRoleMenu(false);
+                  if (typeof switchRole === 'function') switchRole('Receptionist');
+                  else navigateTo('receptionist-dashboard');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: user?.role === 'Receptionist' ? '1.5px solid #fde68a' : '1px solid transparent',
+                  background: user?.role === 'Receptionist' ? '#fffbeb' : '#f8fafc',
+                  color: '#b45309',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <Building2 size={18} color="#f59e0b" />
+                <div>
+                  <div>Receptionist Desk</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>GGH Reception</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRoleMenu(false);
+                  if (typeof switchRole === 'function') switchRole('Patient');
+                  else navigateTo('dashboard');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: (!user?.role || user?.role === 'Patient') ? '1.5px solid #a7f3d0' : '1px solid transparent',
+                  background: (!user?.role || user?.role === 'Patient') ? '#ecfdf5' : '#f8fafc',
+                  color: '#047857',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <UserCheck size={18} color="#10b981" />
+                <div>
+                  <div>Patient Portal</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>Aadhaar Health Vault</div>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Cloud Firestore Status & Database Modal Trigger */}
         <button
           className="btn-icon db-indicator-btn"
@@ -1165,6 +1317,14 @@ service cloud.firestore {
         }
 
         @media (max-width: 480px) {
+          .portal-badge-text {
+            display: none;
+          }
+
+          .portal-badge-btn {
+            padding: 6px 8px !important;
+          }
+
           .app-header {
             height: 60px;
             padding: 0 12px;

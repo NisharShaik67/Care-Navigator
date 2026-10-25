@@ -24,7 +24,10 @@ export const LandingView = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoClicksRef = useRef({ count: 0, timer: null });
 
-  const handleLaunchPortal = () => {
+  const handleLaunchPortal = (role = 'Patient') => {
+    try {
+      sessionStorage.setItem('cn_selected_auth_role', role);
+    } catch {}
     navigateTo('onboarding');
   };
 
@@ -77,13 +80,130 @@ export const LandingView = () => {
             <a href="#roles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Role Portals</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
-            <button className="btn btn-primary btn-sm mobile-nav-signin" onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Patient'); }}>
-              <span>Sign In with Aadhaar</span>
-            </button>
+            
+            <div className="mobile-login-actions" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '14px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Staff & Patient Portals:</span>
+              <button 
+                type="button"
+                className="btn btn-sm" 
+                onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Doctor'); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: '#f0f9ff',
+                  border: '1.5px solid #7dd3fc',
+                  color: '#0369a1',
+                  fontWeight: 800,
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Stethoscope size={18} color="#0284c7" />
+                <span>Doctor Portal Login</span>
+              </button>
+
+              <button 
+                type="button"
+                className="btn btn-sm" 
+                onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Receptionist'); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: '#fffbeb',
+                  border: '1.5px solid #fde68a',
+                  color: '#b45309',
+                  fontWeight: 800,
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Building2 size={18} color="#f59e0b" />
+                <span>Receptionist Login</span>
+              </button>
+
+              <button 
+                type="button"
+                className="btn btn-primary btn-sm mobile-nav-signin" 
+                onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Patient'); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '10px 14px',
+                  borderRadius: '12px'
+                }}
+              >
+                <UserCheck size={18} />
+                <span>Patient Sign In with Aadhaar</span>
+              </button>
+            </div>
           </div>
 
-          <div className="landing-nav-actions desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button className="btn btn-primary btn-sm" onClick={() => handleLaunchPortal('Patient')}>
+          <div className="landing-nav-actions desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              type="button"
+              className="btn btn-outline btn-sm doctor-nav-btn" 
+              onClick={() => handleLaunchPortal('Doctor')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#f0f9ff',
+                border: '1.5px solid #7dd3fc',
+                color: '#0369a1',
+                fontWeight: 700,
+                borderRadius: '10px',
+                padding: '7px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Stethoscope size={16} color="#0284c7" />
+              <span>Doctor Login</span>
+            </button>
+
+            <button 
+              type="button"
+              className="btn btn-outline btn-sm receptionist-nav-btn" 
+              onClick={() => handleLaunchPortal('Receptionist')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#fffbeb',
+                border: '1.5px solid #fde68a',
+                color: '#b45309',
+                fontWeight: 700,
+                borderRadius: '10px',
+                padding: '7px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Building2 size={16} color="#f59e0b" />
+              <span>Receptionist Login</span>
+            </button>
+
+            <button 
+              type="button"
+              className="btn btn-primary btn-sm" 
+              onClick={() => handleLaunchPortal('Patient')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderRadius: '10px',
+                padding: '7px 14px'
+              }}
+            >
+              <UserCheck size={16} />
               <span>Sign In with Aadhaar</span>
             </button>
           </div>
@@ -116,6 +236,50 @@ export const LandingView = () => {
               <CheckCircle2 size={20} />
               <span>Sign In with Aadhaar Number</span>
               <ArrowRight size={18} />
+            </button>
+
+            <button 
+              type="button"
+              className="btn btn-hero hero-doctor-btn" 
+              onClick={() => handleLaunchPortal('Doctor')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#ffffff',
+                border: '2px solid #0284c7',
+                color: '#0369a1',
+                fontWeight: 800,
+                cursor: 'pointer',
+                borderRadius: '14px',
+                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.12)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Stethoscope size={20} color="#0284c7" />
+              <span>Doctor Login</span>
+            </button>
+
+            <button 
+              type="button"
+              className="btn btn-hero hero-receptionist-btn" 
+              onClick={() => handleLaunchPortal('Receptionist')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#ffffff',
+                border: '2px solid #f59e0b',
+                color: '#b45309',
+                fontWeight: 800,
+                cursor: 'pointer',
+                borderRadius: '14px',
+                boxShadow: '0 4px 14px rgba(245, 158, 11, 0.12)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Building2 size={20} color="#f59e0b" />
+              <span>Receptionist Login</span>
             </button>
           </div>
 

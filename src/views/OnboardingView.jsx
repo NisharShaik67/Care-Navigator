@@ -1,17 +1,50 @@
 import React, { useState } from 'react';
 import { useApp, AADHAAR_DATABASE } from '../context/AppContext';
-import { CheckCircle2, Ambulance, CreditCard, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  Ambulance, 
+  CreditCard, 
+  ShieldCheck, 
+  AlertTriangle,
+  Stethoscope,
+  Building2,
+  UserCheck,
+  ArrowLeft,
+  ArrowRight,
+  Zap,
+  Key
+} from 'lucide-react';
 
 export const OnboardingView = () => {
   const { navigateTo, loginWithAccount, lookupAccount } = useApp();
 
   const [authMode, setAuthMode] = useState('login'); // 'login', 'otp', 'pin'
-  const [selectedRole, setSelectedRole] = useState('User');
+  const [selectedRole, setSelectedRole] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('cn_selected_auth_role');
+      if (saved === 'Doctor') return 'Doctor';
+      if (saved === 'Receptionist') return 'Receptionist';
+      if (saved === 'Responder') return 'Responder';
+      return 'User';
+    } catch {
+      return 'User';
+    }
+  });
   const [errorMsg, setErrorMsg] = useState('');
   const [inputError, setInputError] = useState(false);
 
   // Role Specific Credentials State
-  const [uniqueId, setUniqueId] = useState('');
+  const [uniqueId, setUniqueId] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('cn_selected_auth_role');
+      if (saved === 'Doctor') return 'DOCTOR-001';
+      if (saved === 'Receptionist') return 'reception.narasaraopet@gmail.com';
+      if (saved === 'Responder') return '9876510800';
+      return '';
+    } catch {
+      return '';
+    }
+  });
   const [aadharNumber, setAadharNumber] = useState('');
   const [doctorId, setDoctorId] = useState('DOCTOR-001');
   const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
@@ -317,7 +350,27 @@ export const OnboardingView = () => {
       const isAdmin = clean.toLowerCase().includes('admin') || clean.toLowerCase() === 'director' || clean.toLowerCase() === 'superadmin';
       const digitsOnly = clean.replace(/\D/g, '');
 
-      if (!isDoc && !isEmail && !isAdmin) {
+      if (selectedRole === 'Doctor' || isDoc) {
+        setSelectedRole('Doctor');
+        setDoctorId(clean || doctorId || 'DOCTOR-001');
+        setErrorMsg('');
+        setPin(['1', '2', '3', '4']);
+        setAuthMode('pin');
+        return;
+      } else if (selectedRole === 'Receptionist' || isEmail) {
+        setSelectedRole('Receptionist');
+        setReceptionistGmail(clean || receptionistGmail || 'reception.narasaraopet@gmail.com');
+        setErrorMsg('');
+        setPin(['1', '2', '3', '4']);
+        setAuthMode('pin');
+        return;
+      } else if (isAdmin) {
+        setSelectedRole('Admin');
+        setErrorMsg('');
+        setPin(['1', '2', '3', '4']);
+        setAuthMode('pin');
+        return;
+      } else {
         if (!clean || digitsOnly.length === 0) {
           setErrorMsg('❌ Please enter a valid 10-digit Mobile Number or 12-digit Aadhaar Card Number.');
           return;
@@ -347,30 +400,10 @@ export const OnboardingView = () => {
           setSelectedRole('Responder');
           setPhoneNumber(`+91 ${digitsOnly}`);
           setErrorMsg('');
-          setPin(['', '', '', '']);
+          setPin(['1', '2', '3', '4']);
           setAuthMode('pin');
           return;
         }
-      } else if (isAdmin) {
-        setSelectedRole('Admin');
-        setErrorMsg('');
-        setPin(['', '', '', '']);
-        setAuthMode('pin');
-        return;
-      } else if (isDoc) {
-        setSelectedRole('Doctor');
-        setDoctorId(clean);
-        setErrorMsg('');
-        setPin(['', '', '', '']);
-        setAuthMode('pin');
-        return;
-      } else if (isEmail) {
-        setSelectedRole('Receptionist');
-        setReceptionistGmail(clean);
-        setErrorMsg('');
-        setPin(['', '', '', '']);
-        setAuthMode('pin');
-        return;
       }
     } else if (authMode === 'otp') {
       const enteredOtp = otp.join('');
@@ -477,6 +510,81 @@ export const OnboardingView = () => {
     }
   };
 
+  const handleSelectRole = (role) => {
+    setErrorMsg('');
+    setInputError(false);
+    setSelectedRole(role);
+    try {
+      sessionStorage.setItem('cn_selected_auth_role', role);
+    } catch {}
+
+    if (role === 'Doctor') {
+      const doc = doctorId || 'DOCTOR-001';
+      setUniqueId(doc);
+      setDoctorId(doc);
+      setPin(['1', '2', '3', '4']);
+    } else if (role === 'Receptionist') {
+      const rec = receptionistGmail || 'reception.narasaraopet@gmail.com';
+      setUniqueId(rec);
+      setReceptionistGmail(rec);
+      setPin(['1', '2', '3', '4']);
+    } else if (role === 'Responder') {
+      setUniqueId('9876510800');
+      setPhoneNumber('+91 98765 10800');
+      setPin(['1', '2', '3', '4']);
+    } else {
+      setSelectedRole('User');
+      setUniqueId(aadharNumber || '123456789012');
+      handleAadhaarNumberChange(aadharNumber || '123456789012');
+    }
+  };
+
+  const handleQuickDoctorLogin = (e) => {
+    e?.preventDefault?.();
+    if (loginWithAccount) {
+      loginWithAccount('DOCTOR-001', 'Doctor', {
+        name: 'Dr. Raghavendra',
+        specialty: 'General Physician',
+        phone: '+91 94401 23456', 
+        doctorId: 'DOCTOR-001',
+        photo: '/doctor_raghavendra.jpg'
+      });
+    }
+    navigateTo('doctor-dashboard', true);
+  };
+
+  const handleQuickReceptionistLogin = (e) => {
+    e?.preventDefault?.();
+    if (loginWithAccount) {
+      loginWithAccount('reception.narasaraopet@gmail.com', 'Receptionist', {
+        name: 'GGH Reception Desk',
+        role: 'Receptionist',
+        phone: '+91 98765 10800', 
+        receptionistGmail: 'reception.narasaraopet@gmail.com',
+        email: 'reception.narasaraopet@gmail.com'
+      });
+    }
+    navigateTo('receptionist-dashboard', true);
+  };
+
+  const handleQuickPatientLogin = (e) => {
+    e?.preventDefault?.();
+    const demoAadhaar = '123456789012';
+    if (loginWithAccount) {
+      loginWithAccount(demoAadhaar, 'Patient', {
+        fullName: 'Alex Morgan',
+        aadhaarAddress: 'House 4-12, Main Road, Narasaraopet, AP',
+        cityVillage: 'Narasaraopet',
+        pinCode: '522601',
+        phoneNumber: '+91 98765 43210',
+        gender: 'MALE',
+        age: '32',
+        bloodGroup: 'O+'
+      });
+    }
+    navigateTo('dashboard', true);
+  };
+
   const digitsOnlyId = (uniqueId || '').replace(/\D/g, '');
   const is10DigitMobile = selectedRole === 'Responder' || digitsOnlyId.length === 10 || (!aadharNumber && phoneNumber && uniqueId.replace(/\D/g, '').length === 10);
   const displayPhone = is10DigitMobile && digitsOnlyId.length === 10
@@ -485,6 +593,32 @@ export const OnboardingView = () => {
 
   return (
     <div className="onboarding-container fade-in">
+      {/* Return back to Landing button */}
+      <div style={{ maxWidth: '580px', width: '100%', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+        <button
+          type="button"
+          onClick={() => navigateTo('landing')}
+          className="btn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            background: '#ffffff',
+            border: '1.5px solid #cbd5e1',
+            color: '#1e293b',
+            cursor: 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+          }}
+        >
+          <ArrowLeft size={16} strokeWidth={2.5} />
+          <span>Back to Landing Page</span>
+        </button>
+      </div>
+
       <div className="auth-card glass-panel fade-in">
         <h2 className="modal-title">
           {authMode === 'login' 
@@ -539,38 +673,199 @@ export const OnboardingView = () => {
           </div>
         )}
 
+        {/* Role Selector Tabs (Doctor, Receptionist, Patient, 108 Responder) */}
+        {authMode === 'login' && (
+          <div className="role-selector-cards">
+            <div 
+              className={`role-card role-doctor ${selectedRole === 'Doctor' ? 'selected' : ''}`}
+              onClick={() => handleSelectRole('Doctor')}
+              title="Doctor Consultation Portal Sign In"
+            >
+              <div className="role-card-icon-wrapper">
+                <Stethoscope size={22} />
+              </div>
+              <span>Doctor</span>
+            </div>
+
+            <div 
+              className={`role-card role-receptionist ${selectedRole === 'Receptionist' ? 'selected' : ''}`}
+              onClick={() => handleSelectRole('Receptionist')}
+              title="Hospital Reception Desk Sign In"
+            >
+              <div className="role-card-icon-wrapper">
+                <Building2 size={22} />
+              </div>
+              <span>Receptionist</span>
+            </div>
+
+            <div 
+              className={`role-card role-user ${selectedRole === 'User' ? 'selected' : ''}`}
+              onClick={() => handleSelectRole('User')}
+              title="Patient Sign In with Aadhaar"
+            >
+              <div className="role-card-icon-wrapper">
+                <UserCheck size={22} />
+              </div>
+              <span>Patient</span>
+            </div>
+
+            <div 
+              className={`role-card role-responder ${selectedRole === 'Responder' ? 'selected' : ''}`}
+              onClick={() => handleSelectRole('Responder')}
+              title="108 Ambulance Responder Sign In"
+            >
+              <div className="role-card-icon-wrapper">
+                <Ambulance size={22} />
+              </div>
+              <span>108 Unit</span>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleAuthSubmit} className="auth-form">
           {authMode === 'login' && (
             <>
               {selectedRole === 'Doctor' && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '12px 16px',
-                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                  border: '1.5px solid #7dd3fc',
-                  borderRadius: '16px',
-                  marginBottom: '16px',
-                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.1)'
-                }}>
+                <>
                   <div style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '3px solid #0284c7',
-                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)',
-                    flexShrink: 0
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    padding: '12px 16px',
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                    border: '1.5px solid #7dd3fc',
+                    borderRadius: '16px',
+                    marginBottom: '14px',
+                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.1)'
                   }}>
-                    <img src="/doctor_raghavendra.jpg" alt="Dr. Raghavendra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      border: '3px solid #0284c7',
+                      boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)',
+                      flexShrink: 0
+                    }}>
+                      <img src="/doctor_raghavendra.jpg" alt="Dr. Raghavendra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369a1' }}>Dr. Raghavendra</h4>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Senior General Physician • ID: <strong style={{ color: '#0284c7' }}>DOCTOR-001</strong></p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369a1' }}>Dr. Raghavendra</h4>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>General Physician • Universal ID: <strong style={{ color: '#0284c7' }}>DOCTOR-001</strong></p>
-                  </div>
-                </div>
+
+                  <button
+                    type="button"
+                    onClick={handleQuickDoctorLogin}
+                    className="btn btn-block"
+                    style={{
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                      color: '#ffffff',
+                      fontWeight: '800',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)'
+                    }}
+                  >
+                    <Zap size={18} color="#ffffff" />
+                    <span>⚡ 1-Click Doctor Demo Sign In</span>
+                  </button>
+                </>
               )}
+
+              {selectedRole === 'Receptionist' && (
+                <>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    padding: '12px 16px',
+                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                    border: '1.5px solid #fde68a',
+                    borderRadius: '16px',
+                    marginBottom: '14px',
+                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)'
+                  }}>
+                    <div style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '50%',
+                      background: '#d97706',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
+                      flexShrink: 0
+                    }}>
+                      <Building2 size={26} color="#ffffff" />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#92400e' }}>GGH Central Reception Desk</h4>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#b45309' }}>Reception Desk Portal • OPD Triage & Bed Allocations</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleQuickReceptionistLogin}
+                    className="btn btn-block"
+                    style={{
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                      color: '#ffffff',
+                      fontWeight: '800',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(217, 119, 6, 0.25)'
+                    }}
+                  >
+                    <Zap size={18} color="#ffffff" />
+                    <span>⚡ 1-Click Receptionist Demo Sign In</span>
+                  </button>
+                </>
+              )}
+
+              {selectedRole === 'User' && (
+                <button
+                  type="button"
+                  onClick={handleQuickPatientLogin}
+                  className="btn btn-block"
+                  style={{
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                    color: '#ffffff',
+                    fontWeight: '800',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)'
+                  }}
+                >
+                  <Zap size={18} color="#ffffff" />
+                  <span>⚡ 1-Click Demo Patient Sign In (Alex Morgan)</span>
+                </button>
+              )}
+
 
               {is10DigitMobile && selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && (
                 <div style={{
