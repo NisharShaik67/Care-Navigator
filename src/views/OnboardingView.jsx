@@ -669,9 +669,9 @@ export const OnboardingView = () => {
               title="Patient Sign In with Aadhaar"
             >
               <div className="role-card-icon-wrapper">
-                <UserCheck size={22} />
+                <UserCheck size={20} />
               </div>
-              <span>Patient (Aadhaar)</span>
+              <span>Patient</span>
             </div>
 
             <div 
@@ -1261,55 +1261,78 @@ export const OnboardingView = () => {
 
         @media (max-width: 540px) {
           .onboarding-container {
-            padding: 16px 12px;
-            justify-content: flex-start;
+            padding: 12px 10px 32px 10px !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
 
           .onboarding-card-wrapper {
-            width: 100%;
-            max-width: 100%;
-            gap: 10px;
+            width: 100% !important;
+            max-width: 100% !important;
+            gap: 10px !important;
+            box-sizing: border-box !important;
+          }
+
+          .onboarding-top-bar {
+            width: 100% !important;
+            padding: 0 2px !important;
           }
 
           .auth-card {
-            width: 100%;
-            padding: 20px 14px;
-            border-radius: 18px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 20px 12px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+            box-sizing: border-box !important;
           }
 
           .modal-title {
-            font-size: 1.22rem;
-            line-height: 1.25;
-            margin-bottom: 4px;
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+            margin-bottom: 4px !important;
           }
 
           .modal-subtitle {
-            font-size: 0.8rem;
-            margin-bottom: 14px;
-            line-height: 1.35;
+            font-size: 0.82rem !important;
+            margin-bottom: 16px !important;
+            line-height: 1.35 !important;
           }
 
+          /* Force Horizontal 4-Column Layout on Mobile */
           .role-selector-cards {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 14px;
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 6px !important;
+            margin-bottom: 16px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
 
           .role-card {
-            padding: 10px 4px !important;
+            padding: 8px 2px !important;
             border-radius: 12px !important;
-            gap: 6px !important;
+            gap: 5px !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
           }
 
           .role-card-icon-wrapper {
-            width: 38px !important;
-            height: 38px !important;
+            width: 36px !important;
+            height: 36px !important;
             border-radius: 10px !important;
           }
 
           .role-card span {
-            font-size: 0.72rem !important;
+            font-size: 0.7rem !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: block !important;
+            max-width: 100% !important;
+            text-align: center !important;
           }
 
           .input-group {
