@@ -80,46 +80,6 @@ export const LandingView = () => {
             <a href="#roles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Role Portals</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#impact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Live Impact</a>
-            
-            <div className="mobile-login-actions" style={{ width: '100%', marginTop: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '14px' }}>
-              <button 
-                type="button"
-                className="btn btn-primary btn-sm mobile-nav-signin" 
-                onClick={() => { setMobileMenuOpen(false); handleLaunchPortal('Patient'); }}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  fontWeight: 700
-                }}
-              >
-                <CheckCircle2 size={18} />
-                <span>Sign In with Aadhaar Number</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="landing-nav-actions desktop-only">
-            <button 
-              type="button"
-              className="btn btn-primary btn-sm" 
-              onClick={() => handleLaunchPortal('Patient')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                borderRadius: '10px',
-                padding: '8px 18px',
-                fontWeight: 700
-              }}
-            >
-              <CheckCircle2 size={16} />
-              <span>Sign In with Aadhaar Number</span>
-            </button>
           </div>
 
           <button 
@@ -640,10 +600,6 @@ export const LandingView = () => {
           cursor: pointer;
         }
 
-        .mobile-nav-signin {
-          display: none;
-        }
-
         @media (max-width: 860px) {
           .desktop-only {
             display: none !important;
@@ -671,13 +627,6 @@ export const LandingView = () => {
 
           .landing-nav-links.mobile-open {
             display: flex;
-          }
-
-          .mobile-nav-signin {
-            display: inline-flex;
-            width: 100%;
-            justify-content: center;
-            margin-top: 8px;
           }
         }
 
