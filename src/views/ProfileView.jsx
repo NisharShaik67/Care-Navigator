@@ -2,6 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { useApp, calculateProfileCompletion } from '../context/AppContext';
 import { Phone, ShieldCheck, Heart, AlertTriangle, FileText, Edit3, CheckCircle2, UserPlus, LogOut, Upload, Camera, Trash2, X, Sparkles } from 'lucide-react';
 
+// Helper function to compress large camera / device images using canvas to prevent exceeding localStorage quota
+const compressImageToDataUrl = (file, maxWidth = 320, maxHeight = 320, quality = 0.82) => {
+  return new Promise((resolve) => {
+    try {
+      const reader = new FileReader();
+      reader.onerror = () => resolve(null);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => resolve(e.target?.result || null);
+        img.onload = () => {
+          try {
+            let { width, height } = img;
+            if (width > maxWidth || height > maxHeight) {
+              const ratio = Math.min(maxWidth / width, maxHeight / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(e.target?.result || null);
+              return;
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressed);
+          } catch {
+            resolve(e.target?.result || null);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      resolve(null);
+    }
+  });
+};
+
 export const ProfileView = () => {
   const { user, updateUserProfile, logout } = useApp();
 
@@ -14,15 +55,22 @@ export const ProfileView = () => {
     user?.prescriptionReport?.name || (user?.uploadedReports?.[0]?.name || '')
   );
   const [isDragOverProfile, setIsDragOverProfile] = useState(false);
+  const [saveToast, setSaveToast] = useState(false);
 
-  // Sync inputs whenever active user profile changes
+  // Sync inputs ONLY on initial load or when switching to a completely different user account ID.
+  // This guarantees that in-progress typing in age, bloodGroup, name, phone is NEVER wiped when adding or changing photo.
+  const lastSyncedAccountIdRef = React.useRef(null);
   useEffect(() => {
     if (!user) return;
-    setName(user.name || '');
-    setPhone(user.phone || '');
-    setAge(user.age || '');
-    setBloodGroup(user.bloodGroup || '');
-    setReportName(user.prescriptionReport?.name || (user.uploadedReports?.[0]?.name || ''));
+    const currentAccountId = user.accountId || user.aadharNumber || user.phone || 'patient';
+    if (lastSyncedAccountIdRef.current !== currentAccountId) {
+      lastSyncedAccountIdRef.current = currentAccountId;
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setAge(user.age || '');
+      setBloodGroup(user.bloodGroup || '');
+      setReportName(user.prescriptionReport?.name || (user?.uploadedReports?.[0]?.name || ''));
+    }
   }, [user]);
 
   const [showAddContactModal, setShowAddContactModal] = useState(false);
@@ -38,29 +86,46 @@ export const ProfileView = () => {
     { id: 'av-6', label: 'Professional Profile', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=240' }
   ];
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const dataUrl = uploadEvent.target.result;
-      updateUserProfile({ photo: dataUrl });
-      setShowPhotoModal(false);
-    };
-    reader.readAsDataURL(file);
+    const compressedDataUrl = await compressImageToDataUrl(file, 320, 320, 0.82);
+    if (compressedDataUrl) {
+      updateUserProfile({
+        name: name.trim() || user?.name,
+        phone: phone.trim() || user?.phone,
+        age: age ? String(age).trim() : (user?.age || ''),
+        bloodGroup: bloodGroup ? String(bloodGroup).trim() : (user?.bloodGroup || ''),
+        photo: compressedDataUrl
+      });
+    }
+    setShowPhotoModal(false);
+    if (photoFileInputRef.current) photoFileInputRef.current.value = '';
   };
 
   const handleRemovePhoto = () => {
-    updateUserProfile({ photo: null });
+    updateUserProfile({
+      name: name.trim() || user?.name,
+      phone: phone.trim() || user?.phone,
+      age: age ? String(age).trim() : (user?.age || ''),
+      bloodGroup: bloodGroup ? String(bloodGroup).trim() : (user?.bloodGroup || ''),
+      photo: null
+    });
     setShowPhotoModal(false);
   };
 
   const handleSelectPresetAvatar = (url) => {
-    updateUserProfile({ photo: url });
+    updateUserProfile({
+      name: name.trim() || user?.name,
+      phone: phone.trim() || user?.phone,
+      age: age ? String(age).trim() : (user?.age || ''),
+      bloodGroup: bloodGroup ? String(bloodGroup).trim() : (user?.bloodGroup || ''),
+      photo: url
+    });
     setShowPhotoModal(false);
   };
 
@@ -88,17 +153,24 @@ export const ProfileView = () => {
   const handleSaveProfile = (e) => {
     e.preventDefault();
     const finalReportName = reportName || 'Doctor_Prescription_Report.pdf';
+    const trimmedAge = String(age).trim();
+    const trimmedBloodGroup = String(bloodGroup).trim();
+    const trimmedName = name.trim() || user?.name || 'Patient';
+    const trimmedPhone = phone.trim() || user?.phone || '';
+
     updateUserProfile({
-      name,
-      phone,
-      age,
-      bloodGroup,
+      name: trimmedName,
+      phone: trimmedPhone,
+      age: trimmedAge,
+      bloodGroup: trimmedBloodGroup,
       prescriptionReport: { name: finalReportName, date: 'Today' },
       uploadedReports: [
         { id: Date.now(), name: finalReportName, date: 'Today', size: '1.8 MB' }
       ]
     });
     setIsEditing(false);
+    setSaveToast(true);
+    setTimeout(() => setSaveToast(false), 3500);
   };
 
   const handleAddContactSubmit = (e) => {
@@ -1182,6 +1254,34 @@ export const ProfileView = () => {
           }
         }
       `}</style>
+
+      {/* Save Success Toast Banner */}
+      {saveToast && (
+        <div 
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+            color: '#ffffff',
+            padding: '14px 22px',
+            borderRadius: '14px',
+            boxShadow: '0 12px 30px rgba(16, 185, 129, 0.45), 0 4px 10px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            border: '2px solid rgba(255,255,255,0.3)',
+            animation: 'fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        >
+          <CheckCircle2 size={22} color="#ffffff" />
+          <span>Profile details & health records saved successfully!</span>
+        </div>
+      )}
     </div>
   );
 };

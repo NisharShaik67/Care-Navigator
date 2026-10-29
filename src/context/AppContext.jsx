@@ -50,6 +50,7 @@ export const calculateProfileCompletion = (user) => {
 };
 
 const DEFAULT_USER = {
+  accountId: 'acc_alex',
   name: 'Alex Johnson',
   age: '',
   gender: 'MALE', // Auto-filled from Aadhaar Base
@@ -260,16 +261,32 @@ export const getAccountDb = () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        let activeUserOverrides = {};
+        try {
+          const rawUser = localStorage.getItem('cn_user');
+          if (rawUser) {
+            const u = JSON.parse(rawUser);
+            if (u && (u.accountId === 'acc_alex' || !u.accountId)) {
+              activeUserOverrides = u;
+            }
+          }
+        } catch {}
+
         // Ensure Patient demo accounts are always correctly mapped to their Aadhaar
         if (SEED_ACCOUNTS['acc_alex']) {
-          parsed['acc_alex'] = { ...SEED_ACCOUNTS['acc_alex'], ...(parsed['acc_alex'] || {}), role: 'Patient' };
-          parsed['589241037621'] = parsed['acc_alex'];
-          parsed['aadhaar:589241037621'] = parsed['acc_alex'];
+          parsed['acc_alex'] = { 
+            ...SEED_ACCOUNTS['acc_alex'], 
+            ...(parsed['acc_alex'] || {}), 
+            ...activeUserOverrides,
+            role: 'Patient' 
+          };
+          parsed['589241037621'] = 'acc_alex';
+          parsed['aadhaar:589241037621'] = 'acc_alex';
         }
         if (SEED_ACCOUNTS['acc_priya']) {
           parsed['acc_priya'] = { ...SEED_ACCOUNTS['acc_priya'], ...(parsed['acc_priya'] || {}), role: 'Patient' };
-          parsed['123456789012'] = parsed['acc_priya'];
-          parsed['aadhaar:123456789012'] = parsed['acc_priya'];
+          parsed['123456789012'] = 'acc_priya';
+          parsed['aadhaar:123456789012'] = 'acc_priya';
         }
         if (parsed['acc_receptionist']) {
           delete parsed['acc_receptionist'].aadhaar;
@@ -287,7 +304,7 @@ export const getAccountDb = () => {
     initialDb[acc.accountId] = acc;
     if (Array.isArray(acc.aliases)) {
       acc.aliases.forEach(alias => {
-        initialDb[alias] = acc;
+        initialDb[alias] = acc.accountId;
       });
     }
   });
@@ -310,29 +327,64 @@ export const findAccountInDb = (db, identifier) => {
   const raw = String(identifier).trim();
   if (!raw) return null;
 
-  if (db[raw]) return db[raw];
+  const resolveVal = (val) => {
+    if (!val) return null;
+    if (typeof val === 'string' && db[val] && typeof db[val] === 'object') {
+      return db[val];
+    }
+    return typeof val === 'object' ? val : null;
+  };
+
+  if (db[raw]) {
+    const res = resolveVal(db[raw]);
+    if (res) return res;
+  }
 
   const lower = raw.toLowerCase();
-  if (db[lower]) return db[lower];
+  if (db[lower]) {
+    const res = resolveVal(db[lower]);
+    if (res) return res;
+  }
 
   const a12 = extract12DigitAadhaar(raw);
   if (a12) {
-    if (db[a12]) return db[a12];
-    if (db[`aadhaar:${a12}`]) return db[`aadhaar:${a12}`];
+    if (db[a12]) {
+      const res = resolveVal(db[a12]);
+      if (res) return res;
+    }
+    if (db[`aadhaar:${a12}`]) {
+      const res = resolveVal(db[`aadhaar:${a12}`]);
+      if (res) return res;
+    }
   }
 
   const p10 = extract10DigitPhone(raw);
   if (p10) {
-    if (db[p10]) return db[p10];
-    if (db[`phone:${p10}`]) return db[`phone:${p10}`];
+    if (db[p10]) {
+      const res = resolveVal(db[p10]);
+      if (res) return res;
+    }
+    if (db[`phone:${p10}`]) {
+      const res = resolveVal(db[`phone:${p10}`]);
+      if (res) return res;
+    }
   }
 
   const cleanDoc = raw.replace(/\s+/g, '').toUpperCase();
-  if (db[cleanDoc]) return db[cleanDoc];
-  if (db[`doctor:${cleanDoc}`]) return db[`doctor:${cleanDoc}`];
+  if (db[cleanDoc]) {
+    const res = resolveVal(db[cleanDoc]);
+    if (res) return res;
+  }
+  if (db[`doctor:${cleanDoc}`]) {
+    const res = resolveVal(db[`doctor:${cleanDoc}`]);
+    if (res) return res;
+  }
 
   if (raw.includes('@')) {
-    if (db[`email:${lower}`]) return db[`email:${lower}`];
+    if (db[`email:${lower}`]) {
+      const res = resolveVal(db[`email:${lower}`]);
+      if (res) return res;
+    }
   }
 
   const checkedAccountIds = new Set();
@@ -428,7 +480,9 @@ export const persistUserDataToDb = (userToSave, extraData = {}) => {
 
     db[accountId] = merged;
     merged.aliases.forEach(alias => {
-      db[alias] = merged;
+      if (alias !== accountId) {
+        db[alias] = accountId;
+      }
     });
 
     saveAccountDb(db);
@@ -671,7 +725,17 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('cn_user');
-      return saved ? JSON.parse(saved) : DEFAULT_USER;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...DEFAULT_USER,
+            ...parsed,
+            accountId: parsed.accountId || 'acc_alex'
+          };
+        }
+      }
+      return DEFAULT_USER;
     } catch {
       return DEFAULT_USER;
     }
@@ -1045,7 +1109,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      if (isLoggedIn && user && user.accountId) {
+      if (isLoggedIn && user && (user.accountId || user.name)) {
         localStorage.setItem('cn_user', JSON.stringify(user));
         if (user.role === 'Patient') {
           localStorage.setItem('cn_last_patient_account', JSON.stringify({
@@ -1189,11 +1253,30 @@ export const AppProvider = ({ children }) => {
     if (!isFirebaseConfigured || !isLoggedIn || !user?.accountId) return;
 
     const unsubUser = subscribeUserFromFirestore(user.accountId, (remoteUserData) => {
-      if (remoteUserData) {
-        setUser(prev => ({
-          ...prev,
-          ...remoteUserData
-        }));
+      if (remoteUserData && typeof remoteUserData === 'object') {
+        setUser(prev => {
+          if (!prev) return remoteUserData;
+          const merged = { ...prev };
+          // Only merge fields from remote that are NOT blank/null/undefined if local already has a valid non-empty value.
+          // This prevents initial or blank Firestore fields from wiping local profile details (age, bloodGroup, photo, etc.)
+          Object.entries(remoteUserData).forEach(([key, val]) => {
+            if (val === '' || val === null || val === undefined) {
+              const localVal = prev[key];
+              if (localVal !== undefined && localVal !== '' && localVal !== null) {
+                return;
+              }
+            }
+            merged[key] = val;
+          });
+          merged.completionScore = calculateProfileCompletion(merged);
+          try {
+            localStorage.setItem('cn_user', JSON.stringify(merged));
+            if (merged.role === 'Patient') {
+              localStorage.setItem('cn_last_patient_account', JSON.stringify(merged));
+            }
+          } catch {}
+          return merged;
+        });
       }
     });
 
@@ -1422,14 +1505,32 @@ export const AppProvider = ({ children }) => {
 
   const updateUserProfile = (updates) => {
     setUser(prev => {
-      const updated = { ...prev, ...updates };
-      persistUserDataToDb(updated);
+      const updated = { 
+        ...prev, 
+        ...updates,
+        accountId: prev?.accountId || updates?.accountId || (
+          prev?.role === 'Doctor' ? 'acc_doctor_01' : 'acc_alex'
+        )
+      };
+      updated.completionScore = calculateProfileCompletion(updated);
+
+      // Save directly to localStorage FIRST to guarantee persistence across browser refresh
       try {
         localStorage.setItem('cn_user', JSON.stringify(updated));
         if (updated.role === 'Patient') {
           localStorage.setItem('cn_last_patient_account', JSON.stringify(updated));
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Direct cn_user localStorage error:', e);
+      }
+
+      // Persist to local database and synchronize with Firestore
+      try {
+        persistUserDataToDb(updated);
+      } catch (e) {
+        console.warn('persistUserDataToDb error:', e);
+      }
+
       return updated;
     });
   };
