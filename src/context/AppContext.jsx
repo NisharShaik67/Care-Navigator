@@ -260,24 +260,23 @@ export const getAccountDb = () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
-        let updated = false;
-        Object.values(SEED_ACCOUNTS).forEach(acc => {
-          if (!parsed[acc.accountId]) {
-            parsed[acc.accountId] = acc;
-            updated = true;
-          }
-          if (Array.isArray(acc.aliases)) {
-            acc.aliases.forEach(alias => {
-              if (!parsed[alias]) {
-                parsed[alias] = acc;
-                updated = true;
-              }
-            });
-          }
-        });
-        if (updated) {
-          saveAccountDb(parsed);
+        // Ensure Patient demo accounts are always correctly mapped to their Aadhaar
+        if (SEED_ACCOUNTS['acc_alex']) {
+          parsed['acc_alex'] = { ...SEED_ACCOUNTS['acc_alex'], ...(parsed['acc_alex'] || {}), role: 'Patient' };
+          parsed['589241037621'] = parsed['acc_alex'];
+          parsed['aadhaar:589241037621'] = parsed['acc_alex'];
         }
+        if (SEED_ACCOUNTS['acc_priya']) {
+          parsed['acc_priya'] = { ...SEED_ACCOUNTS['acc_priya'], ...(parsed['acc_priya'] || {}), role: 'Patient' };
+          parsed['123456789012'] = parsed['acc_priya'];
+          parsed['aadhaar:123456789012'] = parsed['acc_priya'];
+        }
+        if (parsed['acc_receptionist']) {
+          delete parsed['acc_receptionist'].aadhaar;
+          delete parsed['acc_receptionist'].aadharNumber;
+          parsed['acc_receptionist'].role = 'Receptionist';
+        }
+        saveAccountDb(parsed);
         return parsed;
       }
     }
@@ -400,7 +399,8 @@ export const persistUserDataToDb = (userToSave, extraData = {}) => {
     aliasSet.add(accountId);
 
     const a12 = extract12DigitAadhaar(merged.aadharNumber || merged.aadhaar || '');
-    if (a12) {
+    // Only Patient accounts may be mapped to 12-digit Aadhaar aliases
+    if (a12 && (merged.role === 'Patient' || merged.role === 'User' || !merged.role)) {
       aliasSet.add(`aadhaar:${a12}`);
       aliasSet.add(a12);
     }
@@ -459,6 +459,10 @@ export const findOrCreateAccount = (identifier, roleHint, initialDefaults = {}) 
 
   const existing = findAccountInDb(db, identifier);
   if (existing) {
+    // If a 12-digit Aadhaar was looked up, it MUST be a Patient account!
+    if (a12 && existing.role !== 'Patient') {
+      return persistUserDataToDb({ ...existing, role: 'Patient' });
+    }
     if (isResponder && existing.role !== 'Responder') {
       return persistUserDataToDb({ ...existing, role: 'Responder' });
     }

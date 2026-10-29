@@ -271,6 +271,16 @@ export const OnboardingView = () => {
     const clean = processed.trim();
     const digitsOnly = clean.replace(/\D/g, '');
 
+    // Any 12-digit numeric input is unequivocally a Patient's Aadhaar Number!
+    // Immediately set role to User (Patient) and load Aadhaar details
+    if (digitsOnly.length === 12) {
+      setInputError(false);
+      setSelectedRole('User');
+      setAadharNumber(digitsOnly);
+      handleAadhaarNumberChange(digitsOnly);
+      return;
+    }
+
     if (!isSpecialRole && digitsOnly.length > 0 && digitsOnly.length !== 10 && digitsOnly.length !== 12) {
       setInputError(true);
     } else {
@@ -280,11 +290,11 @@ export const OnboardingView = () => {
     // Check if account already exists in DB for this credential
     const saved = lookupAccount ? lookupAccount(clean) : null;
     if (saved) {
-      if (saved.role === 'Doctor') {
+      if (saved.role === 'Doctor' && isDocMatch) {
         setSelectedRole('Doctor');
         setDoctorId(saved.doctorId || clean);
         return;
-      } else if (saved.role === 'Receptionist') {
+      } else if (saved.role === 'Receptionist' && clean.includes('@')) {
         setSelectedRole('Receptionist');
         setReceptionistGmail(saved.receptionistGmail || clean);
         return;
@@ -330,10 +340,6 @@ export const OnboardingView = () => {
       setBloodGroup('');
       setGender('MALE');
       setAadharNumber('');
-    } else if (digitsOnly.length === 12) {
-      setSelectedRole('User');
-      setAadharNumber(clean);
-      handleAadhaarNumberChange(clean);
     } else {
       setSelectedRole('User');
     }
@@ -350,14 +356,28 @@ export const OnboardingView = () => {
       const isAdmin = clean.toLowerCase().includes('admin') || clean.toLowerCase() === 'director' || clean.toLowerCase() === 'superadmin';
       const digitsOnly = clean.replace(/\D/g, '');
 
-      if (selectedRole === 'Doctor' || isDoc) {
+      // PRIORITY 1: Any 12-digit number is an Aadhaar Card for Patient login!
+      // This strictly overrides any previous role selection or stale session.
+      if (digitsOnly.length === 12) {
+        setSelectedRole('User');
+        setAadharNumber(digitsOnly);
+        handleAadhaarNumberChange(digitsOnly);
+        setErrorMsg('');
+        setOtp(['', '', '', '']);
+        setOtpTimer(10);
+        setOtpAutoFilled(false);
+        setAuthMode('otp');
+        return;
+      }
+
+      if (isDoc || (selectedRole === 'Doctor' && !digitsOnly)) {
         setSelectedRole('Doctor');
         setDoctorId(clean || doctorId || 'DOCTOR-001');
         setErrorMsg('');
         setPin(['1', '2', '3', '4']);
         setAuthMode('pin');
         return;
-      } else if (selectedRole === 'Receptionist' || isEmail) {
+      } else if (isEmail || (selectedRole === 'Receptionist' && !digitsOnly)) {
         setSelectedRole('Receptionist');
         setReceptionistGmail(clean || receptionistGmail || 'reception.narasaraopet@gmail.com');
         setErrorMsg('');
@@ -382,21 +402,8 @@ export const OnboardingView = () => {
           return;
         }
 
-        if (digitsOnly.length === 12) {
-          // ONLY 12-digit Aadhaar Card Number gets OTP automatically in 10 seconds!
-          setSelectedRole('User');
-          setAadharNumber(digitsOnly);
-          handleAadhaarNumberChange(digitsOnly);
-          setErrorMsg('');
-          setOtp(['', '', '', '']);
-          setOtpTimer(10);
-          setOtpAutoFilled(false);
-          setAuthMode('otp');
-          return;
-        }
-
         if (digitsOnly.length === 10) {
-          // 10-digit Mobile Number strictly uses 4-digit security PIN
+          // 10-digit Mobile Number strictly uses 4-digit security PIN for responder console
           setSelectedRole('Responder');
           setPhoneNumber(`+91 ${digitsOnly}`);
           setErrorMsg('');
@@ -468,10 +475,9 @@ export const OnboardingView = () => {
         const recEmail = uniqueId || receptionistGmail || 'reception.narasaraopet@gmail.com';
         if (loginWithAccount) {
           loginWithAccount(recEmail, 'Receptionist', {
-            phone: phoneNumber, 
+            phone: phoneNumber || '+91 98765 10800', 
             receptionistGmail: recEmail,
-            email: recEmail,
-            aadharNumber: uniqueId || aadharNumber 
+            email: recEmail
           });
         }
         navigateTo('receptionist-dashboard', true);
@@ -848,11 +854,11 @@ export const OnboardingView = () => {
               <div className="mobile-quick-chips">
                 <button
                   type="button"
-                  className={`quick-chip ${digitsOnlyId.length === 12 ? 'active' : ''}`}
+                  className={`quick-chip ${digitsOnlyId.length === 12 || selectedRole === 'User' ? 'active' : ''}`}
                   onClick={() => {
                     setSelectedRole('User');
-                    setUniqueId('234567890123');
-                    handleAadhaarNumberChange('234567890123');
+                    setUniqueId('589241037621');
+                    handleAadhaarNumberChange('589241037621');
                   }}
                 >
                   <UserCheck size={14} color="#059669" />
