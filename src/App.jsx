@@ -36,7 +36,8 @@ const MainContent = () => {
       case 'emergency':
         return <EmergencyView />;
       case 'responder':
-        return <EmergencyView />;
+      case 'responder-dashboard':
+        return <ResponderHomeView />;
       case 'symptom-checker':
         return <SymptomCheckerView />;
       case 'hospitals':
@@ -63,15 +64,6 @@ const MainContent = () => {
         if (typeof currentScreen === 'string' && currentScreen.startsWith('admin')) {
           return <AdminDashboardView />;
         }
-        if (user?.role === 'Doctor' && (currentScreen === 'dashboard' || !currentScreen)) {
-          return <DoctorDashboardView />;
-        }
-        if (user?.role === 'Receptionist' && (currentScreen === 'dashboard' || !currentScreen)) {
-          return <ReceptionistView />;
-        }
-        if ((user?.role === 'Responder' || user?.role === 'Driver') && (currentScreen === 'dashboard' || !currentScreen)) {
-          return <ResponderHomeView />;
-        }
         return <DashboardView />;
     }
   };
@@ -97,7 +89,11 @@ const MainContent = () => {
     );
   }
 
-  if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard') {
+  const isDoctorRole = user?.role === 'Doctor';
+  const isReceptionistRole = user?.role === 'Receptionist';
+  const isResponderRole = user?.role === 'Responder' || user?.role === 'Driver';
+
+  if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard' || (isReceptionistRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
         <ReceptionistView />
@@ -105,7 +101,7 @@ const MainContent = () => {
     );
   }
 
-  if (currentScreen === 'doctor-dashboard') {
+  if (currentScreen === 'doctor-dashboard' || (isDoctorRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
         <DoctorDashboardView />
@@ -113,7 +109,7 @@ const MainContent = () => {
     );
   }
 
-  if (currentScreen === 'responder') {
+  if (currentScreen === 'responder' || currentScreen === 'responder-dashboard' || (isResponderRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
         <ResponderHomeView />

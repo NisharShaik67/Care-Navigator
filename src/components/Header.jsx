@@ -24,6 +24,10 @@ const TITLE_MAP = {
   'onboarding': 'Welcome to Care Navigator',
   'dashboard': 'Care Navigator Home',
   'emergency': '108 Emergency Ambulance Tracker',
+  'responder': '108 Responder Command Center',
+  'responder-dashboard': '108 Responder Command Center',
+  'admin': 'State Health Admin Console',
+  'admin-dashboard': 'State Health Admin Console',
   'symptom-checker': 'AI Health Symptom Triage',
   'hospitals': 'Nearby Hospitals & Emergency Beds',
   'icu': 'ICU & Critical Care Bed Matrix',
@@ -136,8 +140,10 @@ export const Header = () => {
     : user?.role === 'Receptionist'
       ? 'receptionist-dashboard'
       : isDriver
-        ? 'emergency'
-        : 'dashboard';
+        ? 'responder'
+        : (user?.role === 'Admin' || user?.role === 'Super Admin')
+          ? 'admin'
+          : 'dashboard';
 
   const title = (currentScreen === 'emergency' && isDriver)
     ? '108 Responder Command Console'

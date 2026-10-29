@@ -10,9 +10,7 @@ import {
   Building2,
   UserCheck,
   ArrowLeft,
-  ArrowRight,
-  Zap,
-  Key
+  Zap
 } from 'lucide-react';
 
 export const OnboardingView = () => {
@@ -403,13 +401,24 @@ export const OnboardingView = () => {
         }
 
         if (digitsOnly.length === 10) {
-          // 10-digit Mobile Number strictly uses 4-digit security PIN for responder console
-          setSelectedRole('Responder');
-          setPhoneNumber(`+91 ${digitsOnly}`);
-          setErrorMsg('');
-          setPin(['1', '2', '3', '4']);
-          setAuthMode('pin');
-          return;
+          if (digitsOnly === '9876510800' || selectedRole === 'Responder') {
+            setSelectedRole('Responder');
+            setPhoneNumber(`+91 ${digitsOnly}`);
+            setErrorMsg('');
+            setPin(['1', '2', '3', '4']);
+            setAuthMode('pin');
+            return;
+          } else {
+            // Patient logging in with 10-digit Mobile Phone Number via OTP
+            setSelectedRole('User');
+            setPhoneNumber(`+91 ${digitsOnly}`);
+            setErrorMsg('');
+            setOtp(['', '', '', '']);
+            setOtpTimer(10);
+            setOtpAutoFilled(false);
+            setAuthMode('otp');
+            return;
+          }
         }
       }
     } else if (authMode === 'otp') {
@@ -496,7 +505,7 @@ export const OnboardingView = () => {
             isOnline: true
           });
         }
-        navigateTo('emergency', true);
+        navigateTo('responder', true);
       } else {
         const cleanNo = (uniqueId || aadharNumber || phoneNumber || '').replace(/\D/g, '');
         if (loginWithAccount) {

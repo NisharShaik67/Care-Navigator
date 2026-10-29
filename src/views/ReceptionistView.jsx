@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 export const ReceptionistView = () => {
-  const { user, logout, navigateTo } = useApp();
+  const { user, logout, navigateTo, returnToPatientPortal } = useApp();
   const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLogoTripleClick = (e) => {
@@ -1941,6 +1941,33 @@ export const ReceptionistView = () => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* Return to Patient Portal Button */}
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    if (typeof returnToPatientPortal === 'function') returnToPatientPortal();
+                    else navigateTo('dashboard');
+                  }}
+                  style={{
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    color: '#059669',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0
+                  }}
+                  title="Return to Patient Portal"
+                  aria-label="Return to Patient Portal"
+                >
+                  <Home size={18} />
+                </button>
+
                 {/* Logout Button */}
                 <button
                   onClick={() => {

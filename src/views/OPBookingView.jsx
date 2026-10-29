@@ -60,7 +60,7 @@ export const OPBookingView = () => {
   // Booking Form State
   const [patientType, setPatientType] = useState('self'); // 'self' | 'other'
   const [otherPatientName, setOtherPatientName] = useState('');
-  const [patientPhone, setPatientPhone] = useState(user.phone || '+91 9876543210');
+  const [patientPhone, setPatientPhone] = useState(user?.phone || '+91 9876543210');
   
   // Date picker (defaults to today's date formatted YYYY-MM-DD)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -102,7 +102,7 @@ export const OPBookingView = () => {
     e.preventDefault();
     if (!bookingModalDoc) return;
 
-    const patientNameFinal = patientType === 'self' ? user.name : (otherPatientName || 'Patient');
+    const patientNameFinal = patientType === 'self' ? (user?.name || 'Self') : (otherPatientName || 'Patient');
     const tokenData = {
       patientName: patientNameFinal,
       patientPhone: patientPhone,
@@ -366,7 +366,7 @@ export const OPBookingView = () => {
                       checked={patientType === 'self'} 
                       onChange={() => setPatientType('self')} 
                     />
-                    <span>I am the Patient ({user.name})</span>
+                    <span>I am the Patient ({user?.name || 'Self'})</span>
                   </label>
 
                   <label className={`toggle-option ${patientType === 'other' ? 'selected' : ''}`}>

@@ -19,7 +19,8 @@ import {
   ExternalLink, 
   Info, 
   LogOut, 
-  Compass
+  Compass,
+  RotateCcw
 } from 'lucide-react';
 import { 
   saveEmergencyDispatchToFirestore, 
@@ -28,7 +29,7 @@ import {
 } from '../firebase/firestoreService';
 
 export const ResponderHomeView = () => {
-  const { user, logout } = useApp();
+  const { user, logout, navigateTo, returnToPatientPortal } = useApp();
 
   // Active Bottom Navigation Tab: 'home', 'history', 'map', 'profile'
   const [activeTab, setActiveTab] = useState('home');
@@ -1091,7 +1092,15 @@ export const ResponderHomeView = () => {
               </button>
             </div>
 
-            <div className="drawer-footer">
+            <div className="drawer-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                className="drawer-logout-btn"
+                style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}
+                onClick={() => { setDrawerOpen(false); if (typeof returnToPatientPortal === 'function') returnToPatientPortal(); else navigateTo('dashboard'); }}
+              >
+                <RotateCcw size={18} />
+                <span>Return to Patient Portal</span>
+              </button>
               <button className="drawer-logout-btn" onClick={logout}>
                 <LogOut size={18} />
                 <span>Logout Session</span>

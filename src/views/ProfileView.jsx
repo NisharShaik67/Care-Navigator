@@ -114,9 +114,9 @@ export const ProfileView = () => {
   };
 
   const missingRequirements = [];
-  if (!user.age || String(user.age).trim() === '') missingRequirements.push('Age');
-  if (!user.bloodGroup || String(user.bloodGroup).trim() === '') missingRequirements.push('Blood Group');
-  if (!user.prescriptionReport && (!user.uploadedReports || user.uploadedReports.length === 0)) {
+  if (!user?.age || String(user.age).trim() === '') missingRequirements.push('Age');
+  if (!user?.bloodGroup || String(user.bloodGroup).trim() === '') missingRequirements.push('Blood Group');
+  if (!user?.prescriptionReport && (!user?.uploadedReports || user.uploadedReports.length === 0)) {
     missingRequirements.push("Doctor's Prescription / Medical Report");
   }
 
@@ -234,11 +234,11 @@ export const ProfileView = () => {
             </div>
           </div>
           <div className="p-header-info">
-            <h2>{user.name}</h2>
-            <p>{user.gender} {user.age ? `• ${user.age} yrs` : ''} • {user.cityVillage || user.location || 'AP'} ({user.pincode || '522601'})</p>
-            <p className="med-id-tag">Aadhaar No: <strong>{user.aadharNumber || (user.phone ? `Linked to Mobile (${user.phone})` : 'Registered via Mobile OTP')}</strong></p>
+            <h2>{user?.name || 'Patient'}</h2>
+            <p>{user?.gender || 'Patient'} {user?.age ? `• ${user.age} yrs` : ''} • {user?.cityVillage || user?.location || 'AP'} ({user?.pincode || '522601'})</p>
+            <p className="med-id-tag">Aadhaar No: <strong>{user?.aadharNumber || (user?.phone ? `Linked to Mobile (${user.phone})` : 'Registered via Mobile OTP')}</strong></p>
             <p className="med-id-tag text-muted" style={{ fontSize: '0.78rem', marginTop: '2px' }}>
-              Address: {user.address || (user.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}
+              Address: {user?.address || (user?.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}
             </p>
           </div>
 
@@ -291,13 +291,13 @@ export const ProfileView = () => {
             {/* Readonly Aadhaar Details Box */}
             <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
               <span className="badge badge-emerald" style={{ marginBottom: '8px', fontSize: '0.72rem' }}>
-                <ShieldCheck size={12} /> {user.aadharNumber ? 'Auto-Filled From UIDAI Aadhaar' : 'Verified Digital Health Identity'}
+                <ShieldCheck size={12} /> {user?.aadharNumber ? 'Auto-Filled From UIDAI Aadhaar' : 'Verified Digital Health Identity'}
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.84rem', marginTop: '6px' }}>
-                <div><strong>Full Name:</strong> {user.name}</div>
-                <div><strong>Aadhaar Card No:</strong> {user.aadharNumber || (user.phone ? `Linked to Mobile (${user.phone})` : 'Not Linked')}</div>
-                <div><strong>Gender:</strong> {user.gender}</div>
-                <div><strong>Aadhaar Address:</strong> {user.address || (user.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}</div>
+                <div><strong>Full Name:</strong> {user?.name || 'Patient'}</div>
+                <div><strong>Aadhaar Card No:</strong> {user?.aadharNumber || (user?.phone ? `Linked to Mobile (${user.phone})` : 'Not Linked')}</div>
+                <div><strong>Gender:</strong> {user?.gender || 'Not specified'}</div>
+                <div><strong>Aadhaar Address:</strong> {user?.address || (user?.cityVillage ? `${user.cityVillage}, Andhra Pradesh` : 'Registered Online via Phone OTP')}</div>
               </div>
             </div>
 
@@ -442,7 +442,7 @@ export const ProfileView = () => {
           </div>
           <div>
             <span className="lbl">Blood Group</span>
-            <span className="val">{user.bloodGroup}</span>
+            <span className="val">{user?.bloodGroup || 'O+'}</span>
           </div>
         </div>
 
@@ -452,7 +452,7 @@ export const ProfileView = () => {
           </div>
           <div>
             <span className="lbl">Known Allergies</span>
-            <span className="val">{Array.isArray(user.allergies) ? user.allergies.join(', ') : (user.allergies || 'None')}</span>
+            <span className="val">{Array.isArray(user?.allergies) ? user.allergies.join(', ') : (user?.allergies || 'None')}</span>
           </div>
         </div>
 
@@ -462,7 +462,7 @@ export const ProfileView = () => {
           </div>
           <div>
             <span className="lbl">Aadhaar Health ID</span>
-            <span className="val-sm">{user.aadharNumber || '5892 4103 7621'}</span>
+            <span className="val-sm">{user?.aadharNumber || '5892 4103 7621'}</span>
           </div>
         </div>
       </div>
@@ -475,7 +475,7 @@ export const ProfileView = () => {
             <h3>Medical Precautions for Patient</h3>
           </div>
           <ul className="precautions-list">
-            {(user.precautions || [
+            {(user?.precautions || [
               'Avoid NSAID pain relievers due to mild gastritis history.',
               'Maintain daily hydration (>3L/day) for high uric acid prevention.',
               'Monitor blood pressure weekly.'
@@ -494,7 +494,7 @@ export const ProfileView = () => {
             <h3>Active Medicine Schedule Alerts</h3>
           </div>
           <div className="alerts-list">
-            {(user.medicineAlerts || [
+            {(user?.medicineAlerts || [
               { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
               { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
             ]).map((med) => (

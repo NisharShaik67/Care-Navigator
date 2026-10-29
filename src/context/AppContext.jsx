@@ -632,7 +632,7 @@ export const AppProvider = ({ children }) => {
         }
         const uRaw = localStorage.getItem('cn_user');
         const role = uRaw ? JSON.parse(uRaw)?.role : 'Patient';
-        return role === 'Doctor' ? 'doctor-dashboard' : role === 'Receptionist' ? 'receptionist-dashboard' : 'dashboard';
+        return role === 'Doctor' ? 'doctor-dashboard' : role === 'Receptionist' ? 'receptionist-dashboard' : (role === 'Responder' || role === 'Driver') ? 'responder' : (role === 'Admin' || role === 'Super Admin') ? 'admin' : 'dashboard';
       }
       if (hash && hash !== 'landing') {
         if (hash === 'onboarding' || hash === 'admin' || hash.startsWith('admin')) {
@@ -1225,7 +1225,11 @@ export const AppProvider = ({ children }) => {
       ? 'doctor-dashboard'
       : userRole === 'Receptionist'
         ? 'receptionist-dashboard'
-        : 'dashboard';
+        : (userRole === 'Responder' || userRole === 'Driver')
+          ? 'responder'
+          : (userRole === 'Admin' || userRole === 'Super Admin')
+            ? 'admin'
+            : 'dashboard';
 
     // If not authenticated and trying to access protected screens, redirect to onboarding
     if (!isAuth && screen !== 'landing' && screen !== 'onboarding' && screen !== 'admin' && !screen?.startsWith('admin')) {
@@ -1290,7 +1294,11 @@ export const AppProvider = ({ children }) => {
       ? 'doctor-dashboard'
       : userRole === 'Receptionist'
         ? 'receptionist-dashboard'
-        : 'dashboard';
+        : (userRole === 'Responder' || userRole === 'Driver')
+          ? 'responder'
+          : (userRole === 'Admin' || userRole === 'Super Admin')
+            ? 'admin'
+            : 'dashboard';
 
     setScreenHistory(prev => {
       if (isAuth) {
@@ -1339,7 +1347,11 @@ export const AppProvider = ({ children }) => {
       ? 'doctor-dashboard'
       : userRole === 'Receptionist'
         ? 'receptionist-dashboard'
-        : 'dashboard';
+        : (userRole === 'Responder' || userRole === 'Driver')
+          ? 'responder'
+          : (userRole === 'Admin' || userRole === 'Super Admin')
+            ? 'admin'
+            : 'dashboard';
 
     const handlePopState = (event) => {
       const auth = isLoggedIn || (localStorage.getItem('cn_isLoggedIn') === 'true');
@@ -1532,25 +1544,42 @@ export const AppProvider = ({ children }) => {
   };
 
   const switchRole = (role) => {
-    if (isLoggedIn) {
-      setUser(prev => {
-        if (!prev || !prev.accountId) return { ...prev, role };
-        const updated = { ...prev, role };
-        persistUserDataToDb(updated);
-        return updated;
-      });
+    if (role === 'Patient' || role === 'User') {
+      return returnToPatientPortal();
     }
     if (role === 'Doctor') {
+      loginWithAccount('DOCTOR-001', 'Doctor');
       setCurrentScreenState('doctor-dashboard');
-    } else if (role === 'Receptionist') {
-      setCurrentScreenState('receptionist-dashboard');
-    } else if (role === 'Responder' || role === 'Driver') {
-      setCurrentScreenState('emergency');
-    } else if (role === 'Admin' || role === 'Super Admin') {
-      setCurrentScreenState('admin');
-    } else {
-      setCurrentScreenState('dashboard');
+      try {
+        window.history.pushState({ screen: 'doctor-dashboard' }, '', '#doctor-dashboard');
+      } catch {}
+      return;
     }
+    if (role === 'Receptionist') {
+      loginWithAccount('reception.narasaraopet@gmail.com', 'Receptionist');
+      setCurrentScreenState('receptionist-dashboard');
+      try {
+        window.history.pushState({ screen: 'receptionist-dashboard' }, '', '#receptionist-dashboard');
+      } catch {}
+      return;
+    }
+    if (role === 'Responder' || role === 'Driver') {
+      loginWithAccount('9876510800', 'Responder');
+      setCurrentScreenState('responder');
+      try {
+        window.history.pushState({ screen: 'responder' }, '', '#responder');
+      } catch {}
+      return;
+    }
+    if (role === 'Admin' || role === 'Super Admin') {
+      loginWithAccount('acc_admin', 'Super Admin');
+      setCurrentScreenState('admin');
+      try {
+        window.history.pushState({ screen: 'admin' }, '', '#admin');
+      } catch {}
+      return;
+    }
+    returnToPatientPortal();
   };
 
   const logout = () => {

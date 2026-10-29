@@ -24,7 +24,16 @@ export const Navigation = () => {
     { id: 'symptom-checker', label: 'AI Symptom', icon: Bot }
   ];
 
-  if (currentScreen === 'onboarding' || currentScreen === 'landing' || currentScreen === 'receptionist-dashboard' || currentScreen === 'receptionist' || currentScreen === 'doctor-dashboard') return null;
+  if (
+    currentScreen === 'onboarding' ||
+    currentScreen === 'landing' ||
+    currentScreen === 'receptionist-dashboard' ||
+    currentScreen === 'receptionist' ||
+    currentScreen === 'doctor-dashboard' ||
+    currentScreen === 'responder' ||
+    currentScreen === 'responder-dashboard' ||
+    currentScreen === 'admin'
+  ) return null;
 
   return (
     <nav className="app-navigation">

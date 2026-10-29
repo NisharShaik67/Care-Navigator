@@ -1,6 +1,4 @@
-const fs = require('fs');
-
-// Let's test the exact logic with default hospitals
+// test filter simulation
 const hospitals = [
   {
     id: 'hosp-4',
@@ -106,7 +104,7 @@ const hospitals = [
 
 const selectedFilter = 'ICU';
 const searchTerm = '';
-const icuCategoryFilter = 'all';
+const _icuCategoryFilter = 'all';
 
 const filteredHospitals = (hospitals || []).filter(hosp => {
   const q = (searchTerm || '').toLowerCase().trim();

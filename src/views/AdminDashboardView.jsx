@@ -39,7 +39,8 @@ import {
   Sliders,
   Send,
   Lock,
-  Menu
+  Menu,
+  RotateCcw
 } from 'lucide-react';
 import { AdminLockGate } from '../components/AdminLockGate';
 
@@ -534,6 +535,15 @@ export const AdminDashboardView = () => {
 
           {/* Return to App / Logout */}
           <div className="admin-profile-menu">
+            <button 
+              className="exit-admin-btn"
+              onClick={() => { if (typeof returnToPatientPortal === 'function') returnToPatientPortal(); else navigateTo('dashboard'); }}
+              title="Return to Main Patient Portal"
+              style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.35)' }}
+            >
+              <RotateCcw size={14} />
+              <span className="hide-on-mobile">Exit Portal</span>
+            </button>
             <button 
               className="exit-admin-btn"
               onClick={handleLock}

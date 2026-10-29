@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 
 export const DoctorDashboardView = () => {
-  const { user, updateUserProfile, logout, navigateTo } = useApp();
+  const { user, updateUserProfile, logout, navigateTo, returnToPatientPortal } = useApp();
   const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLogoTripleClick = (e) => {
@@ -1600,6 +1600,12 @@ export const DoctorDashboardView = () => {
               <div className="drawer-menu-links">
                 <button className="drawer-link" onClick={() => { setShowProfileModal(true); setShowMenuDrawer(false); }}>
                   <User size={18} /> View Official Profile
+                </button>
+                <button className="drawer-link" onClick={() => { setShowMenuDrawer(false); if (typeof returnToPatientPortal === 'function') returnToPatientPortal(); else navigateTo('dashboard'); }}>
+                  <RotateCcw size={18} color="#059669" /> Return to Patient Portal
+                </button>
+                <button className="drawer-link" onClick={() => { setShowMenuDrawer(false); logout(); }} style={{ color: '#dc2626' }}>
+                  <LogOut size={18} color="#dc2626" /> Sign Out
                 </button>
               </div>
             </div>
