@@ -2867,6 +2867,8 @@ export const ReceptionistView = () => {
           .reception-active-emergency-banner { flex-direction: column; align-items: flex-start; }
           .emergency-banner-left { flex-direction: column; align-items: flex-start; }
           .modal-form-grid { grid-template-columns: 1fr; }
+        }
+
         @media print {
           body, html { background: #ffffff !important; }
           .no-print, .reception-top-navy-bar, .reception-bottom-nav, .reception-active-emergency-banner, .reception-quick-stats-grid, .reception-grid-2col, .modal-backdrop-overlay:not(.print-modal-overlay) {

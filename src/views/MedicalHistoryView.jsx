@@ -463,6 +463,43 @@ export const MedicalHistoryView = () => {
           gap: 12px;
           margin-top: 10px;
         }
+
+        @media (max-width: 768px) {
+          .medical-history-container {
+            padding: 14px 12px 88px;
+            gap: 14px;
+          }
+          .vault-header-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            padding: 16px 14px;
+          }
+          .records-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .record-card {
+            padding: 16px 14px;
+          }
+          .rec-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+          }
+          .rec-footer button {
+            width: 100%;
+            justify-content: center;
+          }
+          .modal-footer-btns {
+            flex-direction: column;
+            gap: 8px;
+          }
+          .modal-footer-btns button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

@@ -472,6 +472,34 @@ export const AppointmentsView = () => {
           font-weight: 800;
           color: var(--primary);
         }
+
+        @media (max-width: 768px) {
+          .appointments-view-container {
+            padding: 14px 12px 88px;
+            gap: 14px;
+          }
+          .token-card {
+            padding: 16px 14px;
+          }
+          .token-card-footer {
+            flex-direction: column;
+            gap: 8px;
+          }
+          .token-card-footer button {
+            width: 100%;
+            justify-content: center;
+          }
+          .queue-metric-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 4px;
+          }
+          .qr-pass-modal {
+            max-width: 92vw;
+            padding: 18px 14px;
+          }
+        }
       `}</style>
     </div>
   );

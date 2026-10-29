@@ -1351,20 +1351,30 @@ service cloud.firestore {
             height: 34px;
           }
 
+          .header-title-container {
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+          }
+
           .header-title {
-            font-size: 0.88rem;
-            max-width: 180px;
+            font-size: clamp(0.78rem, 2.8vw, 0.88rem);
+            max-width: 100%;
+            width: 100%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.2;
           }
 
           .header-subtitle {
-            font-size: 0.68rem;
+            font-size: clamp(0.60rem, 2.2vw, 0.68rem);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 160px;
+            max-width: 100%;
+            width: 100%;
+            line-height: 1.2;
           }
 
           .role-btn span {
@@ -1392,6 +1402,36 @@ service cloud.firestore {
 
           .firestore-pill-btn {
             padding: 6px 8px;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .app-header {
+            height: 56px;
+            padding: 0 8px;
+            gap: 4px;
+          }
+          .header-left {
+            gap: 4px;
+          }
+          .header-right {
+            gap: 4px;
+          }
+          .header-back-btn {
+            width: 30px;
+            height: 30px;
+            padding: 4px;
+          }
+          .brand-logo {
+            width: 30px;
+            height: 30px;
+          }
+          .btn-icon {
+            width: 30px;
+            height: 30px;
+          }
+          .portal-badge-btn {
+            padding: 4px 6px !important;
           }
         }
 

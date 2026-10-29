@@ -1117,7 +1117,7 @@ export const LandingView = () => {
 
           .role-tab-btn {
             padding: 8px 4px !important;
-            font-size: 0.72rem !important;
+            font-size: 0.75rem !important;
             gap: 4px !important;
             justify-content: center !important;
             border-radius: 10px !important;
@@ -1127,8 +1127,8 @@ export const LandingView = () => {
           }
 
           .role-tab-btn svg {
-            width: 14px !important;
-            height: 14px !important;
+            width: 15px !important;
+            height: 15px !important;
             flex-shrink: 0 !important;
           }
 
@@ -1137,11 +1137,21 @@ export const LandingView = () => {
           }
         }
 
-        @media (max-width: 400px) {
+        @media (max-width: 480px) {
+          .role-tabs-header {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+          }
+
           .role-tab-btn {
-            padding: 7px 2px !important;
-            font-size: 0.68rem !important;
-            gap: 3px !important;
+            padding: 10px 8px !important;
+            font-size: 0.78rem !important;
+            gap: 6px !important;
+          }
+
+          .role-tab-content {
+            padding: 20px 14px !important;
+            border-radius: 18px !important;
           }
         }
 

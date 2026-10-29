@@ -449,6 +449,35 @@ export const SymptomCheckerView = () => {
           padding: 10px 16px;
           border-radius: 10px;
         }
+
+        @media (max-width: 768px) {
+          .symptom-checker-container {
+            padding: 14px 12px 88px;
+            gap: 14px;
+          }
+          .ai-header-card {
+            padding: 14px 12px;
+          }
+          .chat-window {
+            padding: 14px 12px;
+          }
+          .chat-bubble {
+            max-width: 88%;
+          }
+          .chat-input-bar {
+            padding: 6px 8px;
+          }
+          .chat-input-bar input {
+            font-size: 16px;
+          }
+          .assessment-card {
+            padding: 16px 14px;
+          }
+          .assessment-card button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

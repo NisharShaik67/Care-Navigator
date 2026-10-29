@@ -156,16 +156,39 @@ export const Navigation = () => {
 
         @media (max-width: 480px) {
           .app-navigation {
-            height: 62px;
-            padding: 0 4px;
-          }
-          .nav-tab {
-            padding: 4px 2px;
+            height: 60px;
+            padding: 0 4px max(6px, env(safe-area-inset-bottom, 0px));
             gap: 2px;
           }
+          .nav-tab {
+            padding: 4px 1px;
+            gap: 2px;
+            min-width: 0;
+            max-width: none;
+          }
+          .icon-wrapper svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
           .tab-label {
-            font-size: 0.65rem;
+            font-size: clamp(0.56rem, 2.2vw, 0.68rem);
             letter-spacing: -0.2px;
+            text-align: center;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 350px) {
+          .tab-label {
+            font-size: 0.52rem;
+          }
+          .icon-wrapper svg {
+            width: 16px !important;
+            height: 16px !important;
           }
         }
       `}</style>

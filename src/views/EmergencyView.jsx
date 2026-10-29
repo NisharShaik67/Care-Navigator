@@ -329,6 +329,15 @@ export const EmergencyView = () => {
           .sos-status-card {
             padding: 16px;
           }
+
+          .sos-status-top {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+          }
+
+          .status-indicator {
+            font-size: clamp(0.72rem, 2.8vw, 0.85rem) !important;
+          }
         }
 
         @media (max-width: 480px) {

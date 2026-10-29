@@ -632,6 +632,31 @@ export const DashboardView = () => {
           }
         }
 
+        @media (max-width: 480px) {
+          .hero-banner {
+            padding: 14px 10px !important;
+            gap: 10px !important;
+          }
+
+          .hero-right-profile div {
+            width: 60px !important;
+            height: 60px !important;
+            border-width: 3px !important;
+          }
+
+          .hero-left h2 {
+            font-size: clamp(1.15rem, 4.2vw, 1.45rem) !important;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .hero-right-profile div {
+            width: 50px !important;
+            height: 50px !important;
+            border-width: 2.5px !important;
+          }
+        }
+
         .text-emerald { color: #10b981; }
         .text-sky { color: #0284c7; }
 

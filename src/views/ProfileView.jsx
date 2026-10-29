@@ -1132,6 +1132,55 @@ export const ProfileView = () => {
           font-size: 0.78rem;
           color: var(--text-muted);
         }
+
+        @media (max-width: 768px) {
+          .profile-view-container {
+            padding: 14px 12px 88px;
+            gap: 14px;
+          }
+          .profile-card {
+            padding: 16px 14px;
+          }
+          .profile-top {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 14px;
+          }
+          .profile-info {
+            width: 100%;
+          }
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .medical-flags-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .contacts-list-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .contact-card {
+            padding: 14px 12px;
+          }
+          .precautions-alerts-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .precautions-card, .alerts-card {
+            padding: 16px 14px;
+          }
+          .edit-form-action-row {
+            flex-direction: column;
+            gap: 8px;
+          }
+          .edit-form-action-row button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

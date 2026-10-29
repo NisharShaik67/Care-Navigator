@@ -1101,6 +1101,15 @@ export const OPBookingView = () => {
             grid-template-columns: repeat(3, 1fr);
           }
         }
+
+        @media (max-width: 360px) {
+          .modal-time-slots-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .payment-options-grid {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
     </div>
   );

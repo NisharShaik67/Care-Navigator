@@ -660,9 +660,9 @@ export const OnboardingView = () => {
           </div>
         )}
 
-        {/* Role Selector Tabs (Patient, Doctor, Receptionist, 108 Responder) */}
+        {/* Role Selector Tabs (Aadhaar Number, Doctor Universal ID, Receptionist Gmail ID) - Desktop View */}
         {authMode === 'login' && (
-          <div className="role-selector-cards">
+          <div className="role-selector-cards desktop-only-role-selector">
             <div 
               className={`role-card role-user ${selectedRole === 'User' ? 'selected' : ''}`}
               onClick={() => handleSelectRole('User')}
@@ -671,7 +671,7 @@ export const OnboardingView = () => {
               <div className="role-card-icon-wrapper">
                 <UserCheck size={20} />
               </div>
-              <span>Patient</span>
+              <span>Aadhaar Number</span>
             </div>
 
             <div 
@@ -680,9 +680,9 @@ export const OnboardingView = () => {
               title="Doctor Consultation Portal Sign In"
             >
               <div className="role-card-icon-wrapper">
-                <Stethoscope size={22} />
+                <Stethoscope size={20} />
               </div>
-              <span>Doctor</span>
+              <span>Doctor Universal ID</span>
             </div>
 
             <div 
@@ -691,20 +691,9 @@ export const OnboardingView = () => {
               title="Hospital Reception Desk Sign In"
             >
               <div className="role-card-icon-wrapper">
-                <Building2 size={22} />
+                <Building2 size={20} />
               </div>
-              <span>Receptionist</span>
-            </div>
-
-            <div 
-              className={`role-card role-responder ${selectedRole === 'Responder' ? 'selected' : ''}`}
-              onClick={() => handleSelectRole('Responder')}
-              title="108 Ambulance Responder Sign In"
-            >
-              <div className="role-card-icon-wrapper">
-                <Ambulance size={22} />
-              </div>
-              <span>108 Unit</span>
+              <span>Receptionist Gmail ID</span>
             </div>
           </div>
         )}
@@ -713,7 +702,7 @@ export const OnboardingView = () => {
           {authMode === 'login' && (
             <>
               {selectedRole === 'Doctor' && (
-                <>
+                <div className="desktop-only-demo-banner">
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -738,7 +727,7 @@ export const OnboardingView = () => {
                     </div>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369a1' }}>Dr. Raghavendra</h4>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Senior General Physician • ID: <strong style={{ color: '#0284c7' }}>DOCTOR-001</strong></p>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Senior General Physician • Universal ID: <strong style={{ color: '#0284c7' }}>DOCTOR-001</strong></p>
                     </div>
                   </div>
 
@@ -765,11 +754,11 @@ export const OnboardingView = () => {
                     <Zap size={18} color="#ffffff" />
                     <span>⚡ 1-Click Doctor Demo Sign In</span>
                   </button>
-                </>
+                </div>
               )}
 
               {selectedRole === 'Receptionist' && (
-                <>
+                <div className="desktop-only-demo-banner">
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -797,7 +786,7 @@ export const OnboardingView = () => {
                     </div>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#92400e' }}>GGH Central Reception Desk</h4>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#b45309' }}>Reception Desk Portal • OPD Triage & Bed Allocations</p>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#b45309' }}>Reception Desk Portal • Gmail: <strong style={{ color: '#d97706' }}>reception.narasaraopet@gmail.com</strong></p>
                     </div>
                   </div>
 
@@ -824,34 +813,80 @@ export const OnboardingView = () => {
                     <Zap size={18} color="#ffffff" />
                     <span>⚡ 1-Click Receptionist Demo Sign In</span>
                   </button>
-                </>
+                </div>
               )}
 
               {selectedRole === 'User' && (
+                <div className="desktop-only-demo-banner">
+                  <button
+                    type="button"
+                    onClick={handleQuickPatientLogin}
+                    className="btn btn-block"
+                    style={{
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      color: '#ffffff',
+                      fontWeight: '800',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)'
+                    }}
+                  >
+                    <Zap size={18} color="#ffffff" />
+                    <span>⚡ 1-Click Demo Patient Sign In (Alex Morgan)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Quick credential chips on mobile */}
+              <div className="mobile-quick-chips">
                 <button
                   type="button"
-                  onClick={handleQuickPatientLogin}
-                  className="btn btn-block"
-                  style={{
-                    marginBottom: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                    color: '#ffffff',
-                    fontWeight: '800',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)'
+                  className={`quick-chip ${digitsOnlyId.length === 12 ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedRole('User');
+                    setUniqueId('234567890123');
+                    handleAadhaarNumberChange('234567890123');
                   }}
                 >
-                  <Zap size={18} color="#ffffff" />
-                  <span>⚡ 1-Click Demo Patient Sign In (Alex Morgan)</span>
+                  <UserCheck size={14} color="#059669" />
+                  <span>Aadhaar Number</span>
                 </button>
-              )}
+
+                <button
+                  type="button"
+                  className={`quick-chip ${selectedRole === 'Doctor' ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedRole('Doctor');
+                    setDoctorId('DOCTOR-001');
+                    setUniqueId('DOCTOR-001');
+                    setPin(['1', '2', '3', '4']);
+                  }}
+                >
+                  <Stethoscope size={14} color="#0284c7" />
+                  <span>Doctor Universal ID</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`quick-chip ${selectedRole === 'Receptionist' ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedRole('Receptionist');
+                    setReceptionistGmail('reception.narasaraopet@gmail.com');
+                    setUniqueId('reception.narasaraopet@gmail.com');
+                    setPin(['1', '2', '3', '4']);
+                  }}
+                >
+                  <Building2 size={14} color="#d97706" />
+                  <span>Receptionist Gmail</span>
+                </button>
+              </div>
 
 
               {is10DigitMobile && selectedRole !== 'Doctor' && selectedRole !== 'Receptionist' && (
@@ -1254,12 +1289,80 @@ export const OnboardingView = () => {
 
         .role-selector-cards {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 10px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
           margin-bottom: 20px;
         }
 
-        @media (max-width: 540px) {
+        .desktop-only-demo-banner {
+          display: block;
+        }
+
+        .mobile-quick-chips {
+          display: none;
+        }
+
+        @media (max-width: 640px) {
+          .desktop-only-role-selector {
+            display: none !important;
+          }
+
+          .desktop-only-demo-banner {
+            display: none !important;
+          }
+
+          .mobile-quick-chips {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 14px;
+            width: 100%;
+          }
+
+          .quick-chip {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 4px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+          }
+
+          .quick-chip.active {
+            background: #f0fdf4;
+            border-color: #10b981;
+            color: #047857;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+          }
+
+          @media (max-width: 440px) {
+            .mobile-quick-chips {
+              display: grid !important;
+              grid-template-columns: repeat(2, 1fr) !important;
+              gap: 8px !important;
+            }
+
+            .quick-chip {
+              padding: 9px 6px !important;
+              font-size: 0.78rem !important;
+              gap: 6px !important;
+            }
+          }
+
+          .quick-chip:active {
+            transform: scale(0.97);
+          }
+
           .onboarding-container {
             padding: 12px 10px 32px 10px !important;
             justify-content: flex-start !important;
@@ -1282,7 +1385,7 @@ export const OnboardingView = () => {
           .auth-card {
             width: 100% !important;
             max-width: 100% !important;
-            padding: 20px 12px !important;
+            padding: 22px 14px !important;
             border-radius: 20px !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
             box-sizing: border-box !important;
@@ -1300,48 +1403,13 @@ export const OnboardingView = () => {
             line-height: 1.35 !important;
           }
 
-          /* Force Horizontal 4-Column Layout on Mobile */
-          .role-selector-cards {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 6px !important;
-            margin-bottom: 16px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-          }
-
-          .role-card {
-            padding: 8px 2px !important;
-            border-radius: 12px !important;
-            gap: 5px !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-          }
-
-          .role-card-icon-wrapper {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: 10px !important;
-          }
-
-          .role-card span {
-            font-size: 0.7rem !important;
-            font-weight: 700 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            display: block !important;
-            max-width: 100% !important;
-            text-align: center !important;
-          }
-
           .input-group {
-            padding: 10px 12px;
+            padding: 12px 14px;
           }
 
           .btn-block {
             padding: 12px;
-            font-size: 0.92rem;
+            font-size: 0.95rem;
           }
         }
 
