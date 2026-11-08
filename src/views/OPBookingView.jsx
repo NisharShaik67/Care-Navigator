@@ -11,7 +11,6 @@ import {
   Sparkles,
   CreditCard,
   XCircle,
-  Phone,
   Search,
   Zap
 } from 'lucide-react';
@@ -186,7 +185,7 @@ export const OPBookingView = () => {
           </div>
         </div>
 
-        {selectedHospital && (
+        {selectedHospital && selectedHospital.opQueueCount > 0 && (
           <div className="hosp-quick-info-pills">
             <span className="info-chip queue">
               <span style={{
@@ -203,22 +202,6 @@ export const OPBookingView = () => {
                 <Zap size={13} color="#ffffff" fill="#ffffff" />
               </span>
               <strong style={{ color: '#000000', fontSize: '0.88rem' }}>{selectedHospital.opQueueCount} in OP Queue</strong>
-            </span>
-            <span className="info-chip phone">
-              <span style={{
-                background: '#16a34a',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)',
-                flexShrink: 0
-              }}>
-                <Phone size={13} color="#ffffff" fill="#ffffff" />
-              </span>
-              <strong style={{ color: '#000000', fontSize: '0.88rem' }}>{selectedHospital.phone?.replace(/^0/, '')}</strong>
             </span>
           </div>
         )}
@@ -638,13 +621,6 @@ export const OPBookingView = () => {
         .info-chip.queue {
           background: transparent;
           color: #0f172a;
-          border: none;
-          padding: 4px 8px;
-        }
-
-        .info-chip.phone {
-          background: transparent;
-          color: #000000;
           border: none;
           padding: 4px 8px;
         }
@@ -1216,11 +1192,11 @@ export const OPBookingView = () => {
 
           .hosp-quick-info-pills {
             width: 100%;
-            justify-content: space-between;
+            display: flex;
+            align-items: center;
             gap: 8px;
             margin: 0;
-            padding-top: 8px;
-            border-top: 1px dashed #e2e8f0;
+            padding-top: 6px;
           }
 
           .info-chip {
