@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { QrCode, AlertCircle, XCircle, Plus } from 'lucide-react';
 
@@ -109,8 +110,8 @@ export const AppointmentsView = () => {
       )}
 
       {/* Digital QR Token Pass Modal */}
-      {selectedQRModal && (
-        <div className="modal-overlay" onClick={() => setSelectedQRModal(null)}>
+      {selectedQRModal && typeof document !== 'undefined' && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 999999 }} onClick={() => setSelectedQRModal(null)}>
           <div className="modal-content glass-panel qr-pass-modal fade-in" onClick={e => e.stopPropagation()}>
             <div className="pass-header">
               <span className="badge badge-emerald">DIGITAL HOSPITAL ENTRY PASS</span>
@@ -140,7 +141,8 @@ export const AppointmentsView = () => {
               Close Pass
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{`

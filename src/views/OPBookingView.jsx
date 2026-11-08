@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { 
   Building2, 
@@ -28,6 +29,18 @@ export const OPBookingView = () => {
 
   const [docSearchQuery, setDocSearchQuery] = useState('');
   const [bookingModalDoc, setBookingModalDoc] = useState(null); // When non-null, modal opens
+
+  // Lock body scroll when modal is open so background never scrolls
+  useEffect(() => {
+    if (bookingModalDoc) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [bookingModalDoc]);
 
   // Close booking modal on ESC key press
   useEffect(() => {
@@ -309,194 +322,201 @@ export const OPBookingView = () => {
       </div>
 
 
-      {/* Booking Form Modal triggered on Doctor Click */}
-      {bookingModalDoc && (
-        <div className="modal-backdrop fade-in" onClick={() => setBookingModalDoc(null)}>
+      {/* Booking Form Modal triggered on Doctor Click - Rendered into body via Portal */}
+      {bookingModalDoc && typeof document !== 'undefined' && createPortal(
+        <div className="modal-backdrop op-modal-portal fade-in" onClick={() => setBookingModalDoc(null)}>
           <div className="modal-content glass-panel booking-modal fade-in" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="m-title">
-                <Stethoscope size={22} color="#0284c7" />
-                <div>
-                  <h3>Book OP Token Pass</h3>
-                  <p className="sub">{selectedHospital.name}</p>
+            {/* 1. Modal Top Fixed Header */}
+            <div className="modal-header-section">
+              <div className="modal-header">
+                <div className="m-title">
+                  <Stethoscope size={22} color="#0284c7" />
+                  <div>
+                    <h3>Book OP Token Pass</h3>
+                    <p className="sub">{selectedHospital ? selectedHospital.name : 'Hospital'}</p>
+                  </div>
                 </div>
+                <button className="btn-close" onClick={() => setBookingModalDoc(null)} aria-label="Close modal">
+                  <XCircle size={22} />
+                </button>
               </div>
-              <button className="btn-close" onClick={() => setBookingModalDoc(null)}>
-                <XCircle size={20} />
-              </button>
-            </div>
 
-            {/* Selected Doctor Summary Header */}
-            <div className="modal-doc-summary-chip glass-card">
-              <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
-                <img 
-                  src={bookingModalDoc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} 
-                  alt="Doc" 
-                  className="mini-doc-img" 
-                  style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }}
-                />
-                <label 
-                  className="photo-upload-overlay" 
-                  title="Upload / Change Doctor Picture"
-                  style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px' }}
-                >
-                  <Camera size={11} color="#ffffff" />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    style={{ display: 'none' }} 
-                    onChange={(e) => handleImageUpload(e, bookingModalDoc.id)}
+              {/* Selected Doctor Summary Header */}
+              <div className="modal-doc-summary-chip glass-card">
+                <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
+                  <img 
+                    src={bookingModalDoc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"} 
+                    alt="Doc" 
+                    className="mini-doc-img" 
+                    style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }}
                   />
-                </label>
-              </div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>{bookingModalDoc.name}</h4>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#0284c7', fontWeight: '600' }}>{bookingModalDoc.specialty}</p>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>Room: {bookingModalDoc.roomNo} • Fee: {bookingModalDoc.fee || '₹300'}</p>
+                  <label 
+                    className="photo-upload-overlay" 
+                    title="Upload / Change Doctor Picture"
+                    style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px' }}
+                  >
+                    <Camera size={11} color="#ffffff" />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }} 
+                      onChange={(e) => handleImageUpload(e, bookingModalDoc.id)}
+                    />
+                  </label>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bookingModalDoc.name}</h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#0284c7', fontWeight: '600' }}>{bookingModalDoc.specialty}</p>
+                  <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748b' }}>Room: {bookingModalDoc.roomNo} • Fee: {bookingModalDoc.fee || '₹300'}</p>
+                </div>
               </div>
             </div>
 
-            <form onSubmit={handleFinalSubmitBooking} className="op-booking-form">
-              {/* Patient Type Selection */}
-              <div className="form-group">
-                <label className="form-label">Booking OP Token For:</label>
-                <div className="patient-type-toggle">
-                  <label className={`toggle-option ${patientType === 'self' ? 'selected' : ''}`}>
-                    <input 
-                      type="radio" 
-                      name="ptype" 
-                      checked={patientType === 'self'} 
-                      onChange={() => setPatientType('self')} 
-                    />
-                    <span>I am the Patient ({user?.name || 'Self'})</span>
-                  </label>
+            {/* 2. Scrollable Body with all booking inputs */}
+            <div className="modal-scrollable-body">
+              <form id="op-booking-form-id" onSubmit={handleFinalSubmitBooking} className="op-booking-form">
+                {/* Patient Type Selection */}
+                <div className="form-group">
+                  <label className="form-label">Booking OP Token For:</label>
+                  <div className="patient-type-toggle">
+                    <label className={`toggle-option ${patientType === 'self' ? 'selected' : ''}`}>
+                      <input 
+                        type="radio" 
+                        name="ptype" 
+                        checked={patientType === 'self'} 
+                        onChange={() => setPatientType('self')} 
+                      />
+                      <span>I am the Patient ({user?.name || 'Self'})</span>
+                    </label>
 
-                  <label className={`toggle-option ${patientType === 'other' ? 'selected' : ''}`}>
-                    <input 
-                      type="radio" 
-                      name="ptype" 
-                      checked={patientType === 'other'} 
-                      onChange={() => setPatientType('other')} 
-                    />
-                    <span>Another Person</span>
-                  </label>
+                    <label className={`toggle-option ${patientType === 'other' ? 'selected' : ''}`}>
+                      <input 
+                        type="radio" 
+                        name="ptype" 
+                        checked={patientType === 'other'} 
+                        onChange={() => setPatientType('other')} 
+                      />
+                      <span>Another Person</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
 
-              {/* Blank Patient Name Input if Another Person */}
-              {patientType === 'other' && (
-                <div className="form-group fade-in">
-                  <label className="form-label">Enter Patient Full Name *</label>
+                {/* Blank Patient Name Input if Another Person */}
+                {patientType === 'other' && (
+                  <div className="form-group fade-in">
+                    <label className="form-label">Enter Patient Full Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter patient full name..."
+                      value={otherPatientName}
+                      onChange={e => setOtherPatientName(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Phone Number */}
+                <div className="form-group">
+                  <label className="form-label">Contact Phone Number *</label>
                   <input
-                    type="text"
+                    type="tel"
                     className="form-input"
-                    placeholder="Enter patient full name..."
-                    value={otherPatientName}
-                    onChange={e => setOtherPatientName(e.target.value)}
+                    value={patientPhone}
+                    onChange={e => setPatientPhone(e.target.value)}
                     required
                   />
                 </div>
-              )}
 
-              {/* Phone Number */}
-              <div className="form-group">
-                <label className="form-label">Contact Phone Number *</label>
-                <input
-                  type="tel"
-                  className="form-input"
-                  value={patientPhone}
-                  onChange={e => setPatientPhone(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Date of Booking OP */}
-              <div className="form-group">
-                <label className="form-label">Date of Booking OP *</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={bookingDate}
-                  min={todayStr}
-                  onChange={e => setBookingDate(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Available Time Slots for Selected Date */}
-              <div className="form-group">
-                <label className="form-label">Available Time Slots for {bookingDate} *</label>
-                <div className="modal-time-slots-grid">
-                  {TIME_SLOTS.map((slot, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`slot-chip ${selectedTimeSlot === slot ? 'active' : ''}`}
-                      onClick={() => setSelectedTimeSlot(slot)}
-                    >
-                      <Clock size={13} />
-                      <span>{slot}</span>
-                    </button>
-                  ))}
+                {/* Date of Booking OP */}
+                <div className="form-group">
+                  <label className="form-label">Date of Booking OP *</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={bookingDate}
+                    min={todayStr}
+                    onChange={e => setBookingDate(e.target.value)}
+                    required
+                  />
                 </div>
-              </div>
 
-              {/* Health Problem / Symptoms */}
-              <div className="form-group">
-                <label className="form-label">Health Problem / Symptoms (Optional)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. General checkup, fever, stomach pain, weakness..."
-                  value={symptomsReason}
-                  onChange={e => setSymptomsReason(e.target.value)}
-                />
-              </div>
-
-              {/* Payment Mode Selection */}
-              <div className="form-group">
-                <label className="form-label">Select Payment Mode *</label>
-                <div className="payment-options-grid">
-                  <label className={`pay-card ${paymentMode === 'upi' ? 'selected' : ''}`}>
-                    <input type="radio" name="paym" checked={paymentMode === 'upi'} onChange={() => setPaymentMode('upi')} />
-                    <div>
-                      <strong>UPI / GPay / PhonePe</strong>
-                      <p>Instant Digital OP Pass</p>
-                    </div>
-                  </label>
-
-                  <label className={`pay-card ${paymentMode === 'abha' ? 'selected' : ''}`}>
-                    <input type="radio" name="paym" checked={paymentMode === 'abha'} onChange={() => setPaymentMode('abha')} />
-                    <div>
-                      <strong>ABHA / Aadhaar Card</strong>
-                      <p>Govt Health ID Payment</p>
-                    </div>
-                  </label>
-
-                  <label className={`pay-card ${paymentMode === 'cash' ? 'selected' : ''}`}>
-                    <input type="radio" name="paym" checked={paymentMode === 'cash'} onChange={() => setPaymentMode('cash')} />
-                    <div>
-                      <strong>Pay at Counter</strong>
-                      <p>Pay Cash at OP Desk</p>
-                    </div>
-                  </label>
+                {/* Available Time Slots for Selected Date */}
+                <div className="form-group">
+                  <label className="form-label">Available Time Slots for {bookingDate} *</label>
+                  <div className="modal-time-slots-grid">
+                    {TIME_SLOTS.map((slot, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`slot-chip ${selectedTimeSlot === slot ? 'active' : ''}`}
+                        onClick={() => setSelectedTimeSlot(slot)}
+                      >
+                        <Clock size={13} />
+                        <span>{slot}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Total Fee & Submit Button */}
-              <div className="form-footer-action-row">
-                <div className="fee-summary">
-                  <span className="lbl">Total OPD Fee</span>
-                  <span className="amount text-emerald">{bookingModalDoc.fee || '₹300'}</span>
+                {/* Health Problem / Symptoms */}
+                <div className="form-group">
+                  <label className="form-label">Health Problem / Symptoms (Optional)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. General checkup, fever, stomach pain, weakness..."
+                    value={symptomsReason}
+                    onChange={e => setSymptomsReason(e.target.value)}
+                  />
                 </div>
-                <button type="submit" className="btn btn-primary btn-lg">
-                  <CreditCard size={18} />
-                  <span>Pay & Complete OP Booking</span>
-                </button>
+
+                {/* Payment Mode Selection */}
+                <div className="form-group">
+                  <label className="form-label">Select Payment Mode *</label>
+                  <div className="payment-options-grid">
+                    <label className={`pay-card ${paymentMode === 'upi' ? 'selected' : ''}`}>
+                      <input type="radio" name="paym" checked={paymentMode === 'upi'} onChange={() => setPaymentMode('upi')} />
+                      <div>
+                        <strong>UPI / GPay / PhonePe</strong>
+                        <p>Instant Digital OP Pass</p>
+                      </div>
+                    </label>
+
+                    <label className={`pay-card ${paymentMode === 'abha' ? 'selected' : ''}`}>
+                      <input type="radio" name="paym" checked={paymentMode === 'abha'} onChange={() => setPaymentMode('abha')} />
+                      <div>
+                        <strong>ABHA / Aadhaar Card</strong>
+                        <p>Govt Health ID Payment</p>
+                      </div>
+                    </label>
+
+                    <label className={`pay-card ${paymentMode === 'cash' ? 'selected' : ''}`}>
+                      <input type="radio" name="paym" checked={paymentMode === 'cash'} onChange={() => setPaymentMode('cash')} />
+                      <div>
+                        <strong>Pay at Counter</strong>
+                        <p>Pay Cash at OP Desk</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* 3. Sticky Bottom Action Row - Always visible & tappable */}
+            <div className="modal-sticky-footer">
+              <div className="fee-summary">
+                <span className="lbl">Total OPD Fee</span>
+                <span className="amount text-emerald">{bookingModalDoc.fee || '₹300'}</span>
               </div>
-            </form>
+              <button type="submit" form="op-booking-form-id" className="btn btn-primary btn-lg pay-submit-btn">
+                <CreditCard size={18} />
+                <span>Pay & Complete OP Booking</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{`
@@ -883,28 +903,42 @@ export const OPBookingView = () => {
         }
 
         /* Modal Styles */
-        .modal-backdrop {
+        .modal-backdrop.op-modal-portal {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(2, 132, 199, 0.15);
+          background: rgba(15, 23, 42, 0.65);
           backdrop-filter: blur(8px);
-          z-index: 1000;
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 999999;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 20px;
+          box-sizing: border-box;
         }
 
         .booking-modal {
           width: 100%;
-          max-width: 600px;
+          max-width: 580px;
           max-height: 90vh;
-          overflow-y: auto;
-          padding: 24px;
+          max-height: 90dvh;
+          display: flex;
+          flex-direction: column;
           border-radius: 20px;
+          background: #ffffff;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          box-sizing: border-box;
+          border: 1px solid #e2e8f0;
+          padding: 0;
+        }
+
+        .modal-header-section {
+          flex-shrink: 0;
+          padding: 20px 24px 0 24px;
           background: #ffffff;
         }
 
@@ -912,7 +946,7 @@ export const OPBookingView = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 16px;
+          margin-bottom: 12px;
         }
 
         .m-title {
@@ -922,13 +956,14 @@ export const OPBookingView = () => {
         }
 
         .m-title h3 {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           font-weight: 800;
           margin: 0;
+          color: #0f172a;
         }
 
         .m-title .sub {
-          font-size: 0.82rem;
+          font-size: 0.8rem;
           color: #64748b;
           margin: 0;
         }
@@ -936,25 +971,44 @@ export const OPBookingView = () => {
         .btn-close {
           background: none;
           border: none;
-          color: #64748b;
+          color: #94a3b8;
           cursor: pointer;
+          padding: 4px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .btn-close:hover {
+          color: #ef4444;
+          background: #fef2f2;
         }
 
         .modal-doc-summary-chip {
-          padding: 12px 16px;
+          padding: 10px 14px;
           display: flex;
           align-items: center;
-          gap: 14px;
-          margin-bottom: 20px;
+          gap: 12px;
+          margin-bottom: 14px;
           background: #f8fafc;
+          border-radius: 12px;
           border: 1px solid #e2e8f0;
         }
 
         .mini-doc-img {
-          width: 48px;
-          height: 48px;
+          width: 46px;
+          height: 46px;
           border-radius: 12px;
           object-fit: cover;
+        }
+
+        .modal-scrollable-body {
+          flex: 1;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 4px 24px 20px 24px;
         }
 
         .op-booking-form {
@@ -1055,13 +1109,15 @@ export const OPBookingView = () => {
           margin: 2px 0 0 0;
         }
 
-        .form-footer-action-row {
+        .modal-sticky-footer {
+          flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-top: 10px;
-          padding-top: 16px;
+          padding: 14px 24px calc(14px + env(safe-area-inset-bottom, 0px));
+          background: #ffffff;
           border-top: 1px solid #e2e8f0;
+          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
         }
 
         .fee-summary {
@@ -1080,12 +1136,23 @@ export const OPBookingView = () => {
           font-weight: 900;
         }
 
+        .pay-submit-btn {
+          padding: 12px 22px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
         .form-input {
           width: 100%;
           padding: 10px 14px;
           border-radius: 10px;
           border: 1px solid #cbd5e1;
           font-size: 0.92rem;
+          font-family: inherit;
           color: #0f172a;
           background: #ffffff;
           outline: none;
@@ -1254,25 +1321,33 @@ export const OPBookingView = () => {
             display: flex;
           }
 
-          /* Modal on Mobile: bottom-sheet drawer or full fit */
-          .modal-backdrop {
+          /* Modal on Mobile: Responsive Bottom Sheet with Fixed Header & Sticky Footer */
+          .modal-backdrop.op-modal-portal {
             padding: 0;
             align-items: flex-end;
+            justify-content: flex-end;
           }
 
           .booking-modal {
-            max-width: 100%;
-            max-height: 88vh;
-            max-height: 88dvh;
-            border-radius: 20px 20px 0 0;
-            padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            box-sizing: border-box;
+            max-width: 100vw;
+            width: 100%;
+            height: 92vh;
+            height: 92dvh;
+            max-height: 92dvh;
+            border-radius: 22px 22px 0 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
+          }
+
+          .modal-header-section {
+            padding: 14px 16px 0 16px;
           }
 
           .modal-header {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
           }
 
           .m-title h3 {
@@ -1280,9 +1355,16 @@ export const OPBookingView = () => {
           }
 
           .modal-doc-summary-chip {
-            padding: 10px 12px;
-            margin-bottom: 14px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
             gap: 10px;
+          }
+
+          .modal-scrollable-body {
+            padding: 4px 16px 16px 16px;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
           }
 
           .patient-type-toggle {
@@ -1323,29 +1405,36 @@ export const OPBookingView = () => {
             font-size: 0.7rem;
           }
 
-          .form-footer-action-row {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 10px;
-            padding-top: 12px;
-            margin-top: 6px;
-          }
-
-          .fee-summary {
+          .modal-sticky-footer {
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
+            padding: 12px 16px max(16px, env(safe-area-inset-bottom, 16px));
+            gap: 12px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+          }
+
+          .fee-summary {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .fee-summary .lbl {
+            font-size: 0.68rem;
           }
 
           .fee-summary .amount {
             font-size: 1.25rem;
           }
 
-          .form-footer-action-row .btn-primary {
-            width: 100%;
+          .pay-submit-btn {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            font-weight: 800;
             justify-content: center;
-            padding: 12px;
-            font-size: 0.92rem;
           }
         }
 
@@ -1355,6 +1444,10 @@ export const OPBookingView = () => {
           }
           .op-booking-view-container {
             padding: 8px 8px 105px;
+          }
+          .pay-submit-btn {
+            font-size: 0.82rem;
+            padding: 10px;
           }
         }
       `}</style>
