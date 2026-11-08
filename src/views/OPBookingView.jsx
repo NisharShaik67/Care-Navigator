@@ -741,9 +741,9 @@ export const OPBookingView = () => {
         }
 
         .common-doctor-highlight {
-          border: 2px solid #10b981 !important;
-          background: linear-gradient(135deg, #ffffff 0%, rgba(16, 185, 129, 0.04) 100%) !important;
-          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15) !important;
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          box-shadow: none;
         }
 
         .common-doc-ribbon {
@@ -1234,11 +1234,14 @@ export const OPBookingView = () => {
             border-radius: 14px;
           }
 
+          .common-doctor-highlight {
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+          }
+
           .common-doc-ribbon {
-            font-size: 0.68rem;
-            padding: 4px 10px;
-            margin: -14px -14px 12px -14px;
-            border-radius: 12px 12px 0 0;
+            display: none !important;
           }
 
           .doc-card-inner {
