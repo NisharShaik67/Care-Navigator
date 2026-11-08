@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
@@ -30,11 +30,253 @@ import {
   Check,
   SlidersHorizontal,
   LogOut,
-  Trash2
+  Trash2,
+  Zap
 } from 'lucide-react';
 
+// Baseline Queue List (Initial 6 patients shown in receptionist dashboard)
+const BASELINE_QUEUE_LIST = [
+  {
+    id: 'op-101',
+    token: 'OP-01',
+    name: 'Ramesh Kumar',
+    age: 45,
+    gender: 'Male',
+    uhid: 'UHID-882109',
+    doctor: 'Dr. K. Srinivas Rao (Cardiology)',
+    dept: 'Cardiology',
+    timeSlot: '09:30 AM',
+    status: 'Consultation',
+    phone: '+91 98480 12345',
+    arrivedAt: '09:15 AM'
+  },
+  {
+    id: 'op-102',
+    token: 'OP-02',
+    name: 'Priya Sharma',
+    age: 32,
+    gender: 'Female',
+    uhid: 'UHID-774012',
+    doctor: 'Dr. S. Meenakshi (Orthopedics)',
+    dept: 'Orthopedics',
+    timeSlot: '09:45 AM',
+    status: 'Arrived',
+    phone: '+91 98765 43210',
+    arrivedAt: '09:35 AM'
+  },
+  {
+    id: 'op-103',
+    token: 'WK-01',
+    name: 'Venkatesh Rao',
+    age: 58,
+    gender: 'Male',
+    uhid: 'UHID-993041',
+    doctor: 'Dr. Common Duty Physician',
+    dept: 'General Medicine',
+    timeSlot: 'Walk-in',
+    status: 'Waiting',
+    phone: '+91 94401 98765',
+    arrivedAt: '09:40 AM'
+  },
+  {
+    id: 'op-104',
+    token: 'OP-03',
+    name: 'Ananya Das',
+    age: 26,
+    gender: 'Female',
+    uhid: 'UHID-662198',
+    doctor: 'Dr. R. V. Ramana (Pediatrics)',
+    dept: 'Pediatrics',
+    timeSlot: '10:00 AM',
+    status: 'Waiting',
+    phone: '+91 91234 56789',
+    arrivedAt: '09:42 AM'
+  },
+  {
+    id: 'op-105',
+    token: 'WK-02',
+    name: 'Mohd. Ibrahim',
+    age: 50,
+    gender: 'Male',
+    uhid: 'UHID-551029',
+    doctor: 'Dr. M. Lakshmi Prasanna (Surgery)',
+    dept: 'General Surgery',
+    timeSlot: 'Walk-in',
+    status: 'Arrived',
+    phone: '+91 99887 76655',
+    arrivedAt: '09:45 AM'
+  },
+  {
+    id: 'op-106',
+    token: 'OP-04',
+    name: 'K. Lakshmi',
+    age: 61,
+    gender: 'Female',
+    uhid: 'UHID-440192',
+    doctor: 'Dr. K. Srinivas Rao (Cardiology)',
+    dept: 'Cardiology',
+    timeSlot: '10:15 AM',
+    status: 'Completed',
+    phone: '+91 97001 11223',
+    arrivedAt: '09:00 AM'
+  }
+];
+
+const BASELINE_REC_NOTIFS = [
+  {
+    id: 'rn-1',
+    title: 'Emergency Triage Alert',
+    text: 'Ambulance AP-07-TY-4912 en route to ER Bay 02. ETA 2.3 Mins.',
+    time: 'Just now',
+    urgent: true,
+    important: true
+  },
+  {
+    id: 'rn-2',
+    title: 'OP Token #WK-01 Arrived',
+    text: 'Venkatesh Rao checked in at Central OPD Counter. Waiting for General Medicine.',
+    time: '10m ago',
+    urgent: false,
+    important: false
+  },
+  {
+    id: 'rn-3',
+    title: 'Doctor Schedule Update',
+    text: 'Dr. K. Srinivas Rao (Cardiology) initiated OP Consultation for Token #11.',
+    time: '25m ago',
+    urgent: false,
+    important: false
+  }
+];
+
+// Helper to format an OP token into the Receptionist queue structure
+const formatTokenToQueuePatient = (token, currentUser = null) => {
+  const patientName = token.patientName || token.userName || (currentUser?.name || 'Patient');
+  const patientPhone = token.patientPhone || token.phone || (currentUser?.phone || '+91 98765 43210');
+  const appointmentTime = token.timeSlot || token.time || '10:00 AM';
+  const age = token.age || (patientName === 'Alex Morgan' ? 28 : (currentUser?.age || 35));
+  const gender = token.gender || (patientName === 'Alex Morgan' ? 'Male' : (currentUser?.gender || 'Male'));
+  const doctor = token.doctorName ? (token.doctorName.startsWith('Dr.') ? token.doctorName : `Dr. ${token.doctorName}`) : 'Dr. K. Srinivas Rao (Cardiology)';
+  const dept = token.specialty || 'General OPD';
+  const tokenFormatted = token.tokenNumber ? (token.tokenNumber.toString().startsWith('OP-') ? token.tokenNumber : `OP-${token.tokenNumber.toString().padStart(2, '0')}`) : 'OP-NEW';
+  const uhid = token.uhid || `UHID-${(token.id ? token.id.replace(/\D/g, '').slice(-6) : Math.floor(100000 + Math.random() * 900000))}`;
+
+  return {
+    id: token.id || `op-${Date.now()}`,
+    token: tokenFormatted,
+    name: patientName,
+    age: age,
+    gender: gender,
+    uhid: uhid,
+    doctor: doctor,
+    dept: dept,
+    timeSlot: appointmentTime,
+    status: 'Waiting',
+    phone: patientPhone,
+    arrivedAt: 'Just now',
+    isLiveBooking: true,
+    originalToken: token
+  };
+};
+
+// Helper to format an OP token into Reception registrations
+const formatTokenToRegistration = (token, currentUser = null) => {
+  const patientName = token.patientName || token.userName || (currentUser?.name || 'Patient');
+  const uhid = token.uhid || `UHID-${(token.id ? token.id.replace(/\D/g, '').slice(-6) : Math.floor(100000 + Math.random() * 900000))}`;
+  const aadhaar = token.patientAadhaar || (currentUser?.aadharNumber ? currentUser.aadharNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3') : 'XXXX XXXX ' + Math.floor(1000 + Math.random() * 9000));
+  const age = token.age || (patientName === 'Alex Morgan' ? 28 : (currentUser?.age || 35));
+  const gender = (token.gender || (patientName === 'Alex Morgan' ? 'Male' : (currentUser?.gender || 'Male'))).charAt(0).toUpperCase();
+
+  return {
+    id: `reg-${token.id || Date.now()}`,
+    uhid: uhid,
+    aadhaar: aadhaar,
+    name: patientName,
+    ageGender: `${age} / ${gender}`,
+    type: 'Online Portal',
+    dept: token.specialty || 'General OPD',
+    registeredAt: 'Just now Today',
+    status: 'Token Issued',
+    isLiveBooking: true
+  };
+};
+
+// Initial state loader for Receptionist Queue (Booked tokens always on line 1 / top)
+const getInitialQueueList = (appContextAppointments = []) => {
+  let loadedBookedOps = [];
+  try {
+    const raw = localStorage.getItem('cn_receptionist_booked_ops') || localStorage.getItem('cn_doctor_booked_ops');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) loadedBookedOps = parsed;
+    }
+  } catch {}
+
+  if (Array.isArray(appContextAppointments)) {
+    appContextAppointments.forEach(item => {
+      if (item && item.id && item.tokenNumber && !loadedBookedOps.some(o => o.id === item.id)) {
+        if (item.patientName || (item.id !== 'op-101' && item.id !== 'op-102')) {
+          loadedBookedOps.push(item);
+        }
+      }
+    });
+  }
+
+  const formatted = loadedBookedOps.map(token => formatTokenToQueuePatient(token));
+  const existingIds = new Set(formatted.map(f => f.id));
+  const remainingBaseline = BASELINE_QUEUE_LIST.filter(b => !existingIds.has(b.id));
+
+  // Newly booked tokens prepend at index 0 (first line)
+  return [...formatted, ...remainingBaseline];
+};
+
+const getInitialRecNotifs = () => {
+  try {
+    const raw = localStorage.getItem('cn_receptionist_notifications');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return BASELINE_REC_NOTIFS;
+};
+
+// Gentle audio chime for incoming live OP booking
+const playLiveBookingChime = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now);
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(880, now + 0.12);
+
+    gainNode.gain.setValueAtTime(0.01, now);
+    gainNode.gain.linearRampToValueAtTime(0.2, now + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now + 0.12);
+    osc1.stop(now + 0.4);
+    osc2.stop(now + 0.45);
+  } catch {}
+};
+
 export const ReceptionistView = () => {
-  const { user, logout, navigateTo, returnToPatientPortal } = useApp();
+  const { user, logout, navigateTo, returnToPatientPortal, appointments, bookOPToken } = useApp();
   const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLogoTripleClick = (e) => {
@@ -116,32 +358,10 @@ export const ReceptionistView = () => {
 
   // Notification Menu Dropdown State
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [recNotifications, setRecNotifications] = useState([
-    {
-      id: 'rn-1',
-      title: 'Emergency Triage Alert',
-      text: 'Ambulance AP-07-TY-4912 en route to ER Bay 02. ETA 2.3 Mins.',
-      time: 'Just now',
-      urgent: true,
-      important: true
-    },
-    {
-      id: 'rn-2',
-      title: 'OP Token #WK-01 Arrived',
-      text: 'Venkatesh Rao checked in at Central OPD Counter. Waiting for General Medicine.',
-      time: '10m ago',
-      urgent: false,
-      important: false
-    },
-    {
-      id: 'rn-3',
-      title: 'Doctor Schedule Update',
-      text: 'Dr. K. Srinivas Rao (Cardiology) initiated OP Consultation for Token #11.',
-      time: '25m ago',
-      urgent: false,
-      important: false
-    }
-  ]);
+  const [recNotifications, setRecNotifications] = useState(getInitialRecNotifs);
+
+  // Live incoming booking toast alert
+  const [liveBookingAlert, setLiveBookingAlert] = useState(null);
 
   const handleClearAllRecNotifs = () => {
     setRecNotifications([]);
@@ -173,96 +393,174 @@ export const ReceptionistView = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Live Today's Queue Data
+  // Live Today's Queue Data (Initialized with booked tokens prepended on line 1)
   const [queueSearch, setQueueSearch] = useState('');
   const [queueFilter, setQueueFilter] = useState('ALL');
 
-  const [queueList, setQueueList] = useState([
-    {
-      id: 'op-101',
-      token: 'OP-01',
-      name: 'Ramesh Kumar',
-      age: 45,
-      gender: 'Male',
-      uhid: 'UHID-882109',
-      doctor: 'Dr. K. Srinivas Rao (Cardiology)',
-      dept: 'Cardiology',
-      timeSlot: '09:30 AM',
-      status: 'Consultation',
-      phone: '+91 98480 12345',
-      arrivedAt: '09:15 AM'
-    },
-    {
-      id: 'op-102',
-      token: 'OP-02',
-      name: 'Priya Sharma',
-      age: 32,
-      gender: 'Female',
-      uhid: 'UHID-774012',
-      doctor: 'Dr. S. Meenakshi (Orthopedics)',
-      dept: 'Orthopedics',
-      timeSlot: '09:45 AM',
-      status: 'Arrived',
-      phone: '+91 98765 43210',
-      arrivedAt: '09:35 AM'
-    },
-    {
-      id: 'op-103',
-      token: 'WK-01',
-      name: 'Venkatesh Rao',
-      age: 58,
-      gender: 'Male',
-      uhid: 'UHID-993041',
-      doctor: 'Dr. Common Duty Physician',
-      dept: 'General Medicine',
-      timeSlot: 'Walk-in',
-      status: 'Waiting',
-      phone: '+91 94401 98765',
-      arrivedAt: '09:40 AM'
-    },
-    {
-      id: 'op-104',
-      token: 'OP-03',
-      name: 'Ananya Das',
-      age: 26,
-      gender: 'Female',
-      uhid: 'UHID-662198',
-      doctor: 'Dr. R. V. Ramana (Pediatrics)',
-      dept: 'Pediatrics',
-      timeSlot: '10:00 AM',
-      status: 'Waiting',
-      phone: '+91 91234 56789',
-      arrivedAt: '09:42 AM'
-    },
-    {
-      id: 'op-105',
-      token: 'WK-02',
-      name: 'Mohd. Ibrahim',
-      age: 50,
-      gender: 'Male',
-      uhid: 'UHID-551029',
-      doctor: 'Dr. M. Lakshmi Prasanna (Surgery)',
-      dept: 'General Surgery',
-      timeSlot: 'Walk-in',
-      status: 'Arrived',
-      phone: '+91 99887 76655',
-      arrivedAt: '09:45 AM'
-    },
-    {
-      id: 'op-106',
-      token: 'OP-04',
-      name: 'K. Lakshmi',
-      age: 61,
-      gender: 'Female',
-      uhid: 'UHID-440192',
-      doctor: 'Dr. K. Srinivas Rao (Cardiology)',
-      dept: 'Cardiology',
-      timeSlot: '10:15 AM',
-      status: 'Completed',
-      phone: '+91 97001 11223',
-      arrivedAt: '09:00 AM'
+  const [queueList, setQueueList] = useState(() => getInitialQueueList(appointments));
+
+  // Handler for incoming live OP booking
+  const handleIncomingOPToken = useCallback((token) => {
+    if (!token || !token.id) return;
+
+    const newPatient = formatTokenToQueuePatient(token, user);
+    const newReg = formatTokenToRegistration(token, user);
+
+    // 1. Immediately prepend to queueList on the FIRST LINE (index 0)
+    setQueueList(prev => {
+      const filtered = prev.filter(p => p.id !== newPatient.id);
+      return [newPatient, ...filtered];
+    });
+
+    // 2. Immediately prepend to registrationsList on the FIRST LINE (index 0)
+    setRegistrationsList(prev => {
+      const filtered = prev.filter(r => r.uhid !== newReg.uhid);
+      return [newReg, ...filtered];
+    });
+
+    // 3. Immediately prepend notification on the FIRST LINE (index 0)
+    const notifId = 'rn-op-' + token.id;
+    const patientName = token.patientName || 'Patient';
+    const notifText = `${patientName} booked OP Token #${token.tokenNumber || '1'} (${token.specialty || 'General OPD'}) for ${token.timeSlot || 'Today'}.`;
+    const newNotif = {
+      id: notifId,
+      title: '🚨 New OP Token Booked',
+      text: notifText,
+      time: 'Just now',
+      urgent: true,
+      important: true,
+      isNew: true,
+      appointmentId: token.id
+    };
+    setRecNotifications(prev => [newNotif, ...prev.filter(n => n.id !== notifId)]);
+
+    // 4. Show live toast alert
+    setLiveBookingAlert({
+      patientName: patientName,
+      tokenNumber: token.tokenNumber || '1',
+      timeSlot: token.timeSlot || 'Today',
+      patient: newPatient
+    });
+
+    // 5. Play audio chime
+    playLiveBookingChime();
+  }, [user]);
+
+  // Helper to simulate live OP token booking right on page
+  const handleSimulateLiveOPBooking = () => {
+    const samplePatients = [
+      { name: 'Kavya Madhavan', gender: 'Female', age: 29, phone: '+91 98451 23456', specialty: 'General OPD', doctor: 'Dr. Common Duty Physician' },
+      { name: 'Arjun Reddy', gender: 'Male', age: 36, phone: '+91 97012 34567', specialty: 'Cardiology', doctor: 'Dr. K. Srinivas Rao (Cardiology)' },
+      { name: 'Ananya Roy', gender: 'Female', age: 42, phone: '+91 98867 54321', specialty: 'Pediatrics', doctor: 'Dr. R. V. Ramana (Pediatrics)' },
+      { name: 'Rahul Varma', gender: 'Male', age: 31, phone: '+91 99491 87654', specialty: 'General Surgery', doctor: 'Dr. M. Lakshmi Prasanna (Surgery)' }
+    ];
+    const picked = samplePatients[Math.floor(Math.random() * samplePatients.length)];
+    const timeSlots = ['10:00 AM', '11:15 AM', '02:30 PM', '04:00 PM', '05:30 PM'];
+    const chosenSlot = timeSlots[Math.floor(Math.random() * timeSlots.length)];
+    const tokenNum = Math.floor(Math.random() * 40 + 20).toString();
+
+    const sampleToken = {
+      id: 'op-' + Date.now(),
+      tokenNumber: tokenNum,
+      patientName: picked.name,
+      patientPhone: picked.phone,
+      doctorName: picked.doctor,
+      specialty: picked.specialty,
+      date: 'Today',
+      timeSlot: chosenSlot,
+      age: picked.age,
+      gender: picked.gender,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString()
+    };
+
+    if (typeof bookOPToken === 'function') {
+      bookOPToken(sampleToken, false);
+    } else {
+      handleIncomingOPToken(sampleToken);
     }
-  ]);
+  };
+
+  // Auto-dismiss live booking toast after 7s
+  useEffect(() => {
+    if (!liveBookingAlert) return;
+    const timer = setTimeout(() => {
+      setLiveBookingAlert(null);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [liveBookingAlert]);
+
+  // Real-time listener for incoming bookings across windows/tabs
+  useEffect(() => {
+    const handleNewOPEvent = (e) => {
+      if (e?.detail) handleIncomingOPToken(e.detail);
+    };
+    window.addEventListener('care_navigator_new_op_booked', handleNewOPEvent);
+
+    const handleStorageEvent = (e) => {
+      if ((e.key === 'cn_receptionist_booked_ops' || e.key === 'cn_doctor_booked_ops') && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            handleIncomingOPToken(parsed[0]);
+          }
+        } catch {}
+      }
+      if (e.key === 'cn_receptionist_notifications' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setRecNotifications(parsed);
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageEvent);
+
+    let channel = null;
+    try {
+      channel = new BroadcastChannel('care_navigator_live_sync');
+      channel.onmessage = (msg) => {
+        if (msg?.data?.type === 'NEW_OP_BOOKED' && msg.data.token) {
+          handleIncomingOPToken(msg.data.token);
+        }
+      };
+    } catch {}
+
+    return () => {
+      window.removeEventListener('care_navigator_new_op_booked', handleNewOPEvent);
+      window.removeEventListener('storage', handleStorageEvent);
+      if (channel) {
+        try { channel.close(); } catch {}
+      }
+    };
+  }, [handleIncomingOPToken]);
+
+  // Synchronize appointments from AppContext
+  useEffect(() => {
+    if (!Array.isArray(appointments) || appointments.length === 0) return;
+    const newTokens = appointments.filter(a => a && a.id && a.tokenNumber && (a.patientName || a.id.startsWith('op-')));
+    if (newTokens.length > 0) {
+      setQueueList(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const toAdd = [];
+        for (const tok of newTokens) {
+          if (!existingIds.has(tok.id) && tok.id !== 'op-101' && tok.id !== 'op-102') {
+            toAdd.push(formatTokenToQueuePatient(tok, user));
+          }
+        }
+        if (toAdd.length === 0) return prev;
+        return [...toAdd, ...prev];
+      });
+    }
+  }, [appointments, user]);
+
+  // Persist notifications list changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_receptionist_notifications', JSON.stringify(recNotifications));
+    } catch {}
+  }, [recNotifications]);
 
   // Live New Registrations Data
   const [regSearch, setRegSearch] = useState('');
@@ -539,6 +837,64 @@ export const ReceptionistView = () => {
         </div>
       )}
 
+      {/* Live Incoming OP Booking Toast Alert */}
+      {liveBookingAlert && (
+        <div className="toast-alert live-booking-toast fade-in" style={{
+          position: 'fixed',
+          top: '18px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 99999,
+          background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+          color: '#ffffff',
+          padding: '10px 18px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px -5px rgba(2, 132, 199, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '92vw',
+          border: '1px solid #7dd3fc',
+          animation: 'slide-in-top 0.3s ease-out'
+        }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '6px', borderRadius: '50%', display: 'flex' }}>
+            <Bell size={18} color="#ffffff" className="bell-shake-anim" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: '800', fontSize: '0.86rem', lineHeight: '1.2' }}>⚡ New OP Token Booked!</div>
+            <div style={{ fontSize: '0.76rem', opacity: 0.95, marginTop: '1px' }}>
+              <strong>{liveBookingAlert.patientName}</strong> booked Token #{liveBookingAlert.tokenNumber} ({liveBookingAlert.timeSlot})
+            </div>
+          </div>
+          <button
+            style={{
+              background: '#ffffff',
+              color: '#0369a1',
+              fontWeight: '800',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '5px 12px',
+              cursor: 'pointer',
+              fontSize: '0.75rem'
+            }}
+            onClick={() => {
+              if (liveBookingAlert.patient) {
+                handleCallPatient(liveBookingAlert.patient);
+              }
+              setLiveBookingAlert(null);
+            }}
+          >
+            Call
+          </button>
+          <button
+            style={{ background: 'transparent', border: 'none', color: '#ffffff', cursor: 'pointer', opacity: 0.8, display: 'flex' }}
+            onClick={() => setLiveBookingAlert(null)}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Click outside overlay to close notifications dropdown */}
       {showNotifMenu && (
         <div 
@@ -584,7 +940,9 @@ export const ReceptionistView = () => {
               style={{ position: 'relative' }}
             >
               <Bell size={20} color="#0f172a" />
-              {recNotifications.length > 0 && <span className="navy-notif-dot" />}
+              {recNotifications.length > 0 && (
+                <span className="navy-notif-count">{recNotifications.length}</span>
+              )}
             </button>
 
             {showNotifMenu && (
@@ -808,24 +1166,39 @@ export const ReceptionistView = () => {
         <div className="reception-grid-2col">
           {/* LEFT COLUMN: TODAY'S QUEUE */}
           <div className="queue-column-panel glass-card-static">
-            <div className="panel-header-row">
-              <div className="panel-title-group">
+            <div className="panel-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="panel-title-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Clock size={20} color="#0284c7" />
-                <h3 className="panel-heading">Today's Queue List</h3>
+                <h3 className="panel-heading" style={{ margin: 0 }}>Today's Queue List</h3>
+                <span className="live-indicator-pill">
+                  <span className="live-ping-dot" /> LIVE
+                </span>
                 <span className="panel-count-pill">{filteredQueueList.length} Patients</span>
               </div>
 
-              {/* Status Filter Tabs */}
-              <div className="queue-filter-tabs">
-                {['ALL', 'WAITING', 'ARRIVED', 'CONSULTATION', 'COMPLETED'].map(f => (
-                  <button
-                    key={f}
-                    className={`q-tab-btn ${queueFilter === f ? 'active' : ''}`}
-                    onClick={() => setQueueFilter(f)}
-                  >
-                    {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button 
+                  type="button" 
+                  className="simulate-booking-btn" 
+                  onClick={handleSimulateLiveOPBooking} 
+                  title="Simulate incoming OP appointment"
+                >
+                  <Zap size={13} color="#047857" />
+                  <span>+ Simulate Live OP</span>
+                </button>
+
+                {/* Status Filter Tabs */}
+                <div className="queue-filter-tabs">
+                  {['ALL', 'WAITING', 'ARRIVED', 'CONSULTATION', 'COMPLETED'].map(f => (
+                    <button
+                      key={f}
+                      className={`q-tab-btn ${queueFilter === f ? 'active' : ''}`}
+                      onClick={() => setQueueFilter(f)}
+                    >
+                      {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -852,17 +1225,22 @@ export const ReceptionistView = () => {
             <div className="queue-patients-scroll-container">
               {filteredQueueList.length > 0 ? (
                 filteredQueueList.map(patient => (
-                  <div key={patient.id} className="queue-patient-card">
+                  <div key={patient.id} className={`queue-patient-card ${patient.isLiveBooking ? 'live-queue-card' : ''}`}>
                     <div className="patient-card-left">
-                      <div className="token-number-badge">
-                        <span className="token-label">TOKEN</span>
-                        <strong className="token-val">{patient.token}</strong>
+                      <div className="token-number-badge" style={patient.isLiveBooking ? { background: '#ecfdf5', borderColor: '#a7f3d0' } : {}}>
+                        <span className="token-label" style={patient.isLiveBooking ? { color: '#047857' } : {}}>TOKEN</span>
+                        <strong className="token-val" style={patient.isLiveBooking ? { color: '#065f46' } : {}}>{patient.token}</strong>
                       </div>
 
                       <div className="patient-info-block">
-                        <div className="patient-name-row">
+                        <div className="patient-name-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <h4 className="patient-name">{patient.name}</h4>
                           <span className="patient-meta">({patient.age} yrs • {patient.gender})</span>
+                          {patient.isLiveBooking && (
+                            <span className="live-pulse-badge">
+                              <span className="live-dot" /> LIVE OP
+                            </span>
+                          )}
                         </div>
 
                         <p className="patient-sub-details">
@@ -2630,6 +3008,130 @@ export const ReceptionistView = () => {
           transition: all 0.2s ease;
         }
         .queue-patient-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); }
+
+        /* Live Incoming OP Token Styling */
+        .queue-patient-card.live-queue-card {
+          border: 1.5px solid #10b981;
+          background: linear-gradient(to right, #f0fdf4 0%, #ffffff 100%);
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.12);
+          animation: slide-in-top 0.4s ease-out;
+        }
+        .queue-patient-card.live-queue-card:hover {
+          background: #ecfdf5;
+        }
+
+        .live-indicator-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          padding: 2px 8px;
+          border-radius: 999px;
+        }
+
+        .live-ping-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #10b981;
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+          animation: ping-pulse 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+
+        .simulate-booking-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .simulate-booking-btn:hover {
+          background: #d1fae5;
+          border-color: #6ee7b7;
+          transform: translateY(-1px);
+        }
+
+        .live-pulse-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #d1fae5;
+          color: #065f46;
+          border: 1px solid #6ee7b7;
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 1px 7px;
+          border-radius: 999px;
+          letter-spacing: 0.02em;
+        }
+
+        .live-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #059669;
+          animation: ping-pulse 1.4s infinite;
+        }
+
+        .navy-notif-count {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          background: #ef4444;
+          color: #ffffff;
+          font-size: 0.65rem;
+          font-weight: 800;
+          min-width: 17px;
+          height: 17px;
+          border-radius: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 3px;
+          box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+          animation: pulse-badge-glow 1.8s infinite;
+        }
+
+        @keyframes ping-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; }
+          70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); opacity: 0.8; }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; }
+        }
+
+        @keyframes pulse-badge-glow {
+          0%, 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); }
+          50% { transform: scale(1.08); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.6); }
+        }
+
+        @keyframes bell-shake-anim {
+          0%, 100% { transform: rotate(0); }
+          20% { transform: rotate(-15deg); }
+          40% { transform: rotate(15deg); }
+          60% { transform: rotate(-10deg); }
+          80% { transform: rotate(10deg); }
+        }
+
+        .bell-shake-anim {
+          animation: bell-shake-anim 1s ease infinite;
+        }
+
+        @keyframes slide-in-top {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
 
         .patient-card-left { display: flex; align-items: center; gap: 14px; }
         .patient-card-left { display: flex; align-items: center; gap: 14px; }

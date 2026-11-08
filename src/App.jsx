@@ -69,11 +69,19 @@ const MainContent = () => {
   };
 
   if (currentScreen === 'landing') {
-    return <LandingView />;
+    return (
+      <ErrorBoundary>
+        <LandingView />
+      </ErrorBoundary>
+    );
   }
 
   if (currentScreen === 'onboarding') {
-    return <OnboardingView />;
+    return (
+      <ErrorBoundary>
+        <OnboardingView />
+      </ErrorBoundary>
+    );
   }
 
   const isAdminScreen = 
@@ -172,8 +180,10 @@ const MainContent = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

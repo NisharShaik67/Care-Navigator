@@ -163,23 +163,11 @@ export const AdminDashboardView = () => {
     phone: ''
   });
 
-  // Load All Core Data
+  // Load All Core Data with resilient Promise.allSettled
   const loadData = async () => {
     try {
       setLoading(true);
-      const [
-        sStats,
-        sPatients,
-        sHospitals,
-        sDoctors,
-        sAppts,
-        sEmgs,
-        sAi,
-        sNotifs,
-        sRoles,
-        sLogs,
-        sSettings
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         adminService.getDashboardStats(),
         adminService.getPatients(),
         adminService.getHospitals(),
@@ -193,20 +181,39 @@ export const AdminDashboardView = () => {
         adminService.getSystemSettings()
       ]);
 
-      setStats(sStats);
-      setPatients(sPatients);
-      setHospitals(sHospitals);
-      setDoctors(sDoctors);
-      setAppointments(sAppts);
-      setEmergencies(sEmgs);
-      setAiConfig(sAi);
-      setNotifications(sNotifs);
-      setRoles(sRoles);
-      setAuditLogs(sLogs);
-      setSettings(sSettings);
+      const [
+        rStats,
+        rPatients,
+        rHospitals,
+        rDoctors,
+        rAppts,
+        rEmgs,
+        rAi,
+        rNotifs,
+        rRoles,
+        rLogs,
+        rSettings
+      ] = results;
+
+      if (rStats.status === 'fulfilled' && rStats.value) setStats(rStats.value);
+      if (rPatients.status === 'fulfilled' && Array.isArray(rPatients.value)) setPatients(rPatients.value);
+      if (rHospitals.status === 'fulfilled' && Array.isArray(rHospitals.value)) setHospitals(rHospitals.value);
+      if (rDoctors.status === 'fulfilled' && Array.isArray(rDoctors.value)) setDoctors(rDoctors.value);
+      if (rAppts.status === 'fulfilled' && Array.isArray(rAppts.value)) setAppointments(rAppts.value);
+      if (rEmgs.status === 'fulfilled' && Array.isArray(rEmgs.value)) setEmergencies(rEmgs.value);
+      if (rAi.status === 'fulfilled' && rAi.value) setAiConfig(rAi.value);
+      if (rNotifs.status === 'fulfilled' && Array.isArray(rNotifs.value)) setNotifications(rNotifs.value);
+      if (rRoles.status === 'fulfilled' && Array.isArray(rRoles.value)) setRoles(rRoles.value);
+      if (rLogs.status === 'fulfilled' && Array.isArray(rLogs.value)) setAuditLogs(rLogs.value);
+      if (rSettings.status === 'fulfilled' && rSettings.value) setSettings(rSettings.value);
+
+      // Only show error if ALL promises rejected (catastrophic failure)
+      const allFailed = results.every(r => r.status === 'rejected');
+      if (allFailed) {
+        showToast('Error loading administrative data. Using cached state.', 'error');
+      }
     } catch (err) {
-      console.error('Failed to load admin dashboard data:', err);
-      showToast('Error loading administrative data. Using cached state.', 'error');
+      console.warn('Admin dashboard load fallback:', err);
     } finally {
       setLoading(false);
     }
@@ -539,7 +546,7 @@ export const AdminDashboardView = () => {
               className="exit-admin-btn"
               onClick={() => { if (typeof returnToPatientPortal === 'function') returnToPatientPortal(); else navigateTo('dashboard'); }}
               title="Return to Main Patient Portal"
-              style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.35)' }}
+              style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}
             >
               <RotateCcw size={14} />
               <span className="hide-on-mobile">Exit Portal</span>
@@ -548,7 +555,7 @@ export const AdminDashboardView = () => {
               className="exit-admin-btn"
               onClick={handleLock}
               title="Lock Admin Console with 6-Digit PIN"
-              style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' }}
             >
               <Lock size={14} />
               <span className="hide-on-mobile">Lock Console</span>
@@ -2580,7 +2587,7 @@ export const AdminDashboardView = () => {
           height: 100vh;
           display: flex;
           flex-direction: column;
-          background: #f8fafc;
+          background: #ffffff;
           color: #0f172a;
           font-family: var(--font-main, 'Inter', -apple-system, sans-serif);
           overflow: hidden;
@@ -2590,13 +2597,13 @@ export const AdminDashboardView = () => {
         .admin-top-header {
           height: 64px;
           flex-shrink: 0;
-          background: #0f172a;
-          color: #ffffff;
+          background: #ffffff;
+          color: #0f172a;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 0 20px;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid #e2e8f0;
           z-index: 100;
         }
 
@@ -2610,7 +2617,7 @@ export const AdminDashboardView = () => {
           display: none;
           background: none;
           border: none;
-          color: #ffffff;
+          color: #0f172a;
           cursor: pointer;
         }
 
@@ -2642,7 +2649,7 @@ export const AdminDashboardView = () => {
           font-size: 1.05rem;
           font-weight: 800;
           letter-spacing: -0.02em;
-          color: #ffffff;
+          color: #0f172a;
         }
 
         .brand-sub-badge {
@@ -2650,23 +2657,23 @@ export const AdminDashboardView = () => {
           font-weight: 800;
           padding: 2px 6px;
           border-radius: 4px;
-          background: rgba(56, 189, 248, 0.15);
-          color: #38bdf8;
-          border: 1px solid rgba(56, 189, 248, 0.3);
+          background: rgba(2, 132, 199, 0.08);
+          color: #0284c7;
+          border: 1px solid rgba(2, 132, 199, 0.25);
         }
 
         .brand-motto {
           margin: 0;
           font-size: 0.68rem;
-          color: #94a3b8;
+          color: #64748b;
         }
 
         .header-search-bar {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
           border-radius: 999px;
           padding: 6px 14px;
           width: 380px;
@@ -2674,16 +2681,16 @@ export const AdminDashboardView = () => {
         }
 
         .header-search-bar:focus-within {
-          background: rgba(255,255,255,0.14);
-          border-color: #38bdf8;
-          box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+          background: #ffffff;
+          border-color: #0284c7;
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
 
         .header-search-bar input {
           background: none;
           border: none;
           outline: none;
-          color: #ffffff;
+          color: #0f172a;
           font-size: 0.8rem;
           width: 100%;
         }
@@ -2695,7 +2702,7 @@ export const AdminDashboardView = () => {
         .search-clear-btn {
           background: none;
           border: none;
-          color: #94a3b8;
+          color: #64748b;
           cursor: pointer;
         }
 
@@ -2713,14 +2720,15 @@ export const AdminDashboardView = () => {
           border-radius: 999px;
           font-size: 0.72rem;
           font-weight: 700;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: #94a3b8;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          color: #64748b;
         }
 
         .admin-system-indicator.connected {
-          color: #34d399;
-          border-color: rgba(52, 211, 153, 0.3);
+          color: #059669;
+          border-color: rgba(16, 185, 129, 0.3);
+          background: #ecfdf5;
         }
 
         .dot-pulse {
@@ -2736,10 +2744,10 @@ export const AdminDashboardView = () => {
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.15);
+          background: #f8fafc;
+          border: 1px solid #cbd5e1;
           border-radius: 999px;
-          color: #ffffff;
+          color: #0f172a;
           font-size: 0.75rem;
           font-weight: 700;
           cursor: pointer;
@@ -2747,8 +2755,8 @@ export const AdminDashboardView = () => {
         }
 
         .role-selector-pill:hover {
-          background: rgba(255,255,255,0.16);
-          border-color: #38bdf8;
+          background: #f1f5f9;
+          border-color: #0284c7;
         }
 
         .header-tool-btn {
@@ -2756,9 +2764,9 @@ export const AdminDashboardView = () => {
           width: 36px;
           height: 36px;
           border-radius: 10px;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: #ffffff;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          color: #334155;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2766,10 +2774,15 @@ export const AdminDashboardView = () => {
           transition: all 0.2s ease;
         }
 
+        .header-tool-btn:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+
         .header-tool-btn.red-alert {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.4);
-          color: #f87171;
+          background: #fef2f2;
+          border-color: #fca5a5;
+          color: #dc2626;
         }
 
         .badge-count {
@@ -2782,7 +2795,7 @@ export const AdminDashboardView = () => {
           font-weight: 800;
           padding: 2px 5px;
           border-radius: 999px;
-          border: 1.5px solid #0f172a;
+          border: 1.5px solid #ffffff;
         }
 
         .admin-profile-menu {
@@ -2798,17 +2811,23 @@ export const AdminDashboardView = () => {
           gap: 4px;
           padding: 6px 10px;
           border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(255,255,255,0.06);
-          color: #ffffff;
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          color: #334155;
           font-size: 0.75rem;
           font-weight: 700;
           cursor: pointer;
         }
 
+        .exit-admin-btn:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+
         .logout-admin-btn:hover {
           background: #ef4444;
           border-color: #ef4444;
+          color: #ffffff;
         }
 
         /* Layout Body */
@@ -2944,7 +2963,7 @@ export const AdminDashboardView = () => {
           flex: 1;
           overflow-y: auto;
           padding: 24px;
-          background: #f8fafc;
+          background: #ffffff;
         }
 
         .tab-pane {
@@ -3926,25 +3945,26 @@ export const AdminDashboardView = () => {
           z-index: 9999;
           padding: 12px 18px;
           border-radius: 10px;
-          background: #0f172a;
-          color: #ffffff;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #0f172a;
           font-size: 0.82rem;
           font-weight: 700;
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
         }
 
-        .admin-toast-banner.error { background: #dc2626; }
-        .admin-toast-banner button { background: none; border: none; color: #ffffff; cursor: pointer; }
+        .admin-toast-banner.error { background: #dc2626; color: #ffffff; }
+        .admin-toast-banner button { background: none; border: none; color: #64748b; cursor: pointer; }
 
         /* Modals */
         .admin-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(6px);
+          background: rgba(15, 23, 42, 0.4);
+          backdrop-filter: blur(4px);
           z-index: 1000;
           display: flex;
           align-items: center;
@@ -3958,7 +3978,7 @@ export const AdminDashboardView = () => {
           width: 100%;
           max-width: 460px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.12);
           border: 1px solid #e2e8f0;
         }
 
@@ -3968,15 +3988,16 @@ export const AdminDashboardView = () => {
 
         .modal-top {
           padding: 16px 20px;
-          background: #0f172a;
-          color: #ffffff;
+          background: #ffffff;
+          border-bottom: 1px solid #e2e8f0;
+          color: #0f172a;
           display: flex;
           align-items: center;
           justify-content: space-between;
         }
 
-        .modal-top h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #ffffff; }
-        .modal-top button { background: none; border: none; color: #ffffff; cursor: pointer; }
+        .modal-top h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #0f172a; }
+        .modal-top button { background: none; border: none; color: #64748b; cursor: pointer; }
 
         .dossier-grid {
           display: grid;

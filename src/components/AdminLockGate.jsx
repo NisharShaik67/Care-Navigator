@@ -262,20 +262,19 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
           align-items: center;
           justify-content: center;
           padding: 20px;
-          background: radial-gradient(circle at center, #0a2548 0%, #051429 100%);
-          backdrop-filter: blur(12px);
+          background: #ffffff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         .admin-lock-card {
           width: 100%;
           max-width: 480px;
-          background: rgba(13, 31, 56, 0.95);
-          border: 1.5px solid rgba(0, 184, 217, 0.35);
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
           border-radius: 24px;
           padding: 36px 30px;
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(0, 184, 217, 0.15);
-          color: #ffffff;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+          color: #0f172a;
           text-align: center;
           position: relative;
         }
@@ -290,12 +289,12 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
           width: 76px;
           height: 76px;
           border-radius: 50%;
-          background: rgba(0, 184, 217, 0.12);
-          border: 2px solid rgba(0, 184, 217, 0.4);
+          background: rgba(2, 132, 199, 0.08);
+          border: 2px solid rgba(2, 132, 199, 0.25);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 0 24px rgba(0, 184, 217, 0.3);
+          box-shadow: 0 0 20px rgba(2, 132, 199, 0.12);
           transition: all 0.3s ease;
         }
 
@@ -305,9 +304,9 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
           gap: 6px;
           padding: 4px 12px;
           border-radius: 20px;
-          background: rgba(0, 184, 217, 0.12);
-          border: 1px solid rgba(0, 184, 217, 0.3);
-          color: #38bdf8;
+          background: rgba(2, 132, 199, 0.08);
+          border: 1px solid rgba(2, 132, 199, 0.25);
+          color: #0284c7;
           font-size: 0.72rem;
           font-weight: 800;
           letter-spacing: 0.8px;
@@ -318,13 +317,13 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
           font-size: 1.55rem;
           font-weight: 800;
           margin: 0 0 8px;
-          color: #ffffff;
+          color: #0f172a;
           letter-spacing: -0.3px;
         }
 
         .lock-sub-text {
           font-size: 0.88rem;
-          color: #94a3b8;
+          color: #64748b;
           line-height: 1.5;
           margin: 0 0 22px;
         }
@@ -371,39 +370,40 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
           width: 52px;
           height: 60px;
           border-radius: 14px;
-          background: rgba(15, 23, 42, 0.75);
-          border: 2px solid rgba(148, 163, 184, 0.3);
-          color: #38bdf8;
+          background: #f8fafc;
+          border: 2px solid #cbd5e1;
+          color: #0284c7;
           font-size: 1.6rem;
           font-weight: 800;
           text-align: center;
           outline: none;
           transition: all 0.2s ease;
-          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+          box-shadow: none;
         }
 
         .pin-box:focus {
-          border-color: #00B8D9;
-          background: rgba(15, 23, 42, 0.95);
-          box-shadow: 0 0 0 3px rgba(0, 184, 217, 0.25), inset 0 2px 6px rgba(0, 0, 0, 0.3);
+          border-color: #0284c7;
+          background: #ffffff;
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
           transform: translateY(-2px);
         }
 
         .pin-box.filled {
-          border-color: #38bdf8;
-          background: rgba(7, 30, 58, 0.9);
+          border-color: #0284c7;
+          background: #f0f9ff;
+          color: #0369a1;
         }
 
         .pin-box.error-border {
           border-color: #ef4444 !important;
-          background: rgba(69, 10, 10, 0.3) !important;
-          color: #f87171 !important;
+          background: #fef2f2 !important;
+          color: #dc2626 !important;
         }
 
         .pin-box.success-border {
           border-color: #10b981 !important;
-          background: rgba(6, 78, 59, 0.3) !important;
-          color: #34d399 !important;
+          background: #ecfdf5 !important;
+          color: #059669 !important;
         }
 
         .lock-controls-row {
@@ -490,14 +490,14 @@ export const AdminLockGate = ({ onUnlock, onCancel }) => {
         }
 
         .btn-back-cancel:hover {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.05);
+          color: #0f172a;
+          background: #f1f5f9;
         }
 
         .lock-watermark {
           margin-top: 22px;
           font-size: 0.72rem;
-          color: #475569;
+          color: #94a3b8;
           letter-spacing: 0.2px;
         }
 

@@ -102,16 +102,18 @@ export const OPBookingView = () => {
     e.preventDefault();
     if (!bookingModalDoc) return;
 
-    const patientNameFinal = patientType === 'self' ? (user?.name || 'Self') : (otherPatientName || 'Patient');
+    const patientNameFinal = patientType === 'self' ? (user?.name || user?.fullName || 'Alex Morgan') : (otherPatientName || 'Patient');
     const tokenData = {
       patientName: patientNameFinal,
-      patientPhone: patientPhone,
+      patientPhone: patientPhone || user?.phone || '+91 98765 43210',
       hospitalName: selectedHospital ? selectedHospital.name : 'Hospital',
       doctorName: bookingModalDoc.name,
       specialty: bookingModalDoc.specialty,
       date: bookingDate,
       timeSlot: selectedTimeSlot,
       reason: symptomsReason,
+      age: patientType === 'self' ? (user?.age || 28) : 32,
+      gender: patientType === 'self' ? (user?.gender || 'Male') : 'Male',
       fee: bookingModalDoc.fee || '₹300',
       paymentMode: paymentMode.toUpperCase(),
       paymentStatus: paymentMode === 'cash' ? 'PAY AT COUNTER' : 'PAID ONLINE'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
@@ -32,8 +32,263 @@ import {
   RotateCcw
 } from 'lucide-react';
 
+// Baseline 12 Doctor Appointments (Default clinical queue)
+const BASELINE_DOCTOR_APPOINTMENTS = [
+  {
+    id: 'APT-101',
+    time: '09:30 AM',
+    patientName: 'Rajesh Sharma',
+    age: 45,
+    gender: 'Male',
+    type: 'OP Consultation',
+    status: 'In Queue',
+    phone: '+91 98765 43210',
+    reason: 'Fever & Headaches for 3 days',
+    vitals: { bp: '120/80', hr: '74 bpm', temp: '100.2°F' }
+  },
+  {
+    id: 'APT-102',
+    time: '10:15 AM',
+    patientName: 'Sunita Devi',
+    age: 52,
+    gender: 'Female',
+    type: 'General Checkup',
+    status: 'In Queue',
+    phone: '+91 98123 45678',
+    reason: 'Routine BP & Diabetes Check',
+    vitals: { bp: '135/88', hr: '80 bpm', temp: '98.4°F' }
+  },
+  {
+    id: 'APT-103',
+    time: '11:00 AM',
+    patientName: 'Amit Patel',
+    age: 34,
+    gender: 'Male',
+    type: 'Lab Report Review',
+    status: 'Scheduled',
+    phone: '+91 97654 32109',
+    reason: 'Lipid Profile & CBC Follow-up',
+    vitals: { bp: '118/76', hr: '72 bpm', temp: '98.6°F' }
+  },
+  {
+    id: 'APT-104',
+    time: '11:45 AM',
+    patientName: 'Priya Verma',
+    age: 29,
+    gender: 'Female',
+    type: 'Follow-up Visit',
+    status: 'Scheduled',
+    phone: '+91 99887 76655',
+    reason: 'Post-viral recovery evaluation',
+    vitals: { bp: '110/70', hr: '68 bpm', temp: '98.2°F' }
+  },
+  {
+    id: 'APT-105',
+    time: '12:30 PM',
+    patientName: 'Srinivas Rao',
+    age: 61,
+    gender: 'Male',
+    type: 'General Checkup',
+    status: 'Scheduled',
+    phone: '+91 94401 23456',
+    reason: 'Joint pain & hypertension follow-up',
+    vitals: { bp: '142/90', hr: '82 bpm', temp: '98.6°F' }
+  },
+  {
+    id: 'APT-106',
+    time: '02:00 PM',
+    patientName: 'Kavita Reddy',
+    age: 38,
+    gender: 'Female',
+    type: 'OP Consultation',
+    status: 'Scheduled',
+    phone: '+91 93902 34567',
+    reason: 'Mild abdominal discomfort',
+    vitals: { bp: '122/78', hr: '76 bpm', temp: '98.5°F' }
+  },
+  {
+    id: 'APT-107',
+    time: '02:45 PM',
+    patientName: 'Anand Verma',
+    age: 49,
+    gender: 'Male',
+    type: 'General Checkup',
+    status: 'Scheduled',
+    phone: '+91 91003 45678',
+    reason: 'Annual executive health checkup',
+    vitals: { bp: '126/82', hr: '70 bpm', temp: '98.6°F' }
+  },
+  {
+    id: 'APT-108',
+    time: '03:30 PM',
+    patientName: 'Deepak Joshi',
+    age: 56,
+    gender: 'Male',
+    type: 'Emergency Assessment',
+    status: 'Scheduled',
+    phone: '+91 98490 12345',
+    reason: 'Chest tightness history follow-up',
+    vitals: { bp: '138/86', hr: '84 bpm', temp: '98.7°F' }
+  },
+  {
+    id: 'APT-109',
+    time: '04:15 PM',
+    patientName: 'Meena Kumari',
+    age: 41,
+    gender: 'Female',
+    type: 'Lab Report Review',
+    status: 'Scheduled',
+    phone: '+91 97001 98765',
+    reason: 'Thyroid T3/T4/TSH lab report review',
+    vitals: { bp: '116/74', hr: '72 bpm', temp: '98.4°F' }
+  },
+  {
+    id: 'APT-110',
+    time: '05:00 PM',
+    patientName: 'Rohan Gupta',
+    age: 22,
+    gender: 'Male',
+    type: 'OP Consultation',
+    status: 'Scheduled',
+    phone: '+91 96543 21098',
+    reason: 'Acute seasonal allergic rhinitis',
+    vitals: { bp: '114/72', hr: '78 bpm', temp: '99.1°F' }
+  },
+  {
+    id: 'APT-111',
+    time: '05:30 PM',
+    patientName: 'Pooja Malhotra',
+    age: 33,
+    gender: 'Female',
+    type: 'General Checkup',
+    status: 'Scheduled',
+    phone: '+91 95432 10987',
+    reason: 'Preventive health screening',
+    vitals: { bp: '120/78', hr: '74 bpm', temp: '98.6°F' }
+  },
+  {
+    id: 'APT-112',
+    time: '06:15 PM',
+    patientName: 'Vikram Singh',
+    age: 47,
+    gender: 'Male',
+    type: 'Follow-up Visit',
+    status: 'Scheduled',
+    phone: '+91 94321 09876',
+    reason: 'Post-medication response evaluation',
+    vitals: { bp: '128/84', hr: '76 bpm', temp: '98.5°F' }
+  }
+];
+
+// Helper to format an OP token into the Doctor appointment structure
+const formatTokenToDoctorAppointment = (token, currentUser = null) => {
+  const patientName = token.patientName || token.userName || (currentUser?.name || 'Patient');
+  const patientPhone = token.patientPhone || token.phone || (currentUser?.phone || '+91 98765 43210');
+  const appointmentTime = token.timeSlot || token.time || '10:00 AM';
+  const age = token.age || (patientName === 'Alex Morgan' ? 28 : (currentUser?.age || 35));
+  const gender = token.gender || (patientName === 'Alex Morgan' ? 'Male' : (currentUser?.gender || 'Male'));
+  const reason = token.reason || `OP Token #${token.tokenNumber || ''} Consultation for ${token.specialty || 'General'}`;
+
+  return {
+    id: token.id || `op-${Date.now()}`,
+    time: appointmentTime,
+    patientName: patientName,
+    age: age,
+    gender: gender,
+    type: 'OP Consultation',
+    status: token.status === 'Completed' ? 'Completed' : 'In Queue',
+    phone: patientPhone,
+    reason: reason,
+    tokenNumber: token.tokenNumber || '1',
+    vitals: token.vitals || { bp: '120/80', hr: '76 bpm', temp: '98.6°F' },
+    isLiveBooking: true,
+    createdAt: token.createdAt || new Date().toISOString(),
+    originalToken: token
+  };
+};
+
+// Initial state loader for doctor appointments (Booked tokens always on line 1 / top)
+const getInitialDoctorAppointments = (appContextAppointments = []) => {
+  let loadedBookedOps = [];
+  try {
+    const raw = localStorage.getItem('cn_doctor_booked_ops');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) loadedBookedOps = parsed;
+    }
+  } catch {}
+
+  if (Array.isArray(appContextAppointments)) {
+    appContextAppointments.forEach(item => {
+      if (item && item.id && item.tokenNumber && !loadedBookedOps.some(o => o.id === item.id)) {
+        if (item.patientName || (item.id !== 'op-101' && item.id !== 'op-102')) {
+          loadedBookedOps.push(item);
+        }
+      }
+    });
+  }
+
+  const formatted = loadedBookedOps.map(token => formatTokenToDoctorAppointment(token));
+  const existingIds = new Set(formatted.map(f => f.id));
+  const remainingBaseline = BASELINE_DOCTOR_APPOINTMENTS.filter(b => !existingIds.has(b.id));
+
+  // Newly booked tokens prepend at index 0 (first line)
+  return [...formatted, ...remainingBaseline];
+};
+
+const DEFAULT_DOCTOR_NOTIFS = [
+  { id: 1, title: 'Critical Alert', text: '1 Emergency patient (Ramesh Gupta) requires immediate attention in Bay 02.', time: '2m ago', urgent: true, important: true },
+  { id: 2, title: 'Lab Results Ready', text: 'CBC & Lipid profile for Patient Amit Patel has been uploaded to EHR.', time: '15m ago', urgent: false, important: false },
+  { id: 3, title: 'Shift Handover Sync', text: 'Dr. Raghavendra shift logged for ABC Hospital General Medicine OPD.', time: '1h ago', urgent: false, important: false }
+];
+
+const getInitialDoctorNotifs = () => {
+  try {
+    const raw = localStorage.getItem('cn_doctor_notifications');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return DEFAULT_DOCTOR_NOTIFS;
+};
+
+// Gentle audio chime for incoming live OP booking
+const playLiveBookingChime = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now); // D5
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(880, now + 0.12);
+
+    gainNode.gain.setValueAtTime(0.01, now);
+    gainNode.gain.linearRampToValueAtTime(0.2, now + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now + 0.12);
+    osc1.stop(now + 0.4);
+    osc2.stop(now + 0.45);
+  } catch {}
+};
+
 export const DoctorDashboardView = () => {
-  const { user, updateUserProfile, logout, navigateTo, returnToPatientPortal } = useApp();
+  const { user, updateUserProfile, logout, navigateTo, returnToPatientPortal, appointments, bookOPToken } = useApp();
   const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLogoTripleClick = (e) => {
@@ -240,159 +495,20 @@ export const DoctorDashboardView = () => {
     time: '2 Mins ago'
   });
 
-  // Stats Data
-  const [stats] = useState({
-    todayAppointments: 12,
-    totalPatients: 8
-  });
+  // Appointments List (Initialized with booked tokens prepended on line 1)
+  const [appointmentsList, setAppointmentsList] = useState(() => getInitialDoctorAppointments(appointments));
 
-  // Appointments List (12 Appointments)
-  const [appointmentsList, setAppointmentsList] = useState([
-    {
-      id: 'APT-101',
-      time: '09:30 AM',
-      patientName: 'Rajesh Sharma',
-      age: 45,
-      gender: 'Male',
-      type: 'OP Consultation',
-      status: 'In Queue',
-      phone: '+91 98765 43210',
-      reason: 'Fever & Headaches for 3 days',
-      vitals: { bp: '120/80', hr: '74 bpm', temp: '100.2°F' }
-    },
-    {
-      id: 'APT-102',
-      time: '10:15 AM',
-      patientName: 'Sunita Devi',
-      age: 52,
-      gender: 'Female',
-      type: 'General Checkup',
-      status: 'In Queue',
-      phone: '+91 98123 45678',
-      reason: 'Routine BP & Diabetes Check',
-      vitals: { bp: '135/88', hr: '80 bpm', temp: '98.4°F' }
-    },
-    {
-      id: 'APT-103',
-      time: '11:00 AM',
-      patientName: 'Amit Patel',
-      age: 34,
-      gender: 'Male',
-      type: 'Lab Report Review',
-      status: 'Scheduled',
-      phone: '+91 97654 32109',
-      reason: 'Lipid Profile & CBC Follow-up',
-      vitals: { bp: '118/76', hr: '72 bpm', temp: '98.6°F' }
-    },
-    {
-      id: 'APT-104',
-      time: '11:45 AM',
-      patientName: 'Priya Verma',
-      age: 29,
-      gender: 'Female',
-      type: 'Follow-up Visit',
-      status: 'Scheduled',
-      phone: '+91 99887 76655',
-      reason: 'Post-viral recovery evaluation',
-      vitals: { bp: '110/70', hr: '68 bpm', temp: '98.2°F' }
-    },
-    {
-      id: 'APT-105',
-      time: '12:30 PM',
-      patientName: 'Srinivas Rao',
-      age: 61,
-      gender: 'Male',
-      type: 'General Checkup',
-      status: 'Scheduled',
-      phone: '+91 94401 23456',
-      reason: 'Joint pain & hypertension follow-up',
-      vitals: { bp: '142/90', hr: '82 bpm', temp: '98.6°F' }
-    },
-    {
-      id: 'APT-106',
-      time: '02:00 PM',
-      patientName: 'Kavita Reddy',
-      age: 38,
-      gender: 'Female',
-      type: 'OP Consultation',
-      status: 'Scheduled',
-      phone: '+91 93902 34567',
-      reason: 'Mild abdominal discomfort',
-      vitals: { bp: '122/78', hr: '76 bpm', temp: '98.5°F' }
-    },
-    {
-      id: 'APT-107',
-      time: '02:45 PM',
-      patientName: 'Anand Verma',
-      age: 49,
-      gender: 'Male',
-      type: 'General Checkup',
-      status: 'Scheduled',
-      phone: '+91 91003 45678',
-      reason: 'Annual executive health checkup',
-      vitals: { bp: '126/82', hr: '70 bpm', temp: '98.6°F' }
-    },
-    {
-      id: 'APT-108',
-      time: '03:30 PM',
-      patientName: 'Deepak Joshi',
-      age: 56,
-      gender: 'Male',
-      type: 'Emergency Assessment',
-      status: 'Scheduled',
-      phone: '+91 98490 12345',
-      reason: 'Chest tightness history follow-up',
-      vitals: { bp: '138/86', hr: '84 bpm', temp: '98.7°F' }
-    },
-    {
-      id: 'APT-109',
-      time: '04:15 PM',
-      patientName: 'Meena Kumari',
-      age: 41,
-      gender: 'Female',
-      type: 'Lab Report Review',
-      status: 'Scheduled',
-      phone: '+91 97001 98765',
-      reason: 'Thyroid T3/T4/TSH lab report review',
-      vitals: { bp: '116/74', hr: '72 bpm', temp: '98.4°F' }
-    },
-    {
-      id: 'APT-110',
-      time: '05:00 PM',
-      patientName: 'Rohan Gupta',
-      age: 22,
-      gender: 'Male',
-      type: 'OP Consultation',
-      status: 'Scheduled',
-      phone: '+91 96543 21098',
-      reason: 'Acute seasonal allergic rhinitis',
-      vitals: { bp: '114/72', hr: '78 bpm', temp: '99.1°F' }
-    },
-    {
-      id: 'APT-111',
-      time: '05:30 PM',
-      patientName: 'Pooja Malhotra',
-      age: 33,
-      gender: 'Female',
-      type: 'General Checkup',
-      status: 'Scheduled',
-      phone: '+91 95432 10987',
-      reason: 'Preventive health screening',
-      vitals: { bp: '120/78', hr: '74 bpm', temp: '98.6°F' }
-    },
-    {
-      id: 'APT-112',
-      time: '06:15 PM',
-      patientName: 'Vikram Singh',
-      age: 47,
-      gender: 'Male',
-      type: 'Follow-up Visit',
-      status: 'Scheduled',
-      phone: '+91 94321 09876',
-      reason: 'Post-medication response evaluation',
-      vitals: { bp: '128/84', hr: '76 bpm', temp: '98.5°F' }
-    }
-  ]);
+  // Notifications List state (Loaded from storage or baseline)
+  const [notificationsList, setNotificationsList] = useState(getInitialDoctorNotifs);
+
+  // Live incoming booking toast alert
+  const [liveBookingAlert, setLiveBookingAlert] = useState(null);
+
+  // Stats Data dynamically derived from real-time appointments
+  const stats = {
+    todayAppointments: appointmentsList.length,
+    totalPatients: 8
+  };
 
   // Total Patients List (8 Registered Assigned Patients)
   const totalPatientsList = [
@@ -406,12 +522,164 @@ export const DoctorDashboardView = () => {
     { id: 'P-08', name: 'Deepak Joshi', age: 56, gender: 'Male', bloodGroup: 'O+', visits: 9, lastVisit: 'Today', condition: 'Hypertension & Angina' }
   ];
 
-  // Notifications List state
-  const [notificationsList, setNotificationsList] = useState([
-    { id: 1, title: 'Critical Alert', text: '1 Emergency patient (Ramesh Gupta) requires immediate attention in Bay 02.', time: '2m ago', urgent: true, important: true },
-    { id: 2, title: 'Lab Results Ready', text: 'CBC & Lipid profile for Patient Amit Patel has been uploaded to EHR.', time: '15m ago', urgent: false, important: false },
-    { id: 3, title: 'Shift Handover Sync', text: 'Dr. Raghavendra shift logged for ABC Hospital General Medicine OPD.', time: '1h ago', urgent: false, important: false }
-  ]);
+  // Handler for live incoming OP token
+  const handleIncomingOPToken = useCallback((token) => {
+    if (!token || !token.id) return;
+
+    const newApt = formatTokenToDoctorAppointment(token, user);
+
+    // 1. Immediately prepend to appointmentsList on the FIRST LINE (index 0)
+    setAppointmentsList(prev => {
+      const filtered = prev.filter(a => a.id !== newApt.id);
+      return [newApt, ...filtered];
+    });
+
+    // 2. Immediately prepend notification on the FIRST LINE (index 0)
+    const notifId = 'notif-op-' + token.id;
+    const patientName = token.patientName || 'Patient';
+    const notifText = `${patientName} booked OP Token #${token.tokenNumber || '1'} for ${token.timeSlot || 'Today'}${token.doctorName ? ` (${token.doctorName})` : ''}. Reason: ${token.reason || 'OP Consultation'}`;
+    const newNotif = {
+      id: notifId,
+      title: '🚨 New OP Token Booked',
+      text: notifText,
+      time: 'Just now',
+      urgent: true,
+      important: true,
+      isNew: true,
+      appointmentId: token.id,
+      createdAt: Date.now()
+    };
+    setNotificationsList(prev => [newNotif, ...prev.filter(n => n.id !== notifId)]);
+
+    // 3. Show live banner toast with patient details
+    setLiveBookingAlert({
+      patientName: patientName,
+      tokenNumber: token.tokenNumber || '1',
+      timeSlot: token.timeSlot || 'Today',
+      appointment: newApt
+    });
+
+    // 4. Play audio chime
+    playLiveBookingChime();
+  }, [user]);
+
+  // Helper to simulate live OP token booking right on page
+  const handleSimulateLiveOPBooking = () => {
+    const samplePatients = [
+      { name: 'Kavya Madhavan', gender: 'Female', age: 29, phone: '+91 98451 23456', reason: 'Seasonal viral flu & persistent throat irritation' },
+      { name: 'Arjun Reddy', gender: 'Male', age: 36, phone: '+91 97012 34567', reason: 'Mild chest discomfort after morning jog' },
+      { name: 'Ananya Roy', gender: 'Female', age: 42, phone: '+91 98867 54321', reason: 'Migraine headache & dizziness for 2 days' },
+      { name: 'Rahul Varma', gender: 'Male', age: 31, phone: '+91 99491 87654', reason: 'Acute stomach cramp & nausea follow-up' }
+    ];
+    const picked = samplePatients[Math.floor(Math.random() * samplePatients.length)];
+    const timeSlots = ['10:00 AM', '11:15 AM', '02:30 PM', '04:00 PM', '05:30 PM'];
+    const chosenSlot = timeSlots[Math.floor(Math.random() * timeSlots.length)];
+    const tokenNum = Math.floor(Math.random() * 40 + 20).toString();
+
+    const sampleToken = {
+      id: 'op-' + Date.now(),
+      tokenNumber: tokenNum,
+      patientName: picked.name,
+      patientPhone: picked.phone,
+      doctorName: doctorInfo.name || 'Dr. Raghavendra',
+      specialty: doctorInfo.specialty || 'General Physician',
+      date: 'Today',
+      timeSlot: chosenSlot,
+      reason: picked.reason,
+      age: picked.age,
+      gender: picked.gender,
+      status: 'ACTIVE',
+      vitals: { bp: '122/82', hr: '76 bpm', temp: '98.8°F' },
+      createdAt: new Date().toISOString()
+    };
+
+    if (typeof bookOPToken === 'function') {
+      bookOPToken(sampleToken, false);
+    } else {
+      handleIncomingOPToken(sampleToken);
+    }
+  };
+
+  // Auto-dismiss live booking toast after 7s
+  useEffect(() => {
+    if (!liveBookingAlert) return;
+    const timer = setTimeout(() => {
+      setLiveBookingAlert(null);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [liveBookingAlert]);
+
+  // Real-time listener for incoming bookings across windows/tabs
+  useEffect(() => {
+    const handleNewOPEvent = (e) => {
+      if (e?.detail) handleIncomingOPToken(e.detail);
+    };
+    window.addEventListener('care_navigator_new_op_booked', handleNewOPEvent);
+
+    const handleStorageEvent = (e) => {
+      if (e.key === 'cn_doctor_booked_ops' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            handleIncomingOPToken(parsed[0]);
+          }
+        } catch {}
+      }
+      if (e.key === 'cn_doctor_notifications' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setNotificationsList(parsed);
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageEvent);
+
+    let channel = null;
+    try {
+      channel = new BroadcastChannel('care_navigator_live_sync');
+      channel.onmessage = (msg) => {
+        if (msg?.data?.type === 'NEW_OP_BOOKED' && msg.data.token) {
+          handleIncomingOPToken(msg.data.token);
+        }
+      };
+    } catch {}
+
+    return () => {
+      window.removeEventListener('care_navigator_new_op_booked', handleNewOPEvent);
+      window.removeEventListener('storage', handleStorageEvent);
+      if (channel) {
+        try { channel.close(); } catch {}
+      }
+    };
+  }, [handleIncomingOPToken]);
+
+  // Synchronize appointments from AppContext
+  useEffect(() => {
+    if (!Array.isArray(appointments) || appointments.length === 0) return;
+    const newTokens = appointments.filter(a => a && a.id && a.tokenNumber && (a.patientName || a.id.startsWith('op-')));
+    if (newTokens.length > 0) {
+      setAppointmentsList(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const toAdd = [];
+        for (const tok of newTokens) {
+          if (!existingIds.has(tok.id) && tok.id !== 'op-101' && tok.id !== 'op-102') {
+            toAdd.push(formatTokenToDoctorAppointment(tok, user));
+          }
+        }
+        if (toAdd.length === 0) return prev;
+        return [...toAdd, ...prev];
+      });
+    }
+  }, [appointments, user]);
+
+  // Persist notifications list changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_doctor_notifications', JSON.stringify(notificationsList));
+    } catch {}
+  }, [notificationsList]);
 
   const handleClearAllDoctorNotifs = () => {
     setNotificationsList([]);
@@ -549,12 +817,54 @@ export const DoctorDashboardView = () => {
             </nav>
 
             <div className="header-right">
-              <button className="nav-icon-btn notif-btn" onClick={() => setShowNotifModal(true)} title="Notifications">
+              <button 
+                className="nav-icon-btn notif-btn" 
+                onClick={() => setShowNotifModal(true)} 
+                title="Notifications"
+                style={{ position: 'relative' }}
+              >
                 <Bell size={20} color="#ffffff" />
-                <span className="notif-badge-dot" />
+                {notificationsList.length > 0 ? (
+                  <span className="notif-badge-count">{notificationsList.length}</span>
+                ) : (
+                  <span className="notif-badge-dot" />
+                )}
               </button>
             </div>
           </header>
+
+          {/* Live Incoming OP Booking Toast Alert */}
+          {liveBookingAlert && (
+            <div className="toast-alert live-booking-toast fade-in">
+              <div className="live-toast-icon">
+                <Bell size={18} color="#ffffff" className="bell-shake-anim" />
+              </div>
+              <div className="live-toast-content">
+                <div className="live-toast-title">⚡ New OP Token Booked!</div>
+                <div className="live-toast-desc">
+                  <strong>{liveBookingAlert.patientName}</strong> booked OP Token #{liveBookingAlert.tokenNumber} ({liveBookingAlert.timeSlot})
+                </div>
+              </div>
+              <button
+                className="live-toast-btn"
+                onClick={() => {
+                  if (liveBookingAlert.appointment) {
+                    setSelectedAppointment(liveBookingAlert.appointment);
+                  }
+                  setLiveBookingAlert(null);
+                }}
+              >
+                View
+              </button>
+              <button
+                className="live-toast-close"
+                onClick={() => setLiveBookingAlert(null)}
+                title="Dismiss"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
           {/* Toast Notification Alert */}
           {consultCompletedAlert && (
@@ -697,9 +1007,26 @@ export const DoctorDashboardView = () => {
 
                 {/* TODAY'S APPOINTMENTS SECTION */}
                 <div className="appointments-section">
-                  <div className="section-header-row">
-                    <h3 className="section-title">Today’s Appointments</h3>
-                    <span className="count-pill">{filteredAppointments.length} Total</span>
+                  <div className="section-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <h3 className="section-title" style={{ margin: 0 }}>Today’s Appointments</h3>
+                      <span className="live-indicator-pill">
+                        <span className="live-ping-dot" /> LIVE
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button 
+                        type="button" 
+                        className="simulate-booking-btn" 
+                        onClick={handleSimulateLiveOPBooking} 
+                        title="Simulate incoming OP appointment"
+                      >
+                        <Zap size={13} color="#047857" />
+                        <span>+ Simulate Live OP</span>
+                      </button>
+                      <span className="count-pill">{filteredAppointments.length} Total</span>
+                    </div>
                   </div>
 
                   {/* Appointments Filter Bar */}
@@ -737,17 +1064,29 @@ export const DoctorDashboardView = () => {
                   <div className="appointments-list">
                     {filteredAppointments.length > 0 ? (
                       filteredAppointments.map((apt) => (
-                        <div key={apt.id} className={`appointment-card hover-lift fade-in ${apt.status === 'Completed' ? 'completed-card' : ''}`}>
-                          <div className="apt-time-badge">
-                            <Clock size={14} color="#1e3a8a" />
+                        <div 
+                          key={apt.id} 
+                          className={`appointment-card hover-lift fade-in ${apt.isLiveBooking ? 'live-booking-card' : ''} ${apt.status === 'Completed' ? 'completed-card' : ''}`}
+                        >
+                          <div className="apt-time-badge" style={apt.isLiveBooking ? { background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' } : {}}>
+                            <Clock size={14} color={apt.isLiveBooking ? '#047857' : '#1e3a8a'} />
                             <span>{apt.time}</span>
                           </div>
 
                           <div className="apt-patient-info">
-                            <h4 className="patient-name">{apt.patientName}</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <h4 className="patient-name">{apt.patientName}</h4>
+                              {apt.isLiveBooking && (
+                                <span className="live-pulse-badge">
+                                  <span className="live-dot" /> LIVE OP #{apt.tokenNumber || ''}
+                                </span>
+                              )}
+                            </div>
                             <div className="consultation-type-row">
-                              <span className="type-tag">{apt.type}</span>
-                              <span className="apt-demographics">{apt.gender}, {apt.age} yrs</span>
+                              <span className="type-tag" style={apt.isLiveBooking ? { background: '#d1fae5', color: '#065f46' } : {}}>{apt.type}</span>
+                              <span className="apt-demographics">
+                                {apt.gender}, {apt.age} yrs {apt.phone ? `• ${apt.phone}` : ''}
+                              </span>
                             </div>
                           </div>
 
@@ -2384,6 +2723,207 @@ export const DoctorDashboardView = () => {
           display: flex;
           align-items: center;
           gap: 2px;
+        }
+
+        /* Live Incoming OP Token Styling */
+        .appointment-card.live-booking-card {
+          border: 1.5px solid #10b981;
+          background: linear-gradient(to right, #f0fdf4 0%, #ffffff 100%);
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
+          animation: slide-in-top 0.4s ease-out;
+          position: relative;
+        }
+
+        .appointment-card.live-booking-card:hover {
+          background: #ecfdf5;
+        }
+
+        .live-indicator-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          padding: 2px 8px;
+          border-radius: 999px;
+        }
+
+        .live-ping-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #10b981;
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+          animation: ping-pulse 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+
+        .simulate-booking-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .simulate-booking-btn:hover {
+          background: #d1fae5;
+          border-color: #6ee7b7;
+          transform: translateY(-1px);
+        }
+
+        .live-pulse-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #d1fae5;
+          color: #065f46;
+          border: 1px solid #6ee7b7;
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 1px 7px;
+          border-radius: 999px;
+          letter-spacing: 0.02em;
+        }
+
+        .live-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #059669;
+          animation: ping-pulse 1.4s infinite;
+        }
+
+        .notif-badge-count {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          background: #ef4444;
+          color: #ffffff;
+          font-size: 0.68rem;
+          font-weight: 800;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px;
+          box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+          animation: pulse-badge-glow 1.8s infinite;
+        }
+
+        .live-booking-toast {
+          position: fixed;
+          top: 18px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 99999;
+          background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+          color: #ffffff;
+          padding: 10px 18px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.4);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          max-width: 92vw;
+          border: 1px solid #34d399;
+          animation: slide-in-top 0.3s ease-out;
+        }
+
+        .live-toast-icon {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 6px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .live-toast-content {
+          flex: 1;
+        }
+
+        .live-toast-title {
+          font-weight: 800;
+          font-size: 0.86rem;
+          line-height: 1.2;
+        }
+
+        .live-toast-desc {
+          font-size: 0.76rem;
+          opacity: 0.95;
+          margin-top: 1px;
+        }
+
+        .live-toast-btn {
+          background: #ffffff;
+          color: #065f46;
+          font-weight: 800;
+          border: none;
+          border-radius: 6px;
+          padding: 5px 12px;
+          cursor: pointer;
+          font-size: 0.75rem;
+          transition: background 0.15s ease;
+        }
+
+        .live-toast-btn:hover {
+          background: #ecfdf5;
+        }
+
+        .live-toast-close {
+          background: transparent;
+          border: none;
+          color: #ffffff;
+          cursor: pointer;
+          opacity: 0.8;
+          display: flex;
+          align-items: center;
+          padding: 2px;
+        }
+
+        .live-toast-close:hover {
+          opacity: 1;
+        }
+
+        @keyframes ping-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; }
+          70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); opacity: 0.8; }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; }
+        }
+
+        @keyframes pulse-badge-glow {
+          0%, 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); }
+          50% { transform: scale(1.08); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.6); }
+        }
+
+        @keyframes bell-shake-anim {
+          0%, 100% { transform: rotate(0); }
+          20% { transform: rotate(-15deg); }
+          40% { transform: rotate(15deg); }
+          60% { transform: rotate(-10deg); }
+          80% { transform: rotate(10deg); }
+        }
+
+        .bell-shake-anim {
+          animation: bell-shake-anim 1s ease infinite;
+        }
+
+        @keyframes slide-in-top {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         /* Bottom Navigation Bar */

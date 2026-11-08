@@ -1714,7 +1714,7 @@ export const AppProvider = ({ children }) => {
     } catch {}
   };
 
-  const bookOPToken = (tokenData) => {
+  const bookOPToken = (tokenData, shouldNavigate = true) => {
     const newToken = {
       id: 'op-' + Date.now(),
       tokenNumber: Math.floor(Math.random() * 30 + 10).toString(),
@@ -1724,7 +1724,8 @@ export const AppProvider = ({ children }) => {
       queueAhead: 4,
       qrCode: `OP-TOKEN-${Date.now().toString().slice(-4)}`,
       patientId: user?.accountId || user?.aadharNumber || 'anonymous',
-      patientName: user?.name || user?.fullName || 'Patient',
+      patientName: tokenData?.patientName || user?.name || user?.fullName || 'Patient',
+      patientPhone: tokenData?.patientPhone || user?.phone || '+91 98765 43210',
       createdAt: new Date().toISOString(),
       ...tokenData
     };
@@ -1741,6 +1742,60 @@ export const AppProvider = ({ children }) => {
       return updated;
     });
 
+    // Also persist to cn_doctor_booked_ops, cn_receptionist_booked_ops and notifications for live sync
+    try {
+      const existingOps = JSON.parse(localStorage.getItem('cn_doctor_booked_ops') || '[]');
+      const updatedOps = [newToken, ...existingOps.filter(o => o.id !== newToken.id)];
+      localStorage.setItem('cn_doctor_booked_ops', JSON.stringify(updatedOps));
+
+      const existingRecOps = JSON.parse(localStorage.getItem('cn_receptionist_booked_ops') || '[]');
+      const updatedRecOps = [newToken, ...existingRecOps.filter(o => o.id !== newToken.id)];
+      localStorage.setItem('cn_receptionist_booked_ops', JSON.stringify(updatedRecOps));
+
+      const existingNotifs = JSON.parse(localStorage.getItem('cn_doctor_notifications') || '[]');
+      const newNotif = {
+        id: 'notif-op-' + newToken.id,
+        title: '🚨 New OP Token Booked',
+        text: `${newToken.patientName} booked OP Token #${newToken.tokenNumber} for ${newToken.timeSlot || 'Today'}${newToken.doctorName ? ` (${newToken.doctorName})` : ''}. Reason: ${newToken.reason || 'General Consultation'}`,
+        time: 'Just now',
+        urgent: true,
+        important: true,
+        isNew: true,
+        appointmentId: newToken.id,
+        createdAt: Date.now()
+      };
+      const updatedNotifs = [newNotif, ...existingNotifs.filter(n => n.id !== newNotif.id)];
+      localStorage.setItem('cn_doctor_notifications', JSON.stringify(updatedNotifs));
+
+      const existingRecNotifs = JSON.parse(localStorage.getItem('cn_receptionist_notifications') || '[]');
+      const newRecNotif = {
+        id: 'rn-op-' + newToken.id,
+        title: '🚨 New OP Token Booked',
+        text: `${newToken.patientName} booked OP Token #${newToken.tokenNumber} (${newToken.specialty || 'General OPD'}) for ${newToken.timeSlot || 'Today'}.`,
+        time: 'Just now',
+        urgent: true,
+        important: true,
+        isNew: true,
+        appointmentId: newToken.id,
+        createdAt: Date.now()
+      };
+      const updatedRecNotifs = [newRecNotif, ...existingRecNotifs.filter(n => n.id !== newRecNotif.id)];
+      localStorage.setItem('cn_receptionist_notifications', JSON.stringify(updatedRecNotifs));
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('care_navigator_new_op_booked', { detail: newToken }));
+        window.dispatchEvent(new CustomEvent('care_navigator_doctor_notif', { detail: newNotif }));
+        window.dispatchEvent(new CustomEvent('care_navigator_receptionist_notif', { detail: newRecNotif }));
+        try {
+          const channel = new BroadcastChannel('care_navigator_live_sync');
+          channel.postMessage({ type: 'NEW_OP_BOOKED', token: newToken, notification: newNotif, recNotification: newRecNotif });
+          channel.close();
+        } catch {}
+      }
+    } catch (err) {
+      console.warn('Storage sync error on bookOPToken:', err);
+    }
+
     // Save to Cloud Firestore
     try {
       saveAppointmentToFirestore(newToken);
@@ -1748,7 +1803,10 @@ export const AppProvider = ({ children }) => {
       console.warn('[Firestore] Failed to save appointment:', e);
     }
 
-    navigateTo('appointments');
+    if (shouldNavigate) {
+      navigateTo('appointments');
+    }
+    return newToken;
   };
 
   const cancelAppointment = (id) => {
