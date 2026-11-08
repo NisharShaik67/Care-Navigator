@@ -1080,27 +1080,272 @@ export const OPBookingView = () => {
           font-weight: 900;
         }
 
+        .form-input {
+          width: 100%;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: 1px solid #cbd5e1;
+          font-size: 0.92rem;
+          color: #0f172a;
+          background: #ffffff;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input:focus {
+          border-color: #0284c7;
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
         @media (max-width: 768px) {
-          .section-header-row {
+          .op-booking-view-container {
+            padding: 12px 12px 105px;
+            gap: 14px;
+            box-sizing: border-box;
+            max-width: 100vw;
+            overflow-x: hidden;
+          }
+
+          .compact-hosp-header-bar {
+            padding: 12px 14px;
             flex-direction: column;
             align-items: stretch;
             gap: 12px;
+            border-radius: 14px;
           }
-          .doc-search-box {
+
+          .hosp-select-left {
+            min-width: 0;
+            width: 100%;
+            gap: 10px;
+          }
+
+          .hosp-select-wrapper {
+            min-width: 0;
+            flex: 1;
             width: 100%;
           }
-          .doc-search-box input {
+
+          .hosp-icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+          }
+
+          .hosp-select-label {
+            font-size: 0.72rem;
+          }
+
+          .hosp-dropdown-select {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            border-radius: 8px;
+            max-width: 100%;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+
+          .hosp-quick-info-pills {
             width: 100%;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 0;
+            padding-top: 8px;
+            border-top: 1px dashed #e2e8f0;
           }
-          .doctor-cards-grid {
-            grid-template-columns: 1fr;
+
+          .info-chip {
+            font-size: 0.75rem;
+            padding: 2px 4px;
           }
-          .hosp-select-card {
+
+          .section-header-row {
             flex-direction: column;
             align-items: stretch;
+            gap: 10px;
           }
+
+          .section-header-row h3 {
+            font-size: 1.05rem;
+          }
+
+          .section-header-row .sub {
+            font-size: 0.78rem;
+          }
+
+          .doc-search-box {
+            width: 100%;
+            padding: 8px 12px;
+            box-sizing: border-box;
+          }
+
+          .doctor-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+
+          .doc-card {
+            padding: 14px;
+            border-radius: 14px;
+          }
+
+          .common-doc-ribbon {
+            font-size: 0.68rem;
+            padding: 4px 10px;
+            margin: -14px -14px 12px -14px;
+            border-radius: 12px 12px 0 0;
+          }
+
+          .doc-card-inner {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          .doc-avatar-container {
+            width: 58px;
+            height: 58px;
+          }
+
+          .doc-details {
+            flex: 1;
+            min-width: 170px;
+          }
+
+          .doc-title-row {
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: space-between;
+          }
+
+          .doc-title-row h4 {
+            font-size: 0.98rem;
+          }
+
+          .doc-specialty-txt {
+            font-size: 0.82rem;
+          }
+
+          .doc-room-txt {
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+          }
+
+          .doc-meta-row {
+            gap: 6px;
+          }
+
+          .chip {
+            font-size: 0.68rem;
+            padding: 2px 8px;
+          }
+
+          .tap-to-book-btn {
+            width: 100%;
+            margin: 10px 0 0 0;
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            justify-content: center;
+            display: flex;
+          }
+
+          /* Modal on Mobile: bottom-sheet drawer or full fit */
+          .modal-backdrop {
+            padding: 0;
+            align-items: flex-end;
+          }
+
+          .booking-modal {
+            max-width: 100%;
+            max-height: 88vh;
+            max-height: 88dvh;
+            border-radius: 20px 20px 0 0;
+            padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+          }
+
+          .modal-header {
+            margin-bottom: 12px;
+          }
+
+          .m-title h3 {
+            font-size: 1.05rem;
+          }
+
+          .modal-doc-summary-chip {
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            gap: 10px;
+          }
+
+          .patient-type-toggle {
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .toggle-option {
+            padding: 10px 12px;
+            font-size: 0.82rem;
+          }
+
           .modal-time-slots-grid {
             grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+          }
+
+          .slot-chip {
+            padding: 8px 4px;
+            font-size: 0.72rem;
+            gap: 4px;
+          }
+
+          .payment-options-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+
+          .pay-card {
+            padding: 10px 12px;
+          }
+
+          .pay-card strong {
+            font-size: 0.82rem;
+          }
+
+          .pay-card p {
+            font-size: 0.7rem;
+          }
+
+          .form-footer-action-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding-top: 12px;
+            margin-top: 6px;
+          }
+
+          .fee-summary {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          }
+
+          .fee-summary .amount {
+            font-size: 1.25rem;
+          }
+
+          .form-footer-action-row .btn-primary {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            font-size: 0.92rem;
           }
         }
 
@@ -1108,8 +1353,8 @@ export const OPBookingView = () => {
           .modal-time-slots-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-          .payment-options-grid {
-            grid-template-columns: 1fr;
+          .op-booking-view-container {
+            padding: 8px 8px 105px;
           }
         }
       `}</style>

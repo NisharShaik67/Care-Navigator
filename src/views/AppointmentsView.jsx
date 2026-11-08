@@ -475,8 +475,11 @@ export const AppointmentsView = () => {
 
         @media (max-width: 768px) {
           .appointments-view-container {
-            padding: 14px 12px 88px;
+            padding: 14px 12px 105px;
             gap: 14px;
+            box-sizing: border-box;
+            max-width: 100vw;
+            overflow-x: hidden;
           }
           .token-card {
             padding: 16px 14px;
@@ -498,6 +501,9 @@ export const AppointmentsView = () => {
           .qr-pass-modal {
             max-width: 92vw;
             padding: 18px 14px;
+            max-height: 85vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
           }
         }
       `}</style>
