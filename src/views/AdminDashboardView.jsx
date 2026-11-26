@@ -886,67 +886,81 @@ export const AdminDashboardView = () => {
                       .filter(p => {
                         if (!patientSearch.trim()) return true;
                         const q = patientSearch.toLowerCase();
-                        return p.name.toLowerCase().includes(q) || p.abhaId.toLowerCase().includes(q) || p.phone.includes(q);
-                      })
-                      .map(patient => (
-                        <tr key={patient.id}>
-                          <td>
-                            <div className="patient-cell">
-                              <div className="patient-avatar-mini">
-                                {patient.name.split(' ').map(n => n[0]).join('')}
+                        return (p.name || '').toLowerCase().includes(q) || (p.abhaId || '').toLowerCase().includes(q) || (p.phone || '').includes(q);
+                      }).length > 0 ? (
+                      patients
+                        .filter(p => patientFilter === 'ALL' || p.accountStatus === patientFilter)
+                        .filter(p => {
+                          if (!patientSearch.trim()) return true;
+                          const q = patientSearch.toLowerCase();
+                          return (p.name || '').toLowerCase().includes(q) || (p.abhaId || '').toLowerCase().includes(q) || (p.phone || '').includes(q);
+                        })
+                        .map(patient => (
+                          <tr key={patient.id}>
+                            <td>
+                              <div className="patient-cell">
+                                <div className="patient-avatar-mini">
+                                  {patient.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div>
+                                  <strong className="patient-name-text">{patient.name}</strong>
+                                  <span className="patient-abha-text">{patient.abhaId}</span>
+                                </div>
                               </div>
-                              <div>
-                                <strong className="patient-name-text">{patient.name}</strong>
-                                <span className="patient-abha-text">{patient.abhaId}</span>
+                            </td>
+                            <td>
+                              <span className="mono-text">{patient.phone}</span>
+                            </td>
+                            <td>{patient.age} yrs • {patient.gender}</td>
+                            <td>
+                              <span className="badge-blood">{patient.bloodGroup}</span>
+                            </td>
+                            <td>{patient.district || 'Palnadu'}</td>
+                            <td>
+                              <span className="badge-pill blue">{patient.totalVisits || 1} Visits</span>
+                            </td>
+                            <td>
+                              <span className={`status-badge ${patient.accountStatus.toLowerCase()}`}>
+                                {patient.accountStatus}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="row-actions">
+                                <button 
+                                  className="action-btn-sm" 
+                                  onClick={() => setSelectedPatient(patient)}
+                                  title="View Patient Clinical Dossier"
+                                >
+                                  <Eye size={15} />
+                                </button>
+                                {patient.accountStatus === 'ACTIVE' ? (
+                                  <button 
+                                    className="action-btn-sm danger" 
+                                    onClick={() => handlePatientStatusChange(patient.id, 'SUSPENDED')}
+                                    title="Suspend Patient Account"
+                                  >
+                                    <UserX size={15} />
+                                  </button>
+                                ) : (
+                                  <button 
+                                    className="action-btn-sm success" 
+                                    onClick={() => handlePatientStatusChange(patient.id, 'ACTIVE')}
+                                    title="Reactivate Patient Account"
+                                  >
+                                    <Check size={15} />
+                                  </button>
+                                )}
                               </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="mono-text">{patient.phone}</span>
-                          </td>
-                          <td>{patient.age} yrs • {patient.gender}</td>
-                          <td>
-                            <span className="badge-blood">{patient.bloodGroup}</span>
-                          </td>
-                          <td>{patient.district || 'Palnadu'}</td>
-                          <td>
-                            <span className="badge-pill blue">{patient.totalVisits || 1} Visits</span>
-                          </td>
-                          <td>
-                            <span className={`status-badge ${patient.accountStatus.toLowerCase()}`}>
-                              {patient.accountStatus}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="row-actions">
-                              <button 
-                                className="action-btn-sm" 
-                                onClick={() => setSelectedPatient(patient)}
-                                title="View Patient Clinical Dossier"
-                              >
-                                <Eye size={15} />
-                              </button>
-                              {patient.accountStatus === 'ACTIVE' ? (
-                                <button 
-                                  className="action-btn-sm danger" 
-                                  onClick={() => handlePatientStatusChange(patient.id, 'SUSPENDED')}
-                                  title="Suspend Patient Account"
-                                >
-                                  <UserX size={15} />
-                                </button>
-                              ) : (
-                                <button 
-                                  className="action-btn-sm success" 
-                                  onClick={() => handlePatientStatusChange(patient.id, 'ACTIVE')}
-                                  title="Reactivate Patient Account"
-                                >
-                                  <Check size={15} />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
+                          No registered patients found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1289,77 +1303,91 @@ export const AdminDashboardView = () => {
                       .filter(a => {
                         if (!appointmentSearch.trim()) return true;
                         const q = appointmentSearch.toLowerCase();
-                        return a.tokenNumber.includes(q) || a.patientName.toLowerCase().includes(q) || a.doctorName.toLowerCase().includes(q);
-                      })
-                      .map(appt => (
-                        <tr key={appt.id}>
-                          <td>
-                            <div className="token-badge-admin">
-                              <span className="token-num">#{appt.tokenNumber}</span>
-                              <span className="token-code">{appt.qrCode}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <strong style={{ color: '#0f172a' }}>{appt.patientName}</strong>
-                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.patientPhone}</span>
-                          </td>
-                          <td>
-                            <strong style={{ color: '#0f172a' }}>{appt.doctorName}</strong>
-                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#0284c7' }}>{appt.specialty}</span>
-                          </td>
-                          <td>
-                            <span style={{ fontSize: '0.8rem', color: '#0f172a' }}>{appt.hospitalName}</span>
-                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.roomNo}</span>
-                          </td>
-                          <td>
-                            <span style={{ fontWeight: '600' }}>{appt.timeSlot}</span>
-                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.date}</span>
-                          </td>
-                          <td>
-                            <span className={`status-badge ${appt.status.toLowerCase()}`}>
-                              {appt.status}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`badge-pill ${appt.feeStatus === 'PAID' ? 'emerald' : 'amber'}`}>
-                              {appt.feeStatus}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="row-actions">
-                              {appt.status === 'CONFIRMED' && (
-                                <button 
-                                  className="btn-success-sm"
-                                  onClick={() => handleAppointmentStatusChange(appt.id, 'SERVING')}
-                                  title="Call Next Token to Doctor Room"
-                                >
-                                  <Radio size={13} />
-                                  <span>Serve Now</span>
-                                </button>
-                              )}
-                              {appt.status === 'SERVING' && (
-                                <button 
-                                  className="btn-primary-sm"
-                                  onClick={() => handleAppointmentStatusChange(appt.id, 'COMPLETED')}
-                                  title="Mark Consultation Completed"
-                                >
-                                  <CheckCircle2 size={13} />
-                                  <span>Complete</span>
-                                </button>
-                              )}
-                              {appt.status !== 'CANCELLED' && appt.status !== 'COMPLETED' && (
-                                <button 
-                                  className="action-btn-sm danger"
-                                  onClick={() => handleAppointmentStatusChange(appt.id, 'CANCELLED')}
-                                  title="Cancel Appointment"
-                                >
-                                  <X size={14} />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                        return (a.tokenNumber || '').includes(q) || (a.patientName || '').toLowerCase().includes(q) || (a.doctorName || '').toLowerCase().includes(q);
+                      }).length > 0 ? (
+                      appointments
+                        .filter(a => appointmentFilter === 'ALL' || a.status === appointmentFilter)
+                        .filter(a => {
+                          if (!appointmentSearch.trim()) return true;
+                          const q = appointmentSearch.toLowerCase();
+                          return (a.tokenNumber || '').includes(q) || (a.patientName || '').toLowerCase().includes(q) || (a.doctorName || '').toLowerCase().includes(q);
+                        })
+                        .map(appt => (
+                          <tr key={appt.id}>
+                            <td>
+                              <div className="token-badge-admin">
+                                <span className="token-num">#{appt.tokenNumber}</span>
+                                <span className="token-code">{appt.qrCode}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <strong style={{ color: '#0f172a' }}>{appt.patientName}</strong>
+                              <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.patientPhone}</span>
+                            </td>
+                            <td>
+                              <strong style={{ color: '#0f172a' }}>{appt.doctorName}</strong>
+                              <span style={{ display: 'block', fontSize: '0.72rem', color: '#0284c7' }}>{appt.specialty}</span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '0.8rem', color: '#0f172a' }}>{appt.hospitalName}</span>
+                              <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.roomNo}</span>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: '600' }}>{appt.timeSlot}</span>
+                              <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>{appt.date}</span>
+                            </td>
+                            <td>
+                              <span className={`status-badge ${appt.status.toLowerCase()}`}>
+                                {appt.status}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge-pill ${appt.feeStatus === 'PAID' ? 'emerald' : 'amber'}`}>
+                                {appt.feeStatus}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="row-actions">
+                                {appt.status === 'CONFIRMED' && (
+                                  <button 
+                                    className="btn-success-sm"
+                                    onClick={() => handleAppointmentStatusChange(appt.id, 'SERVING')}
+                                    title="Call Next Token to Doctor Room"
+                                  >
+                                    <Radio size={13} />
+                                    <span>Serve Now</span>
+                                  </button>
+                                )}
+                                {appt.status === 'SERVING' && (
+                                  <button 
+                                    className="btn-primary-sm"
+                                    onClick={() => handleAppointmentStatusChange(appt.id, 'COMPLETED')}
+                                    title="Mark Consultation Completed"
+                                  >
+                                    <CheckCircle2 size={13} />
+                                    <span>Complete</span>
+                                  </button>
+                                )}
+                                {appt.status !== 'CANCELLED' && appt.status !== 'COMPLETED' && (
+                                  <button 
+                                    className="action-btn-sm danger"
+                                    onClick={() => handleAppointmentStatusChange(appt.id, 'CANCELLED')}
+                                    title="Cancel Appointment"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
+                          No appointments found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1406,94 +1434,103 @@ export const AdminDashboardView = () => {
               {/* Emergency Dispatches List */}
               <div className="emergencies-card-list">
                 {emergencies
-                  .filter(e => emergencyFilter === 'ALL' || e.priority === emergencyFilter)
-                  .map(emg => (
-                    <div key={emg.id} className={`emergency-dispatch-card ${emg.priority.toLowerCase()}`}>
-                      <div className="emg-card-top">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span className={`priority-tag ${emg.priority.toLowerCase()}`}>
-                            {emg.priority.replace(/_/g, ' ')}
-                          </span>
-                          <strong className="emg-id-text">{emg.id}</strong>
-                          <span className="emg-time-text">
-                            <Clock size={13} style={{ display: 'inline', marginRight: '4px' }} />
-                            {new Date(emg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <span className={`status-badge ${emg.status.toLowerCase()}`}>
-                          {emg.status}
-                        </span>
-                      </div>
-
-                      <h3 className="emg-type-text">{emg.type}</h3>
-                      <p className="emg-location-text">
-                        <MapPin size={15} color="#dc2626" style={{ display: 'inline', marginRight: '5px' }} />
-                        {emg.location}
-                      </p>
-
-                      <div className="emg-details-grid">
-                        <div className="emg-meta-box">
-                          <span className="lbl">PATIENT</span>
-                          <strong className="val">{emg.patientName} ({emg.patientAge} yrs • {emg.patientBlood})</strong>
-                        </div>
-                        <div className="emg-meta-box">
-                          <span className="lbl">CALLER / BYSTANDER</span>
-                          <strong className="val">{emg.callerName} ({emg.callerPhone})</strong>
-                        </div>
-                        <div className="emg-meta-box">
-                          <span className="lbl">ASSIGNED 108 AMBULANCE</span>
-                          <strong className="val text-blue">{emg.assignedAmbulance}</strong>
-                        </div>
-                        <div className="emg-meta-box">
-                          <span className="lbl">TARGET HOSPITAL & ER</span>
-                          <strong className="val">{emg.targetHospital}</strong>
-                        </div>
-                      </div>
-
-                      <div className="emg-notes-alert">
-                        <strong>Clinical Triage Note:</strong> {emg.notes}
-                      </div>
-
-                      {/* Control Actions */}
-                      <div className="emg-actions-footer">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span className="eta-badge">
-                            ETA: <strong>{emg.etaMinutes} mins</strong> ({emg.distanceKm} km away)
+                  .filter(e => emergencyFilter === 'ALL' || e.priority === emergencyFilter).length > 0 ? (
+                  emergencies
+                    .filter(e => emergencyFilter === 'ALL' || e.priority === emergencyFilter)
+                    .map(emg => (
+                      <div key={emg.id} className={`emergency-dispatch-card ${emg.priority.toLowerCase()}`}>
+                        <div className="emg-card-top">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className={`priority-tag ${emg.priority.toLowerCase()}`}>
+                              {emg.priority.replace(/_/g, ' ')}
+                            </span>
+                            <strong className="emg-id-text">{emg.id}</strong>
+                            <span className="emg-time-text">
+                              <Clock size={13} style={{ display: 'inline', marginRight: '4px' }} />
+                              {new Date(emg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <span className={`status-badge ${emg.status.toLowerCase()}`}>
+                            {emg.status}
                           </span>
                         </div>
 
-                        <div className="btn-group-row">
-                          <button 
-                            className="btn-outline-sm"
-                            onClick={() => window.open(`tel:${emg.callerPhone.replace(/\D/g, '')}`)}
-                          >
-                            <Phone size={14} />
-                            <span>Call Bystander</span>
-                          </button>
+                        <h3 className="emg-type-text">{emg.type}</h3>
+                        <p className="emg-location-text">
+                          <MapPin size={15} color="#dc2626" style={{ display: 'inline', marginRight: '5px' }} />
+                          {emg.location}
+                        </p>
 
-                          {emg.status === 'DISPATCHED' && (
+                        <div className="emg-details-grid">
+                          <div className="emg-meta-box">
+                            <span className="lbl">PATIENT</span>
+                            <strong className="val">{emg.patientName} ({emg.patientAge} yrs • {emg.patientBlood})</strong>
+                          </div>
+                          <div className="emg-meta-box">
+                            <span className="lbl">CALLER / BYSTANDER</span>
+                            <strong className="val">{emg.callerName} ({emg.callerPhone})</strong>
+                          </div>
+                          <div className="emg-meta-box">
+                            <span className="lbl">ASSIGNED 108 AMBULANCE</span>
+                            <strong className="val text-blue">{emg.assignedAmbulance}</strong>
+                          </div>
+                          <div className="emg-meta-box">
+                            <span className="lbl">TARGET HOSPITAL & ER</span>
+                            <strong className="val">{emg.targetHospital}</strong>
+                          </div>
+                        </div>
+
+                        <div className="emg-notes-alert">
+                          <strong>Clinical Triage Note:</strong> {emg.notes}
+                        </div>
+
+                        {/* Control Actions */}
+                        <div className="emg-actions-footer">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="eta-badge">
+                              ETA: <strong>{emg.etaMinutes} mins</strong> ({emg.distanceKm} km away)
+                            </span>
+                          </div>
+
+                          <div className="btn-group-row">
                             <button 
-                              className="btn-primary-sm"
-                              onClick={() => handleEmergencyStatusChange(emg.id, 'TRANSPORTING')}
+                              className="btn-outline-sm"
+                              onClick={() => window.open(`tel:${emg.callerPhone.replace(/\D/g, '')}`)}
                             >
-                              <Ambulance size={14} />
-                              <span>Mark Transporting</span>
+                              <Phone size={14} />
+                              <span>Call Bystander</span>
                             </button>
-                          )}
 
-                          {emg.status === 'TRANSPORTING' && (
-                            <button 
-                              className="btn-success-sm"
-                              onClick={() => handleEmergencyStatusChange(emg.id, 'RESOLVED')}
-                            >
-                              <CheckCircle2 size={14} />
-                              <span>Handover to Hospital (Resolved)</span>
-                            </button>
-                          )}
+                            {emg.status === 'DISPATCHED' && (
+                              <button 
+                                className="btn-primary-sm"
+                                onClick={() => handleEmergencyStatusChange(emg.id, 'TRANSPORTING')}
+                              >
+                                <Ambulance size={14} />
+                                <span>Mark Transporting</span>
+                              </button>
+                            )}
+
+                            {emg.status === 'TRANSPORTING' && (
+                              <button 
+                                className="btn-success-sm"
+                                onClick={() => handleEmergencyStatusChange(emg.id, 'RESOLVED')}
+                              >
+                                <CheckCircle2 size={14} />
+                                <span>Handover to Hospital (Resolved)</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '48px 20px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                    <Siren size={36} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontWeight: 700, color: '#475569' }}>No emergency dispatches recorded</p>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>108 emergency calls and ambulance dispatches will show up here live.</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

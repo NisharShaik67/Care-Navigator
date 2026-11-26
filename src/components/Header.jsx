@@ -41,32 +41,7 @@ export const Header = () => {
   const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
   const isComplete = completionScore === 100;
 
-  const [headerNotifications, setHeaderNotifications] = useState([
-    {
-      id: 'hn-1',
-      title: 'Complete Your Health Profile',
-      text: `Your profile is ${completionScore}% complete. Please update Age, Blood Group & Prescription to reach 100% EHR verification.`,
-      time: 'Just now',
-      urgent: false,
-      important: isProfileIncomplete
-    },
-    {
-      id: 'hn-2',
-      title: 'OP Token #14 Active',
-      text: 'Dr. K. Srinivas Rao at GGH Guntur Cardiology OPD is serving Token #11. Queue ahead: 3.',
-      time: '15m ago',
-      urgent: false,
-      important: false
-    },
-    {
-      id: 'hn-3',
-      title: 'EHR Vault Synced',
-      text: 'Digital prescription & lab diagnostic report archived safely to ABHA Vault.',
-      time: '1h ago',
-      urgent: false,
-      important: false
-    }
-  ]);
+  const [headerNotifications, setHeaderNotifications] = useState([]);
 
   const handleClearAllHeaderNotifs = () => {
     setHeaderNotifications([]);

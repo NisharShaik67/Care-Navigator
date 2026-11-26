@@ -70,79 +70,14 @@ const DEFAULT_USER = {
   allergies: ['Penicillin', 'Dust', 'Sulfa drugs'],
   healthId: 'ABHA-9102-4821-9012',
   medicalId: 'MED-9102-4821',
-  emergencyContacts: [
-    { id: 1, name: 'Robert Johnson', relation: 'Father', phone: '+91 98765 43211' },
-    { id: 2, name: 'Sarah Johnson', relation: 'Spouse', phone: '+91 98765 43212' }
-  ],
-  precautions: [
-    'Avoid NSAID pain relievers due to mild gastritis history.',
-    'Maintain daily hydration (>3L/day) for high uric acid prevention.',
-    'Monitor blood pressure weekly.'
-  ],
-  medicineAlerts: [
-    { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
-    { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
-  ]
+  emergencyContacts: [],
+  precautions: [],
+  medicineAlerts: []
 };
 
-const DEFAULT_APPOINTMENTS = [
-  {
-    id: 'op-101',
-    tokenNumber: '14',
-    doctorName: 'Dr. K. Srinivas Rao, MD',
-    hospitalName: 'Government General Hospital, Guntur',
-    specialty: 'Cardiology',
-    date: 'Today',
-    timeSlot: '10:30 AM',
-    status: 'ACTIVE',
-    currentServing: '11',
-    queueAhead: 3,
-    qrCode: 'OP-GGH-CARD-014'
-  },
-  {
-    id: 'op-102',
-    tokenNumber: '28',
-    doctorName: 'Dr. S. Meenakshi, MS',
-    hospitalName: 'Narasaraopet Area Hospital',
-    specialty: 'Orthopedics',
-    date: '2026-08-20',
-    timeSlot: '02:15 PM',
-    status: 'COMPLETED',
-    currentServing: '28',
-    queueAhead: 0,
-    qrCode: 'OP-NAH-ORTH-028'
-  }
-];
+const DEFAULT_APPOINTMENTS = [];
 
-const DEFAULT_RECORDS = [
-  {
-    id: 'rec-1',
-    title: 'Complete Blood Count (CBC) & Lipid Profile',
-    type: 'Lab Report',
-    date: '2026-08-10',
-    doctor: 'Dr. K. Srinivas Rao, MD',
-    facility: 'Government General Hospital, Guntur',
-    summary: 'Hemoglobin levels normal (14.2 g/dL). Total Cholesterol 185 mg/dL.'
-  },
-  {
-    id: 'rec-2',
-    title: 'OPD Digital Prescription - Cardiology',
-    type: 'Prescription',
-    date: '2026-07-22',
-    doctor: 'Dr. S. Meenakshi, MS',
-    facility: 'Narasaraopet Area Hospital',
-    summary: 'Prescribed Cetirizine 10mg daily after dinner and Multivitamin Complex.'
-  },
-  {
-    id: 'rec-3',
-    title: 'COVID-19 Booster Vaccination Certificate',
-    type: 'Vaccination',
-    date: '2025-11-05',
-    doctor: 'Public Health Officer',
-    facility: 'Primary Health Centre, Narasaraopet',
-    summary: 'Universal Immunization Record verified via CoWIN & ABHA.'
-  }
-];
+const DEFAULT_RECORDS = [];
 
 export const SEED_ACCOUNTS = {
   'acc_alex': {
@@ -167,21 +102,15 @@ export const SEED_ACCOUNTS = {
     phone: '+91 9876543211',
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
     role: 'Patient',
-    prescriptionReport: { name: 'Priya_Cardio_Prescription.pdf', date: '2026-08-15' },
-    uploadedReports: [
-      { id: 1, name: 'Priya_Cardio_Prescription.pdf', date: '2026-08-15', size: '1.2 MB' }
-    ],
+    prescriptionReport: null,
+    uploadedReports: [],
     emergencyContact: '+91 98765 43212',
     allergies: ['Dust'],
     healthId: 'ABHA-1234-5678-9012',
     medicalId: 'MED-1234-5678',
-    emergencyContacts: [
-      { id: 1, name: 'Amit Sharma', relation: 'Spouse', phone: '+91 98765 43212' }
-    ],
-    precautions: ['Routine blood pressure checkup bi-weekly.'],
-    medicineAlerts: [
-      { id: 1, name: 'Iron & Folic Acid', timing: '08:00 AM (Morning)', dose: '1 Tablet after breakfast' }
-    ],
+    emergencyContacts: [],
+    precautions: [],
+    medicineAlerts: [],
     aliases: ['aadhaar:123456789012', '123456789012']
   },
   'acc_doctor_001': {
@@ -744,7 +673,13 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState(() => {
     try {
       const saved = localStorage.getItem('cn_appointments');
-      return saved ? JSON.parse(saved) : DEFAULT_APPOINTMENTS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(a => a && a.id !== 'op-101' && a.id !== 'op-102');
+        }
+      }
+      return DEFAULT_APPOINTMENTS;
     } catch {
       return DEFAULT_APPOINTMENTS;
     }
@@ -753,7 +688,13 @@ export const AppProvider = ({ children }) => {
   const [records, setRecords] = useState(() => {
     try {
       const saved = localStorage.getItem('cn_records');
-      return saved ? JSON.parse(saved) : DEFAULT_RECORDS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(r => r && r.id !== 'rec-1' && r.id !== 'rec-2' && r.id !== 'rec-3');
+        }
+      }
+      return DEFAULT_RECORDS;
     } catch {
       return DEFAULT_RECORDS;
     }
@@ -1594,13 +1535,15 @@ export const AppProvider = ({ children }) => {
 
       // Restore appointments
       if (Array.isArray(patientAccount.appointments) && patientAccount.appointments.length > 0) {
-        setAppointments(patientAccount.appointments);
-        try { localStorage.setItem('cn_appointments', JSON.stringify(patientAccount.appointments)); } catch {}
+        const cleanApps = patientAccount.appointments.filter(a => a && a.id !== 'op-101' && a.id !== 'op-102');
+        setAppointments(cleanApps);
+        try { localStorage.setItem('cn_appointments', JSON.stringify(cleanApps)); } catch {}
       } else {
         try {
           const savedApps = localStorage.getItem('cn_appointments');
           if (savedApps) {
-            setAppointments(JSON.parse(savedApps));
+            const parsedApps = JSON.parse(savedApps);
+            setAppointments(Array.isArray(parsedApps) ? parsedApps.filter(a => a && a.id !== 'op-101' && a.id !== 'op-102') : []);
           } else {
             setAppointments(DEFAULT_APPOINTMENTS);
           }
@@ -1611,13 +1554,15 @@ export const AppProvider = ({ children }) => {
 
       // Restore records
       if (Array.isArray(patientAccount.records) && patientAccount.records.length > 0) {
-        setRecords(patientAccount.records);
-        try { localStorage.setItem('cn_records', JSON.stringify(patientAccount.records)); } catch {}
+        const cleanRecs = patientAccount.records.filter(r => r && r.id !== 'rec-1' && r.id !== 'rec-2' && r.id !== 'rec-3');
+        setRecords(cleanRecs);
+        try { localStorage.setItem('cn_records', JSON.stringify(cleanRecs)); } catch {}
       } else {
         try {
           const savedRecs = localStorage.getItem('cn_records');
           if (savedRecs) {
-            setRecords(JSON.parse(savedRecs));
+            const parsedRecs = JSON.parse(savedRecs);
+            setRecords(Array.isArray(parsedRecs) ? parsedRecs.filter(r => r && r.id !== 'rec-1' && r.id !== 'rec-2' && r.id !== 'rec-3') : []);
           } else {
             setRecords(DEFAULT_RECORDS);
           }

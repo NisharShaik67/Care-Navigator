@@ -546,18 +546,18 @@ export const ProfileView = () => {
             <AlertTriangle size={20} color="#f59e0b" />
             <h3>Medical Precautions for Patient</h3>
           </div>
-          <ul className="precautions-list">
-            {(user?.precautions || [
-              'Avoid NSAID pain relievers due to mild gastritis history.',
-              'Maintain daily hydration (>3L/day) for high uric acid prevention.',
-              'Monitor blood pressure weekly.'
-            ]).map((p, idx) => (
-              <li key={idx}>
-                <ShieldCheck size={16} color="#059669" />
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
+          {Array.isArray(user?.precautions) && user.precautions.length > 0 ? (
+            <ul className="precautions-list">
+              {user.precautions.map((p, idx) => (
+                <li key={idx}>
+                  <ShieldCheck size={16} color="#059669" />
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={{ fontSize: '0.86rem', color: '#64748b', fontStyle: 'italic', margin: '8px 0 0 0' }}>No active medical precautions specified.</p>
+          )}
         </div>
 
         <div className="alerts-card glass-panel">
@@ -566,18 +566,19 @@ export const ProfileView = () => {
             <h3>Active Medicine Schedule Alerts</h3>
           </div>
           <div className="alerts-list">
-            {(user?.medicineAlerts || [
-              { id: 1, name: 'Cetirizine 10mg', timing: '09:00 PM (Bedtime)', dose: '1 Tablet after dinner' },
-              { id: 2, name: 'Multivitamin Complex', timing: '09:30 AM (Morning)', dose: '1 Capsule after breakfast' }
-            ]).map((med) => (
-              <div key={med.id} className="med-alert-item glass-card">
-                <div>
-                  <h4>{med.name}</h4>
-                  <p>{med.dose} • <strong>{med.timing}</strong></p>
+            {Array.isArray(user?.medicineAlerts) && user.medicineAlerts.length > 0 ? (
+              user.medicineAlerts.map((med) => (
+                <div key={med.id} className="med-alert-item glass-card">
+                  <div>
+                    <h4>{med.name}</h4>
+                    <p>{med.dose} • <strong>{med.timing}</strong></p>
+                  </div>
+                  <span className="badge badge-emerald">ACTIVE</span>
                 </div>
-                <span className="badge badge-emerald">ACTIVE</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p style={{ fontSize: '0.86rem', color: '#64748b', fontStyle: 'italic', margin: '8px 0 0 0' }}>No active medicine schedule alerts.</p>
+            )}
           </div>
         </div>
       </div>

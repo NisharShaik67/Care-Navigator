@@ -34,120 +34,10 @@ import {
   Zap
 } from 'lucide-react';
 
-// Baseline Queue List (Initial 6 patients shown in receptionist dashboard)
-const BASELINE_QUEUE_LIST = [
-  {
-    id: 'op-101',
-    token: 'OP-01',
-    name: 'Ramesh Kumar',
-    age: 45,
-    gender: 'Male',
-    uhid: 'UHID-882109',
-    doctor: 'Dr. K. Srinivas Rao (Cardiology)',
-    dept: 'Cardiology',
-    timeSlot: '09:30 AM',
-    status: 'Consultation',
-    phone: '+91 98480 12345',
-    arrivedAt: '09:15 AM'
-  },
-  {
-    id: 'op-102',
-    token: 'OP-02',
-    name: 'Priya Sharma',
-    age: 32,
-    gender: 'Female',
-    uhid: 'UHID-774012',
-    doctor: 'Dr. S. Meenakshi (Orthopedics)',
-    dept: 'Orthopedics',
-    timeSlot: '09:45 AM',
-    status: 'Arrived',
-    phone: '+91 98765 43210',
-    arrivedAt: '09:35 AM'
-  },
-  {
-    id: 'op-103',
-    token: 'WK-01',
-    name: 'Venkatesh Rao',
-    age: 58,
-    gender: 'Male',
-    uhid: 'UHID-993041',
-    doctor: 'Dr. Common Duty Physician',
-    dept: 'General Medicine',
-    timeSlot: 'Walk-in',
-    status: 'Waiting',
-    phone: '+91 94401 98765',
-    arrivedAt: '09:40 AM'
-  },
-  {
-    id: 'op-104',
-    token: 'OP-03',
-    name: 'Ananya Das',
-    age: 26,
-    gender: 'Female',
-    uhid: 'UHID-662198',
-    doctor: 'Dr. R. V. Ramana (Pediatrics)',
-    dept: 'Pediatrics',
-    timeSlot: '10:00 AM',
-    status: 'Waiting',
-    phone: '+91 91234 56789',
-    arrivedAt: '09:42 AM'
-  },
-  {
-    id: 'op-105',
-    token: 'WK-02',
-    name: 'Mohd. Ibrahim',
-    age: 50,
-    gender: 'Male',
-    uhid: 'UHID-551029',
-    doctor: 'Dr. M. Lakshmi Prasanna (Surgery)',
-    dept: 'General Surgery',
-    timeSlot: 'Walk-in',
-    status: 'Arrived',
-    phone: '+91 99887 76655',
-    arrivedAt: '09:45 AM'
-  },
-  {
-    id: 'op-106',
-    token: 'OP-04',
-    name: 'K. Lakshmi',
-    age: 61,
-    gender: 'Female',
-    uhid: 'UHID-440192',
-    doctor: 'Dr. K. Srinivas Rao (Cardiology)',
-    dept: 'Cardiology',
-    timeSlot: '10:15 AM',
-    status: 'Completed',
-    phone: '+91 97001 11223',
-    arrivedAt: '09:00 AM'
-  }
-];
+// Baseline Queue List (Default queue is empty for clean production state)
+const BASELINE_QUEUE_LIST = [];
 
-const BASELINE_REC_NOTIFS = [
-  {
-    id: 'rn-1',
-    title: 'Emergency Triage Alert',
-    text: 'Ambulance AP-07-TY-4912 en route to ER Bay 02. ETA 2.3 Mins.',
-    time: 'Just now',
-    urgent: true,
-    important: true
-  },
-  {
-    id: 'rn-2',
-    title: 'OP Token #WK-01 Arrived',
-    text: 'Venkatesh Rao checked in at Central OPD Counter. Waiting for General Medicine.',
-    time: '10m ago',
-    urgent: false,
-    important: false
-  },
-  {
-    id: 'rn-3',
-    title: 'Doctor Schedule Update',
-    text: 'Dr. K. Srinivas Rao (Cardiology) initiated OP Consultation for Token #11.',
-    time: '25m ago',
-    urgent: false,
-    important: false
-  }
-];
+const BASELINE_REC_NOTIFS = [];
 
 // Helper to format an OP token into the Receptionist queue structure
 const formatTokenToQueuePatient = (token, currentUser = null) => {
@@ -208,14 +98,16 @@ const getInitialQueueList = (appContextAppointments = []) => {
     const raw = localStorage.getItem('cn_receptionist_booked_ops') || localStorage.getItem('cn_doctor_booked_ops');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) loadedBookedOps = parsed;
+      if (Array.isArray(parsed)) {
+        loadedBookedOps = parsed.filter(o => o && o.id !== 'op-101' && o.id !== 'op-102');
+      }
     }
   } catch {}
 
   if (Array.isArray(appContextAppointments)) {
     appContextAppointments.forEach(item => {
       if (item && item.id && item.tokenNumber && !loadedBookedOps.some(o => o.id === item.id)) {
-        if (item.patientName || (item.id !== 'op-101' && item.id !== 'op-102')) {
+        if (item.id !== 'op-101' && item.id !== 'op-102') {
           loadedBookedOps.push(item);
         }
       }
@@ -223,11 +115,7 @@ const getInitialQueueList = (appContextAppointments = []) => {
   }
 
   const formatted = loadedBookedOps.map(token => formatTokenToQueuePatient(token));
-  const existingIds = new Set(formatted.map(f => f.id));
-  const remainingBaseline = BASELINE_QUEUE_LIST.filter(b => !existingIds.has(b.id));
-
-  // Newly booked tokens prepend at index 0 (first line)
-  return [...formatted, ...remainingBaseline];
+  return formatted;
 };
 
 const getInitialRecNotifs = () => {
@@ -235,7 +123,7 @@ const getInitialRecNotifs = () => {
     const raw = localStorage.getItem('cn_receptionist_notifications');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {}
   return BASELINE_REC_NOTIFS;
@@ -564,63 +452,8 @@ export const ReceptionistView = () => {
 
   // Live New Registrations Data
   const [regSearch, setRegSearch] = useState('');
-  const [registrationsList, setRegistrationsList] = useState([
-    {
-      id: 'reg-01',
-      uhid: 'UHID-993041',
-      aadhaar: '5892 4103 7621',
-      name: 'Venkatesh Rao',
-      ageGender: '58 / M',
-      type: 'Walk-in OP',
-      dept: 'General Medicine',
-      registeredAt: '09:40 AM Today',
-      status: 'Token Issued'
-    },
-    {
-      id: 'reg-02',
-      uhid: 'UHID-882109',
-      aadhaar: '9012 3456 7890',
-      name: 'Ramesh Kumar',
-      ageGender: '45 / M',
-      type: 'Online Portal',
-      dept: 'Cardiology',
-      registeredAt: '09:15 AM Today',
-      status: 'In Consultation'
-    },
-    {
-      id: 'reg-03',
-      uhid: 'UHID-774012',
-      aadhaar: '1234 5678 9012',
-      name: 'Priya Sharma',
-      ageGender: '32 / F',
-      type: 'Online Portal',
-      dept: 'Orthopedics',
-      registeredAt: '08:50 AM Today',
-      status: 'Checked In'
-    },
-    {
-      id: 'reg-04',
-      uhid: 'UHID-662198',
-      aadhaar: '4455 6677 8899',
-      name: 'Ananya Das',
-      ageGender: '26 / F',
-      type: 'ABHA App',
-      dept: 'Pediatrics',
-      registeredAt: '08:30 AM Today',
-      status: 'Waiting in Queue'
-    },
-    {
-      id: 'reg-05',
-      uhid: 'UHID-551029',
-      aadhaar: '7788 9900 1122',
-      name: 'Mohd. Ibrahim',
-      ageGender: '50 / M',
-      type: 'Walk-in OP',
-      dept: 'General Surgery',
-      registeredAt: '08:15 AM Today',
-      status: 'Checked In'
-    }
-  ]);
+  const [registrationsList, setRegistrationsList] = useState([]);
+  const [activeEmergency, setActiveEmergency] = useState(null);
 
   // Form States for Modals
   const [registerForm, setRegisterForm] = useState({
@@ -1074,10 +907,10 @@ export const ReceptionistView = () => {
               </div>
             </div>
             <div className="stat-number-row">
-              <span className="stat-number text-navy">18</span>
+              <span className="stat-number text-navy">{queueList.length}</span>
               <span className="stat-badge badge-blue">Scheduled</span>
             </div>
-            <p className="stat-sub-info">12 Verified Online • 6 Desk Booked</p>
+            <p className="stat-sub-info">{queueList.length} Total Patients in Queue</p>
           </div>
 
           {/* Stat 2: Walk-ins */}
@@ -1089,25 +922,25 @@ export const ReceptionistView = () => {
               </div>
             </div>
             <div className="stat-number-row">
-              <span className="stat-number text-teal">6</span>
+              <span className="stat-number text-teal">{queueList.filter(p => p.token?.startsWith('WK') || p.timeSlot === 'Walk-in').length}</span>
               <span className="stat-badge badge-teal">Direct OPD</span>
             </div>
-            <p className="stat-sub-info">4 Tokens Processed • 2 In Waiting</p>
+            <p className="stat-sub-info">Direct Counter Registrations</p>
           </div>
 
-          {/* Stat 3: Emergency Alerts (RED HIGHLIGHT) */}
-          <div className="stat-card card-emergency-alert pulse-red-border">
+          {/* Stat 3: Emergency Alerts */}
+          <div className={`stat-card card-emergency-alert ${activeEmergency ? 'pulse-red-border' : ''}`}>
             <div className="stat-card-header">
-              <span className="stat-title text-red-bold">Emergency Alerts</span>
-              <div className="stat-icon-wrapper bg-red-strong">
-                <Siren size={22} color="#ffffff" className="pulse-icon" />
+              <span className={`stat-title ${activeEmergency ? 'text-red-bold' : ''}`}>Emergency Alerts</span>
+              <div className={`stat-icon-wrapper ${activeEmergency ? 'bg-red-strong' : 'bg-blue-subtle'}`}>
+                <Siren size={22} color={activeEmergency ? '#ffffff' : '#94a3b8'} className={activeEmergency ? 'pulse-icon' : ''} />
               </div>
             </div>
             <div className="stat-number-row">
-              <span className="stat-number text-red">2</span>
-              <span className="stat-badge badge-red-bold">CRITICAL ACTIVE</span>
+              <span className={`stat-number ${activeEmergency ? 'text-red' : 'text-navy'}`}>{activeEmergency ? 1 : 0}</span>
+              <span className={`stat-badge ${activeEmergency ? 'badge-red-bold' : 'badge-blue'}`}>{activeEmergency ? 'CRITICAL ACTIVE' : 'ALL CLEAR'}</span>
             </div>
-            <p className="stat-sub-info text-red-sub">1 Ambulance In-bound • 1 ER Triage</p>
+            <p className="stat-sub-info">{activeEmergency ? 'Ambulance In-bound to ER' : 'No Active 108 Emergency'}</p>
           </div>
 
           {/* Stat 4: Available Beds */}
@@ -1127,40 +960,42 @@ export const ReceptionistView = () => {
         </section>
 
         {/* LIGHT "ACTIVE EMERGENCY" BANNER */}
-        <section className="reception-active-emergency-banner">
-          <div className="emergency-banner-left">
-            <div className="emergency-alert-tag">
-              <span className="red-pulse-beacon" />
-              <Siren size={20} color="#dc2626" />
-              <strong className="emergency-tag-text">ACTIVE EMERGENCY ALERT</strong>
+        {activeEmergency && (
+          <section className="reception-active-emergency-banner">
+            <div className="emergency-banner-left">
+              <div className="emergency-alert-tag">
+                <span className="red-pulse-beacon" />
+                <Siren size={20} color="#dc2626" />
+                <strong className="emergency-tag-text">ACTIVE EMERGENCY ALERT</strong>
+              </div>
+
+              <div className="emergency-details-inline">
+                <div className="emergency-avg-time-box">
+                  <span className="time-val">{activeEmergency.eta || '2.3 min'}</span>
+                  <span className="time-lbl">Response Time</span>
+                </div>
+                <div className="emergency-text-desc">
+                  <p className="emergency-main-line">
+                    <strong>{activeEmergency.title || 'Trauma Case'}:</strong> {activeEmergency.desc || 'Ambulance en route to ER'}
+                  </p>
+                  <p className="emergency-sub-line">
+                    ER Bay Pre-reserved • Vitals Monitor Team Alerted
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="emergency-details-inline">
-              <div className="emergency-avg-time-box">
-                <span className="time-val">2.3 min avg</span>
-                <span className="time-lbl">Response Time</span>
-              </div>
-              <div className="emergency-text-desc">
-                <p className="emergency-main-line">
-                  <strong>Trauma Case #EM-4091:</strong> Severe Road Accident Patient • Ambulance AP-07-TY-4912 en route
-                </p>
-                <p className="emergency-sub-line">
-                  ETA 2.3 Mins • ER Bay 02 Pre-reserved • Vitals Monitor Team Alerted
-                </p>
-              </div>
+            <div className="emergency-banner-right">
+              <button
+                className="btn-emergency-action"
+                onClick={() => setActiveModal('emergency_details')}
+              >
+                <span>View Details</span>
+                <ArrowRight size={16} />
+              </button>
             </div>
-          </div>
-
-          <div className="emergency-banner-right">
-            <button
-              className="btn-emergency-action"
-              onClick={() => setActiveModal('emergency_details')}
-            >
-              <span>View Details</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* MAIN TWO COLUMN GRID: LEFT QUEUE, RIGHT QUICK ACTIONS */}
         <div className="reception-grid-2col">

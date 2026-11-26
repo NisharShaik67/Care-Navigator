@@ -23,8 +23,8 @@ export const MedicalHistoryView = () => {
 
   const [title, setTitle] = useState('');
   const [type, setType] = useState('Lab Report');
-  const [doctor, setDoctor] = useState('Dr. Rajesh Sharma');
-  const [facility, setFacility] = useState('City Care Hospital');
+  const [doctor, setDoctor] = useState('');
+  const [facility, setFacility] = useState('');
   const [summary, setSummary] = useState('');
   const [fileName, setFileName] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -122,36 +122,49 @@ export const MedicalHistoryView = () => {
       </div>
 
       {/* Records List */}
-      <div className="records-grid">
-        {filteredRecords.map(rec => (
-          <div key={rec.id} className="record-card glass-panel fade-in">
-            <div className="rec-top">
-              <div className="rec-type-badge">
-                <FileText size={16} color="#a855f7" />
-                <span>{rec.type}</span>
+      {filteredRecords.length > 0 ? (
+        <div className="records-grid">
+          {filteredRecords.map(rec => (
+            <div key={rec.id} className="record-card glass-panel fade-in">
+              <div className="rec-top">
+                <div className="rec-type-badge">
+                  <FileText size={16} color="#a855f7" />
+                  <span>{rec.type}</span>
+                </div>
+                <span className="rec-date">{rec.date}</span>
               </div>
-              <span className="rec-date">{rec.date}</span>
-            </div>
 
-            <h4 className="rec-title">{rec.title}</h4>
-            <p className="rec-doctor">{rec.doctor} • {rec.facility}</p>
-            <p className="rec-summary">{rec.summary}</p>
+              <h4 className="rec-title">{rec.title}</h4>
+              <p className="rec-doctor">{rec.doctor} • {rec.facility}</p>
+              <p className="rec-summary">{rec.summary}</p>
 
-            <div className="rec-footer">
-              <span className="encrypted-tag">
-                <ShieldCheck size={14} color="#10b981" /> 256-Bit Encrypted
-              </span>
-              <button 
-                className="btn btn-secondary btn-sm"
-                onClick={() => alert(`Downloading encrypted record PDF: ${rec.title}`)}
-              >
-                <Download size={14} />
-                <span>Download PDF</span>
-              </button>
+              <div className="rec-footer">
+                <span className="encrypted-tag">
+                  <ShieldCheck size={14} color="#10b981" /> 256-Bit Encrypted
+                </span>
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => alert(`Downloading encrypted record PDF: ${rec.title}`)}
+                >
+                  <Download size={14} />
+                  <span>Download PDF</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state glass-panel" style={{ textAlign: 'center', padding: '48px 20px', borderRadius: '16px', margin: '20px 0' }}>
+          <FileText size={42} color="#94a3b8" style={{ marginBottom: '12px' }} />
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '1.1rem', color: '#1e293b' }}>No medical records found</h3>
+          <p style={{ margin: '0 0 16px 0', fontSize: '0.88rem', color: '#64748b' }}>
+            {filterType !== 'All' ? `No ${filterType} records found.` : 'Upload lab reports, prescriptions, or vaccination certificates to your encrypted vault.'}
+          </p>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowUploadModal(true)}>
+            <Plus size={16} /> Upload First Record
+          </button>
+        </div>
+      )}
 
       {/* Upload Document Modal */}
       {showUploadModal && (
@@ -196,7 +209,7 @@ export const MedicalHistoryView = () => {
                 className="form-input"
                 value={doctor}
                 onChange={e => setDoctor(e.target.value)}
-                placeholder="Dr. Rajesh Sharma"
+                placeholder="e.g. Dr. K. Srinivas Rao, MD"
               />
 
               <label className="form-label">Hospital / Medical Facility</label>

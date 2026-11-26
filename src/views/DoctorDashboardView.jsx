@@ -32,153 +32,8 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-// Baseline 12 Doctor Appointments (Default clinical queue)
-const BASELINE_DOCTOR_APPOINTMENTS = [
-  {
-    id: 'APT-101',
-    time: '09:30 AM',
-    patientName: 'Rajesh Sharma',
-    age: 45,
-    gender: 'Male',
-    type: 'OP Consultation',
-    status: 'In Queue',
-    phone: '+91 98765 43210',
-    reason: 'Fever & Headaches for 3 days',
-    vitals: { bp: '120/80', hr: '74 bpm', temp: '100.2°F' }
-  },
-  {
-    id: 'APT-102',
-    time: '10:15 AM',
-    patientName: 'Sunita Devi',
-    age: 52,
-    gender: 'Female',
-    type: 'General Checkup',
-    status: 'In Queue',
-    phone: '+91 98123 45678',
-    reason: 'Routine BP & Diabetes Check',
-    vitals: { bp: '135/88', hr: '80 bpm', temp: '98.4°F' }
-  },
-  {
-    id: 'APT-103',
-    time: '11:00 AM',
-    patientName: 'Amit Patel',
-    age: 34,
-    gender: 'Male',
-    type: 'Lab Report Review',
-    status: 'Scheduled',
-    phone: '+91 97654 32109',
-    reason: 'Lipid Profile & CBC Follow-up',
-    vitals: { bp: '118/76', hr: '72 bpm', temp: '98.6°F' }
-  },
-  {
-    id: 'APT-104',
-    time: '11:45 AM',
-    patientName: 'Priya Verma',
-    age: 29,
-    gender: 'Female',
-    type: 'Follow-up Visit',
-    status: 'Scheduled',
-    phone: '+91 99887 76655',
-    reason: 'Post-viral recovery evaluation',
-    vitals: { bp: '110/70', hr: '68 bpm', temp: '98.2°F' }
-  },
-  {
-    id: 'APT-105',
-    time: '12:30 PM',
-    patientName: 'Srinivas Rao',
-    age: 61,
-    gender: 'Male',
-    type: 'General Checkup',
-    status: 'Scheduled',
-    phone: '+91 94401 23456',
-    reason: 'Joint pain & hypertension follow-up',
-    vitals: { bp: '142/90', hr: '82 bpm', temp: '98.6°F' }
-  },
-  {
-    id: 'APT-106',
-    time: '02:00 PM',
-    patientName: 'Kavita Reddy',
-    age: 38,
-    gender: 'Female',
-    type: 'OP Consultation',
-    status: 'Scheduled',
-    phone: '+91 93902 34567',
-    reason: 'Mild abdominal discomfort',
-    vitals: { bp: '122/78', hr: '76 bpm', temp: '98.5°F' }
-  },
-  {
-    id: 'APT-107',
-    time: '02:45 PM',
-    patientName: 'Anand Verma',
-    age: 49,
-    gender: 'Male',
-    type: 'General Checkup',
-    status: 'Scheduled',
-    phone: '+91 91003 45678',
-    reason: 'Annual executive health checkup',
-    vitals: { bp: '126/82', hr: '70 bpm', temp: '98.6°F' }
-  },
-  {
-    id: 'APT-108',
-    time: '03:30 PM',
-    patientName: 'Deepak Joshi',
-    age: 56,
-    gender: 'Male',
-    type: 'Emergency Assessment',
-    status: 'Scheduled',
-    phone: '+91 98490 12345',
-    reason: 'Chest tightness history follow-up',
-    vitals: { bp: '138/86', hr: '84 bpm', temp: '98.7°F' }
-  },
-  {
-    id: 'APT-109',
-    time: '04:15 PM',
-    patientName: 'Meena Kumari',
-    age: 41,
-    gender: 'Female',
-    type: 'Lab Report Review',
-    status: 'Scheduled',
-    phone: '+91 97001 98765',
-    reason: 'Thyroid T3/T4/TSH lab report review',
-    vitals: { bp: '116/74', hr: '72 bpm', temp: '98.4°F' }
-  },
-  {
-    id: 'APT-110',
-    time: '05:00 PM',
-    patientName: 'Rohan Gupta',
-    age: 22,
-    gender: 'Male',
-    type: 'OP Consultation',
-    status: 'Scheduled',
-    phone: '+91 96543 21098',
-    reason: 'Acute seasonal allergic rhinitis',
-    vitals: { bp: '114/72', hr: '78 bpm', temp: '99.1°F' }
-  },
-  {
-    id: 'APT-111',
-    time: '05:30 PM',
-    patientName: 'Pooja Malhotra',
-    age: 33,
-    gender: 'Female',
-    type: 'General Checkup',
-    status: 'Scheduled',
-    phone: '+91 95432 10987',
-    reason: 'Preventive health screening',
-    vitals: { bp: '120/78', hr: '74 bpm', temp: '98.6°F' }
-  },
-  {
-    id: 'APT-112',
-    time: '06:15 PM',
-    patientName: 'Vikram Singh',
-    age: 47,
-    gender: 'Male',
-    type: 'Follow-up Visit',
-    status: 'Scheduled',
-    phone: '+91 94321 09876',
-    reason: 'Post-medication response evaluation',
-    vitals: { bp: '128/84', hr: '76 bpm', temp: '98.5°F' }
-  }
-];
+// Baseline Doctor Appointments (Default clinical queue is empty for production)
+const BASELINE_DOCTOR_APPOINTMENTS = [];
 
 // Helper to format an OP token into the Doctor appointment structure
 const formatTokenToDoctorAppointment = (token, currentUser = null) => {
@@ -214,14 +69,16 @@ const getInitialDoctorAppointments = (appContextAppointments = []) => {
     const raw = localStorage.getItem('cn_doctor_booked_ops');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) loadedBookedOps = parsed;
+      if (Array.isArray(parsed)) {
+        loadedBookedOps = parsed.filter(o => o && o.id !== 'op-101' && o.id !== 'op-102' && !String(o.id).startsWith('APT-'));
+      }
     }
   } catch {}
 
   if (Array.isArray(appContextAppointments)) {
     appContextAppointments.forEach(item => {
       if (item && item.id && item.tokenNumber && !loadedBookedOps.some(o => o.id === item.id)) {
-        if (item.patientName || (item.id !== 'op-101' && item.id !== 'op-102')) {
+        if (item.id !== 'op-101' && item.id !== 'op-102' && !String(item.id).startsWith('APT-')) {
           loadedBookedOps.push(item);
         }
       }
@@ -229,25 +86,17 @@ const getInitialDoctorAppointments = (appContextAppointments = []) => {
   }
 
   const formatted = loadedBookedOps.map(token => formatTokenToDoctorAppointment(token));
-  const existingIds = new Set(formatted.map(f => f.id));
-  const remainingBaseline = BASELINE_DOCTOR_APPOINTMENTS.filter(b => !existingIds.has(b.id));
-
-  // Newly booked tokens prepend at index 0 (first line)
-  return [...formatted, ...remainingBaseline];
+  return formatted;
 };
 
-const DEFAULT_DOCTOR_NOTIFS = [
-  { id: 1, title: 'Critical Alert', text: '1 Emergency patient (Ramesh Gupta) requires immediate attention in Bay 02.', time: '2m ago', urgent: true, important: true },
-  { id: 2, title: 'Lab Results Ready', text: 'CBC & Lipid profile for Patient Amit Patel has been uploaded to EHR.', time: '15m ago', urgent: false, important: false },
-  { id: 3, title: 'Shift Handover Sync', text: 'Dr. Raghavendra shift logged for ABC Hospital General Medicine OPD.', time: '1h ago', urgent: false, important: false }
-];
+const DEFAULT_DOCTOR_NOTIFS = [];
 
 const getInitialDoctorNotifs = () => {
   try {
     const raw = localStorage.getItem('cn_doctor_notifications');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {}
   return DEFAULT_DOCTOR_NOTIFS;
@@ -480,20 +329,8 @@ export const DoctorDashboardView = () => {
   const [consultCompletedAlert, setConsultCompletedAlert] = useState(null);
   const [isEmergencyAccepted, setIsEmergencyAccepted] = useState(false);
 
-  // Emergency Alert Data
-  const [emergencyAlert] = useState({
-    id: 'EMG-9021',
-    count: 1,
-    patientName: 'Ramesh Gupta',
-    age: 58,
-    gender: 'Male',
-    condition: 'Acute Chest Tightness & Low SpO2 (88%)',
-    location: 'Emergency ER Desk / Bay 02',
-    vitals: { bp: '160/105 mmHg', hr: '118 bpm', spo2: '88%', temp: '98.6°F' },
-    ambulanceEta: '4 Mins',
-    status: 'CRITICAL',
-    time: '2 Mins ago'
-  });
+  // Emergency Alert Data (null when no critical ER emergency)
+  const [emergencyAlert, setEmergencyAlert] = useState(null);
 
   // Appointments List (Initialized with booked tokens prepended on line 1)
   const [appointmentsList, setAppointmentsList] = useState(() => getInitialDoctorAppointments(appointments));
@@ -504,23 +341,35 @@ export const DoctorDashboardView = () => {
   // Live incoming booking toast alert
   const [liveBookingAlert, setLiveBookingAlert] = useState(null);
 
+  // Total Patients List (Dynamically derived from real-time appointments)
+  const totalPatientsList = useMemo(() => {
+    const map = new Map();
+    appointmentsList.forEach((apt, idx) => {
+      const name = apt.patientName || 'Patient';
+      if (!map.has(name)) {
+        map.set(name, {
+          id: `P-${String(idx + 1).padStart(2, '0')}`,
+          name,
+          age: apt.age || 35,
+          gender: apt.gender || 'Not specified',
+          bloodGroup: apt.bloodGroup || 'O+',
+          visits: 1,
+          lastVisit: 'Today',
+          condition: apt.reason || apt.type || 'General Consultation'
+        });
+      } else {
+        const p = map.get(name);
+        p.visits += 1;
+      }
+    });
+    return Array.from(map.values());
+  }, [appointmentsList]);
+
   // Stats Data dynamically derived from real-time appointments
   const stats = {
     todayAppointments: appointmentsList.length,
-    totalPatients: 8
+    totalPatients: totalPatientsList.length
   };
-
-  // Total Patients List (8 Registered Assigned Patients)
-  const totalPatientsList = [
-    { id: 'P-01', name: 'Rajesh Sharma', age: 45, gender: 'Male', bloodGroup: 'O+', visits: 4, lastVisit: 'Today', condition: 'Hypertension' },
-    { id: 'P-02', name: 'Sunita Devi', age: 52, gender: 'Female', bloodGroup: 'B+', visits: 8, lastVisit: 'Today', condition: 'Type 2 Diabetes' },
-    { id: 'P-03', name: 'Ramesh Gupta', age: 58, gender: 'Male', bloodGroup: 'A+', visits: 12, lastVisit: 'Today (Emergency)', condition: 'Coronary Care' },
-    { id: 'P-04', name: 'Amit Patel', age: 34, gender: 'Male', bloodGroup: 'AB+', visits: 3, lastVisit: 'Today', condition: 'Hyperlipidemia' },
-    { id: 'P-05', name: 'Priya Verma', age: 29, gender: 'Female', bloodGroup: 'O-', visits: 2, lastVisit: 'Today', condition: 'Seasonal Asthmatic' },
-    { id: 'P-06', name: 'Srinivas Rao', age: 61, gender: 'Male', bloodGroup: 'B+', visits: 6, lastVisit: 'Today', condition: 'Osteoarthritis' },
-    { id: 'P-07', name: 'Kavita Reddy', age: 38, gender: 'Female', bloodGroup: 'A-', visits: 5, lastVisit: 'Today', condition: 'Mild Gastritis' },
-    { id: 'P-08', name: 'Deepak Joshi', age: 56, gender: 'Male', bloodGroup: 'O+', visits: 9, lastVisit: 'Today', condition: 'Hypertension & Angina' }
-  ];
 
   // Handler for live incoming OP token
   const handleIncomingOPToken = useCallback((token) => {
@@ -718,7 +567,7 @@ export const DoctorDashboardView = () => {
   const handleAcceptEmergency = () => {
     setIsEmergencyAccepted(true);
     setShowEmergencyModal(false);
-    setConsultCompletedAlert(`✓ Emergency Accepted! Dr. Raghavendra assigned to Patient ${emergencyAlert.patientName} at ${emergencyAlert.location}.`);
+    setConsultCompletedAlert(`✓ Emergency Accepted! Dr. Raghavendra assigned to Patient ${emergencyAlert?.patientName || 'Emergency Patient'} at ${emergencyAlert?.location || 'ER Desk'}.`);
     setTimeout(() => setConsultCompletedAlert(null), 5000);
   };
 
@@ -1123,37 +972,45 @@ export const DoctorDashboardView = () => {
                   <p>Registered Patients under General Physician Desk</p>
                 </div>
 
-                <div className="patients-grid">
-                  {totalPatientsList.map((p) => (
-                    <div key={p.id} className="patient-tile-card hover-lift fade-in" onClick={() => setSelectedPatient(p)}>
-                      <div className="tile-top">
-                        <div className="p-avatar">
-                          <User size={20} color="#1e3a8a" />
+                {totalPatientsList.length > 0 ? (
+                  <div className="patients-grid">
+                    {totalPatientsList.map((p) => (
+                      <div key={p.id} className="patient-tile-card hover-lift fade-in" onClick={() => setSelectedPatient(p)}>
+                        <div className="tile-top">
+                          <div className="p-avatar">
+                            <User size={20} color="#1e3a8a" />
+                          </div>
+                          <div>
+                            <h4 className="p-tile-name">{p.name}</h4>
+                            <span className="p-tile-sub">{p.gender}, {p.age} yrs • Blood: <strong>{p.bloodGroup}</strong></span>
+                          </div>
+                          <span className="id-badge">{p.id}</span>
                         </div>
-                        <div>
-                          <h4 className="p-tile-name">{p.name}</h4>
-                          <span className="p-tile-sub">{p.gender}, {p.age} yrs • Blood: <strong>{p.bloodGroup}</strong></span>
-                        </div>
-                        <span className="id-badge">{p.id}</span>
-                      </div>
 
-                      <div className="tile-body">
-                        <div className="tile-metric">
-                          <span className="lbl">Active Condition</span>
-                          <span className="val">{p.condition}</span>
+                        <div className="tile-body">
+                          <div className="tile-metric">
+                            <span className="lbl">Active Condition</span>
+                            <span className="val">{p.condition}</span>
+                          </div>
+                          <div className="tile-metric">
+                            <span className="lbl">Total Visits</span>
+                            <span className="val">{p.visits} Visits</span>
+                          </div>
                         </div>
-                        <div className="tile-metric">
-                          <span className="lbl">Total Visits</span>
-                          <span className="val">{p.visits} Visits</span>
-                        </div>
-                      </div>
 
-                      <div className="tile-footer">
-                        <button className="btn-tile-view">View EHR Records</button>
+                        <div className="tile-footer">
+                          <button className="btn-tile-view">View EHR Records</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px' }}>
+                    <User size={36} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontWeight: 600, color: '#475569' }}>No patients assigned yet</p>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Patients will appear here automatically as OP consultations are booked.</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1165,28 +1022,36 @@ export const DoctorDashboardView = () => {
                   <p>ABC Hospital • General Medicine OPD Block A (09:00 AM - 05:00 PM)</p>
                 </div>
 
-                <div className="schedule-timeline">
-                  {appointmentsList.map((apt, idx) => (
-                    <div key={apt.id} className="timeline-item fade-in">
-                      <div className="time-col">
-                        <span className="time-text">{apt.time}</span>
-                        <div className="timeline-line" />
-                      </div>
-
-                      <div className="timeline-card hover-lift">
-                        <div className="t-card-header">
-                          <span className="t-token">Slot #{idx + 1}</span>
-                          <span className={`t-status ${apt.status === 'Completed' ? 'status-done' : 'status-pending'}`}>
-                            {apt.status}
-                          </span>
+                {appointmentsList.length > 0 ? (
+                  <div className="schedule-timeline">
+                    {appointmentsList.map((apt, idx) => (
+                      <div key={apt.id} className="timeline-item fade-in">
+                        <div className="time-col">
+                          <span className="time-text">{apt.time}</span>
+                          <div className="timeline-line" />
                         </div>
-                        <h4 className="t-patient">{apt.patientName}</h4>
-                        <p className="t-reason">Reason: {apt.reason}</p>
-                        <p className="t-vitals">Vitals: BP {apt.vitals.bp} | Temp {apt.vitals.temp}</p>
+
+                        <div className="timeline-card hover-lift">
+                          <div className="t-card-header">
+                            <span className="t-token">Slot #{idx + 1}</span>
+                            <span className={`t-status ${apt.status === 'Completed' ? 'status-done' : 'status-pending'}`}>
+                              {apt.status}
+                            </span>
+                          </div>
+                          <h4 className="t-patient">{apt.patientName}</h4>
+                          <p className="t-reason">Reason: {apt.reason}</p>
+                          <p className="t-vitals">Vitals: BP {apt.vitals?.bp || '120/80'} | Temp {apt.vitals?.temp || '98.6°F'}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px' }}>
+                    <Clock size={36} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontWeight: 600, color: '#475569' }}>No schedule slots for today</p>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Incoming OP bookings will populate the schedule timeline automatically.</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1199,37 +1064,10 @@ export const DoctorDashboardView = () => {
                 </div>
 
                 <div className="records-list">
-                  <div className="record-card hover-lift fade-in">
-                    <div className="rec-icon">
-                      <FileText size={24} color="#1e3a8a" />
-                    </div>
-                    <div className="rec-details">
-                      <h4>Digital Prescription #RX-8842</h4>
-                      <p>Issued to: <strong>Rajesh Sharma</strong> • Diagnosis: Acute Upper Respiratory Infection</p>
-                      <span className="rec-date">Today, 09:45 AM</span>
-                    </div>
-                  </div>
-
-                  <div className="record-card hover-lift fade-in stagger-1">
-                    <div className="rec-icon">
-                      <FileSpreadsheet size={24} color="#16a34a" />
-                    </div>
-                    <div className="rec-details">
-                      <h4>Lab Diagnostic Report #LAB-1029</h4>
-                      <p>Patient: <strong>Amit Patel</strong> • Complete Blood Count & Lipid Profile</p>
-                      <span className="rec-date">Today, 08:30 AM</span>
-                    </div>
-                  </div>
-
-                  <div className="record-card hover-lift fade-in stagger-2">
-                    <div className="rec-icon">
-                      <ShieldAlert size={24} color="#dc2626" />
-                    </div>
-                    <div className="rec-details">
-                      <h4>Emergency Triage Assessment Log</h4>
-                      <p>Patient: <strong>Ramesh Gupta</strong> • Suspected Acute Coronary Syndrome</p>
-                      <span className="rec-date">Today, 10:20 AM</span>
-                    </div>
+                  <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px' }}>
+                    <FileText size={36} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontWeight: 600, color: '#475569' }}>No EHR records archived today</p>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Issued digital prescriptions and lab investigation reports will appear here.</span>
                   </div>
                 </div>
               </div>
@@ -1737,7 +1575,7 @@ export const DoctorDashboardView = () => {
       )}
 
       {/* 2. EMERGENCY ALERT DETAILS MODAL */}
-      {showEmergencyModal && (
+      {showEmergencyModal && emergencyAlert && (
         <div className="modal-overlay alert-overlay" onClick={() => setShowEmergencyModal(false)}>
           <div className="modal-content alert-modal-content fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="alert-modal-header">

@@ -75,121 +75,17 @@ export const ResponderHomeView = () => {
     );
   };
 
-  // New Incoming Emergency Request State
-  const [incomingRequest, setIncomingRequest] = useState({
-    id: 'EMG-2026-9481',
-    type: 'Severe Cardiac Arrest & Respiratory Distress',
-    severity: 'CODE RED • IMMEDIATE CRITICAL',
-    distance: '1.8 km',
-    eta: '3 mins',
-    callerName: 'Rajesh M. (Bystander)',
-    callerPhone: '+91 98765 11223',
-    patientName: 'K. Somasekhar',
-    patientAge: '58',
-    patientGender: 'MALE',
-    patientBlood: 'B+',
-    address: 'Near Clock Tower Junction, Main Bazaar, Narasaraopet, AP',
-    symptoms: 'Sudden collapse, severe chest clutching, unresponsive, breathing labored.',
-    instructions: 'Bystander initiating chest compressions. Dispatch ALS defibrillator unit immediately.',
-    timestamp: 'Just now (1 min ago)'
-  });
+  // New Incoming Emergency Request State (null by default for production)
+  const [incomingRequest, setIncomingRequest] = useState(null);
 
-  // Current Active Emergency State
-  const [currentEmergency, setCurrentEmergency] = useState({
-    id: 'EMG-2026-042',
-    type: 'Severe Road Traffic Accident & Multiple Trauma',
-    severity: 'HIGH PRIORITY • IMMEDIATE DISPATCH',
-    status: 'ACTIVE', // 'ACTIVE', 'ARRIVED', 'TRANSPORTING', 'COMPLETED'
-    distanceKm: 2.4,
-    etaMinutes: 4,
-    ambulanceProgress: 52,
-    patientName: 'Alex Rivera',
-    patientAge: '28',
-    patientGender: 'MALE',
-    patientBlood: 'O+',
-    patientPhone: '+91 98765 43210',
-    pickupAddress: 'House 14, Collectorate Road, Near RTC Bus Terminal, Narasaraopet, Palnadu Dist, AP - 522601',
-    coordinates: { lat: 16.151944, lng: 80.049444 },
-    allergies: 'Penicillin, Dust',
-    precautions: 'Patient has mild gastritis history. Avoid NSAID analgesics. Maintain oxygen saturation above 95%.',
-    targetHospital: 'Government General Hospital (GGH), Guntur - Trauma ICU',
-    handoverDoctor: 'Dr. K. Srinivas Rao, MD (Cardiology/Trauma)',
-    reportedTime: '10:14 AM'
-  });
+  // Current Active Emergency State (null when unit is on standby)
+  const [currentEmergency, setCurrentEmergency] = useState(null);
 
   // Today's Emergency Calls List
-  const [emergencyCalls, setEmergencyCalls] = useState([
-    {
-      id: 'EMG-2026-042',
-      type: 'Severe Road Traffic Accident & Multiple Trauma',
-      distance: '2.4 km',
-      status: 'Active',
-      time: '10:14 AM',
-      patientName: 'Alex Rivera',
-      hospital: 'GGH Guntur Trauma ER'
-    },
-    {
-      id: 'EMG-2026-039',
-      type: 'Motorcycle Collision with Head Injury',
-      distance: '3.2 km',
-      status: 'En Route',
-      time: '09:30 AM',
-      patientName: 'S. Venkat Rao',
-      hospital: 'Area Hospital Narasaraopet'
-    },
-    {
-      id: 'EMG-2026-035',
-      type: 'Acute Respiratory Distress & Asthma Attack',
-      distance: '2.1 km',
-      status: 'Arrived',
-      time: '08:45 AM',
-      patientName: 'M. Lakshmi Devi',
-      hospital: 'GGH Guntur Pulmonary ER'
-    },
-    {
-      id: 'EMG-2026-028',
-      type: 'Senior Citizen Fall Injury & Hip Fracture',
-      distance: '4.5 km',
-      status: 'Completed',
-      time: '07:15 AM',
-      patientName: 'B. Appa Rao (72 yrs)',
-      hospital: 'Area Hospital Narasaraopet'
-    },
-    {
-      id: 'EMG-2026-021',
-      type: 'Pediatric High Febrile Seizure',
-      distance: '1.5 km',
-      status: 'Completed',
-      time: '06:10 AM',
-      patientName: 'Baby Ananya (3 yrs)',
-      hospital: 'GGH Guntur Pediatric ER'
-    }
-  ]);
+  const [emergencyCalls, setEmergencyCalls] = useState([]);
 
   // Notifications List
-  const [notifications] = useState([
-    {
-      id: 'notif-1',
-      title: '🚨 High Priority Dispatch Assigned',
-      desc: 'Severe Cardiac Emergency reported at Main Bazaar. Request ID: EMG-2026-9481.',
-      time: '1m ago',
-      urgent: true
-    },
-    {
-      id: 'notif-2',
-      title: '🏥 GGH Guntur Trauma ER Standby',
-      desc: 'Trauma ICU Bed #03 reserved with Dr. Srinivas Rao ready for arrival.',
-      time: '12m ago',
-      urgent: false
-    },
-    {
-      id: 'notif-3',
-      title: '🚦 Traffic Alert: Express Highway',
-      desc: 'Sector 4 flyover experiencing light congestion. Alternate via Ring Road.',
-      time: '35m ago',
-      urgent: false
-    }
-  ]);
+  const [notifications] = useState([]);
 
   // Subscribe to real-time Cloud Firestore emergency dispatches
   useEffect(() => {
@@ -745,6 +641,14 @@ export const ResponderHomeView = () => {
               </section>
             )}
 
+            {!currentEmergency && (
+              <section className="current-emergency-card" style={{ textAlign: 'center', padding: '36px 20px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                <CheckCircle2 size={36} color="#10b981" style={{ marginBottom: '8px' }} />
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#1e293b' }}>Fleet Unit On Standby</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>No active emergency dispatches right now. Ambulance unit is primed for 108 emergency calls.</p>
+              </section>
+            )}
+
             {/* 6. Today's Emergency Calls Section */}
             <section className="todays-calls-section">
               <div className="section-header-bar">
@@ -762,42 +666,49 @@ export const ResponderHomeView = () => {
               </div>
 
               <div className="calls-list-container">
-                {emergencyCalls.slice(0, 4).map((call) => {
-                  const badge = getStatusBadge(call.status);
-                  return (
-                    <div 
-                      key={call.id} 
-                      className="call-item-card"
-                      onClick={() => setViewDetailsModal(call)}
-                    >
-                      <div className="call-item-left">
-                        <div className="call-badge-indicator" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
-                          <Ambulance size={16} />
-                        </div>
-                        <div className="call-info">
-                          <div className="call-id-row">
-                            <span className="call-id font-mono">{call.id}</span>
-                            <span className="call-time">{call.time}</span>
+                {emergencyCalls.length > 0 ? (
+                  emergencyCalls.slice(0, 4).map((call) => {
+                    const badge = getStatusBadge(call.status);
+                    return (
+                      <div 
+                        key={call.id} 
+                        className="call-item-card"
+                        onClick={() => setViewDetailsModal(call)}
+                      >
+                        <div className="call-item-left">
+                          <div className="call-badge-indicator" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
+                            <Ambulance size={16} />
                           </div>
-                          <h4 className="call-type">{call.type}</h4>
-                          <p className="call-patient-sub">
-                            Patient: <strong>{call.patientName}</strong> • Target: {call.hospital}
-                          </p>
+                          <div className="call-info">
+                            <div className="call-id-row">
+                              <span className="call-id font-mono">{call.id}</span>
+                              <span className="call-time">{call.time}</span>
+                            </div>
+                            <h4 className="call-type">{call.type}</h4>
+                            <p className="call-patient-sub">
+                              Patient: <strong>{call.patientName}</strong> • Target: {call.hospital}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="call-item-right">
+                          <span 
+                            className="call-status-pill" 
+                            style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
+                          >
+                            {call.status}
+                          </span>
+                          <span className="call-distance">{call.distance}</span>
                         </div>
                       </div>
-
-                      <div className="call-item-right">
-                        <span 
-                          className="call-status-pill" 
-                          style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
-                        >
-                          {call.status}
-                        </span>
-                        <span className="call-distance">{call.distance}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '28px 16px', color: '#64748b', background: '#f8fafc', borderRadius: '12px' }}>
+                    <p style={{ margin: 0, fontWeight: 600, color: '#475569' }}>No dispatch logs today</p>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>Emergency response assignments will be logged here.</span>
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -1127,17 +1038,25 @@ export const ResponderHomeView = () => {
             </div>
 
             <div className="notifications-list">
-              {notifications.map(n => (
-                <div key={n.id} className={`notif-item ${n.urgent ? 'notif-urgent' : ''}`}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '0.9rem', color: n.urgent ? '#dc2626' : '#0f172a' }}>
-                      {n.title}
-                    </strong>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{n.time}</span>
+              {notifications.length > 0 ? (
+                notifications.map(n => (
+                  <div key={n.id} className={`notif-item ${n.urgent ? 'notif-urgent' : ''}`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <strong style={{ fontSize: '0.9rem', color: n.urgent ? '#dc2626' : '#0f172a' }}>
+                        {n.title}
+                      </strong>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{n.time}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569' }}>{n.desc}</p>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569' }}>{n.desc}</p>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
+                  <CheckCircle2 size={32} color="#10b981" style={{ marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 2px 0', fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>All Caught Up!</p>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>No pending emergency dispatch notifications.</span>
                 </div>
-              ))}
+              )}
             </div>
 
             <button 
