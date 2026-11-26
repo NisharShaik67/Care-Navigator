@@ -1230,7 +1230,290 @@ html, body, #root {
 }
 
 /* --------------------------------------------------------------------------
-   5. UNIVERSAL ACCESSIBILITY & PERFORMANCE
+   5. UNIVERSAL AUTO-RESPONSIVE MASTER ENGINE (Mobile <-> Desktop Seamless Auto-Adapt)
+   Automatically detects device type and switches all 14 screens cleanly between
+   native Mobile view and expansive Desktop view with zero horizontal overflow.
+   -------------------------------------------------------------------------- */
+
+/* Universal Mobile View Rules: Media Query */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll anywhere on mobile */
+  html, body, #root, .care-navigator-app, .care-main-viewport, .care-standalone-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Main viewport safe padding for mobile bottom navigation */
+  .care-main-viewport {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Universal Screen Containers on Mobile */
+  .care-dashboard-container,
+  .profile-view-container,
+  .symptom-checker-container,
+  .emergency-view-container,
+  .hospitals-view-container,
+  .booking-view-container,
+  .op-booking-view-container,
+  .records-view-container,
+  .medical-history-container,
+  .appointments-view-container,
+  .doctor-dashboard-container,
+  .receptionist-dashboard-container,
+  .receptionist-page-root,
+  .reception-main-content,
+  .responder-dashboard-root,
+  .responder-main-viewport,
+  .admin-page-container,
+  .admin-viewport,
+  .landing-page-container,
+  .onboarding-container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    padding-left: clamp(10px, 3.2vw, 16px) !important;
+    padding-right: clamp(10px, 3.2vw, 16px) !important;
+    padding-top: 12px !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 12px !important;
+  }
+
+  /* Full-bleed Standalone views (Landing, Onboarding, Admin) */
+  .landing-page-container,
+  .onboarding-container,
+  .care-standalone-wrapper {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Header Optimization on Mobile */
+  .app-header {
+    height: 62px !important;
+    min-height: 62px !important;
+    padding-left: clamp(10px, 3vw, 16px) !important;
+    padding-right: clamp(10px, 3vw, 16px) !important;
+    gap: 10px !important;
+  }
+
+  .header-title-container {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .header-title {
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+  }
+
+  .header-subtitle {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .header-back-label {
+    display: none !important;
+  }
+
+  .header-back-btn {
+    padding: 6px 8px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Bottom Navigation Touch Bar */
+  .app-navigation {
+    min-height: 64px !important;
+    padding-top: 5px !important;
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: max(8px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(8px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .nav-tab {
+    padding: 4px 6px !important;
+    gap: 2px !important;
+  }
+
+  .tab-label {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  /* Fluid Card Padding */
+  .glass-card,
+  .glass-panel,
+  .auth-card,
+  .hero-banner,
+  .sos-status-card,
+  .hospital-card,
+  .doc-card,
+  .token-card,
+  .record-card,
+  .dash-token-card,
+  .vault-header-card {
+    padding: clamp(12px, 3.5vw, 18px) !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Universal Grid Collapse to 1 Column or 2 Column Responsive on Mobile */
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .hospitals-grid,
+  .doctor-cards-grid,
+  .records-grid,
+  .form-grid,
+  .form-grid-2col,
+  .reception-grid-2col,
+  .driver-vehicle-section-grid,
+  .overview-split-grid,
+  .triage-info-grid,
+  .stats-section {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Mobile Modals: Native Bottom Sheet / Compact Centered Card */
+  .modal-overlay,
+  .modal-backdrop {
+    padding: 12px !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+  }
+
+  .modal-content,
+  .modal-card-dialog,
+  .firstaid-modal-content,
+  .cancel-confirm-card,
+  .qr-pass-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 88vh !important;
+    max-height: 88dvh !important;
+    border-radius: 20px 20px 16px 16px !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Touch-Friendly Interactive Form Inputs */
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents auto-zoom in mobile Safari and Chrome */
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Confident Mobile Touch Buttons */
+  button {
+    touch-action: manipulation;
+  }
+
+  /* Hospital Dropdown on Mobile */
+  .hosp-dropdown-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Also apply to body.device-mobile and .is-mobile-view when detected programmatically */
+body.device-mobile .care-main-viewport,
+.is-mobile-view .care-main-viewport {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+body.device-mobile .services-grid,
+.is-mobile-view .services-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+}
+
+/* Universal Desktop View Rules (Applied automatically when >= 769px or [data-device="desktop"]) */
+@media (min-width: 769px) {
+  .care-dashboard-container,
+  .profile-view-container,
+  .symptom-checker-container,
+  .emergency-view-container,
+  .hospitals-view-container,
+  .op-booking-view-container,
+  .records-view-container,
+  .medical-history-container,
+  .appointments-view-container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 24px 32px 48px !important;
+  }
+
+  .doctor-dashboard-container,
+  .receptionist-dashboard-container,
+  .admin-page-container,
+  .responder-dashboard-root {
+    max-width: 1540px !important;
+    margin: 0 auto !important;
+    padding: 24px 32px 48px !important;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .hospitals-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+    gap: 18px !important;
+  }
+
+  .doctor-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+    gap: 18px !important;
+  }
+
+  .records-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
+    gap: 18px !important;
+  }
+
+  .app-header {
+    max-width: 100% !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+    height: 72px !important;
+  }
+
+  .modal-content,
+  .modal-card-dialog,
+  .firstaid-modal-content,
+  .qr-pass-modal {
+    border-radius: 24px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. UNIVERSAL ACCESSIBILITY & PERFORMANCE
    Reduced motion support and smooth scrolling
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {

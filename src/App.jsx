@@ -20,7 +20,7 @@ import { ResponderHomeView } from './views/ResponderHomeView';
 import { AdminDashboardView } from './views/AdminDashboardView';
 
 const MainContent = () => {
-  const { currentScreen, user } = useApp();
+  const { currentScreen, user, isMobile, isDesktop, deviceType } = useApp();
 
   const renderView = () => {
     switch (currentScreen) {
@@ -68,10 +68,16 @@ const MainContent = () => {
     }
   };
 
+  const wrapStandaloneView = (viewComponent) => (
+    <div className={`care-standalone-wrapper ${isMobile ? 'is-mobile-view' : 'is-desktop-view'}`} data-device={deviceType} data-screen={currentScreen}>
+      {viewComponent}
+    </div>
+  );
+
   if (currentScreen === 'landing') {
     return (
       <ErrorBoundary>
-        <LandingView />
+        {wrapStandaloneView(<LandingView />)}
       </ErrorBoundary>
     );
   }
@@ -79,7 +85,7 @@ const MainContent = () => {
   if (currentScreen === 'onboarding') {
     return (
       <ErrorBoundary>
-        <OnboardingView />
+        {wrapStandaloneView(<OnboardingView />)}
       </ErrorBoundary>
     );
   }
@@ -92,7 +98,7 @@ const MainContent = () => {
   if (isAdminScreen) {
     return (
       <ErrorBoundary>
-        <AdminDashboardView />
+        {wrapStandaloneView(<AdminDashboardView />)}
       </ErrorBoundary>
     );
   }
@@ -104,7 +110,7 @@ const MainContent = () => {
   if (currentScreen === 'receptionist' || currentScreen === 'receptionist-dashboard' || (isReceptionistRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
-        <ReceptionistView />
+        {wrapStandaloneView(<ReceptionistView />)}
       </ErrorBoundary>
     );
   }
@@ -112,7 +118,7 @@ const MainContent = () => {
   if (currentScreen === 'doctor-dashboard' || (isDoctorRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
-        <DoctorDashboardView />
+        {wrapStandaloneView(<DoctorDashboardView />)}
       </ErrorBoundary>
     );
   }
@@ -120,14 +126,18 @@ const MainContent = () => {
   if (currentScreen === 'responder' || currentScreen === 'responder-dashboard' || (isResponderRole && (currentScreen === 'dashboard' || !currentScreen))) {
     return (
       <ErrorBoundary>
-        <ResponderHomeView />
+        {wrapStandaloneView(<ResponderHomeView />)}
       </ErrorBoundary>
     );
   }
 
   return (
     <ErrorBoundary>
-      <div className="care-navigator-app">
+      <div 
+        className={`care-navigator-app ${isMobile ? 'is-mobile-view' : 'is-desktop-view'}`}
+        data-device={deviceType}
+        data-screen={currentScreen}
+      >
         <Header />
         <main className="care-main-viewport">
           <ErrorBoundary>
@@ -137,6 +147,16 @@ const MainContent = () => {
         <Navigation />
 
       <style>{`
+        .care-standalone-wrapper {
+          width: 100%;
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          overflow-x: hidden;
+          background: #ffffff;
+        }
+
         .care-navigator-app {
           width: 100%;
           height: 100vh;

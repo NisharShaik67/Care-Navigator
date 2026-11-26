@@ -1337,6 +1337,76 @@ export const AppProvider = ({ children }) => {
     };
   }, [isLoggedIn, user?.accountId]);
 
+  // Real-time Background Device & Viewport Detection Engine
+  const [deviceInfo, setDeviceInfo] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { isMobile: false, isTablet: false, isDesktop: true, deviceType: 'desktop', screenWidth: 1200, screenHeight: 800, orientation: 'landscape' };
+    }
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+    const isMob = width <= 768 || (isMobileUA && width <= 1024) || (isTouch && width <= 820);
+    const isTab = width > 768 && width <= 1024 && !isMob;
+    const isDesk = !isMob && !isTab;
+    const devType = isMob ? 'mobile' : (isTab ? 'tablet' : 'desktop');
+
+    return {
+      isMobile: isMob,
+      isTablet: isTab,
+      isDesktop: isDesk,
+      deviceType: devType,
+      screenWidth: width,
+      screenHeight: height,
+      orientation: width < height ? 'portrait' : 'landscape'
+    };
+  });
+
+  useEffect(() => {
+    const evaluateDevice = () => {
+      if (typeof window === 'undefined') return;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+      const isMob = width <= 768 || (isMobileUA && width <= 1024) || (isTouch && width <= 820);
+      const isTab = width > 768 && width <= 1024 && !isMob;
+      const isDesk = !isMob && !isTab;
+      const devType = isMob ? 'mobile' : (isTab ? 'tablet' : 'desktop');
+      const orientation = width < height ? 'portrait' : 'landscape';
+
+      setDeviceInfo({
+        isMobile: isMob,
+        isTablet: isTab,
+        isDesktop: isDesk,
+        deviceType: devType,
+        screenWidth: width,
+        screenHeight: height,
+        orientation
+      });
+
+      // Synchronize DOM root and body instantly
+      try {
+        document.documentElement.setAttribute('data-device', devType);
+        document.documentElement.setAttribute('data-orientation', orientation);
+        document.documentElement.classList.toggle('is-mobile-device', isMob);
+        document.documentElement.classList.toggle('is-desktop-device', isDesk);
+        document.body.classList.toggle('device-mobile', isMob);
+        document.body.classList.toggle('device-desktop', isDesk);
+        document.body.classList.toggle('device-tablet', isTab);
+        document.body.classList.toggle('touch-enabled', isTouch);
+      } catch {}
+    };
+
+    evaluateDevice();
+    window.addEventListener('resize', evaluateDevice, { passive: true });
+    window.addEventListener('orientationchange', evaluateDevice, { passive: true });
+    return () => {
+      window.removeEventListener('resize', evaluateDevice);
+      window.removeEventListener('orientationchange', evaluateDevice);
+    };
+  }, []);
+
   const navigateTo = (screen, resetHistory = false) => {
     // Check authentication reliably from React state OR localStorage
     const isAuth = isLoggedIn || (() => {
@@ -1977,6 +2047,11 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
+        isMobile: deviceInfo.isMobile,
+        isTablet: deviceInfo.isTablet,
+        isDesktop: deviceInfo.isDesktop,
+        deviceType: deviceInfo.deviceType,
+        deviceInfo,
         currentScreen,
         setCurrentScreen: setCurrentScreenState,
         screenHistory,
