@@ -7,29 +7,60 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
   const [isRemoving, setIsRemoving] = useState(false);
   const [isScrollEnabled, setIsScrollEnabled] = useState(false);
   const startXRef = useRef(0);
+  const startYRef = useRef(0);
   const currentXRef = useRef(0);
+  const isHorizontalSwipeRef = useRef(null);
 
   const SWIPE_THRESHOLD = 65; // px distance to trigger swipe action
 
   // Touch Handlers
   const handleTouchStart = (e) => {
-    setIsDragging(true);
     startXRef.current = e.touches[0].clientX;
+    startYRef.current = e.touches[0].clientY;
     currentXRef.current = e.touches[0].clientX;
+    isHorizontalSwipeRef.current = null;
   };
 
   const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    currentXRef.current = e.touches[0].clientX;
-    const diff = currentXRef.current - startXRef.current;
-    // Clamp diff to -130px ... 130px
-    const clampedDiff = Math.max(-130, Math.min(130, diff));
-    setOffsetX(clampedDiff);
+    if (isHorizontalSwipeRef.current === false) return;
+
+    const clientX = e.touches[0].clientX;
+    const clientY = e.touches[0].clientY;
+    const diffX = clientX - startXRef.current;
+    const diffY = clientY - startYRef.current;
+
+    // Detect gesture intention: horizontal swipe vs. natural vertical scroll
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(diffX) > 8 || Math.abs(diffY) > 8) {
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          isHorizontalSwipeRef.current = true;
+          setIsDragging(true);
+        } else {
+          isHorizontalSwipeRef.current = false;
+          return; // Let native vertical scroll proceed smoothly without interference
+        }
+      } else {
+        return;
+      }
+    }
+
+    if (isHorizontalSwipeRef.current) {
+      currentXRef.current = clientX;
+      // Clamp diff to -130px ... 130px
+      const clampedDiff = Math.max(-130, Math.min(130, diffX));
+      setOffsetX(clampedDiff);
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (!isHorizontalSwipeRef.current) {
+      setIsDragging(false);
+      isHorizontalSwipeRef.current = null;
+      return;
+    }
+
     setIsDragging(false);
+    isHorizontalSwipeRef.current = null;
     const diff = currentXRef.current - startXRef.current;
 
     if (diff > SWIPE_THRESHOLD) {
@@ -210,33 +241,33 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
               ? '1.5px solid #f59e0b' 
               : '1px solid #e2e8f0',
           borderRadius: '12px',
-          padding: '12px 14px',
+          padding: '11px 13px',
           boxShadow: notification.important ? '0 4px 12px rgba(245, 158, 11, 0.12)' : '0 2px 6px rgba(0,0,0,0.03)',
           cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'pan-y'
         }}
       >
-        <div className="notif-card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '6px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="notif-card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', flex: '1 1 auto', minWidth: '120px' }}>
             {notification.urgent ? (
-              <span className="badge notif-badge-urgent" style={{ background: '#ef4444', color: '#ffffff', fontSize: '0.72rem', padding: '3px 8px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span className="badge notif-badge-urgent" style={{ background: '#ef4444', color: '#ffffff', fontSize: '0.68rem', padding: '2px 7px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                 <AlertTriangle size={12} /> CRITICAL
               </span>
             ) : notification.important ? (
-              <span className="badge notif-badge-important" style={{ background: '#f59e0b', color: '#ffffff', fontSize: '0.72rem', padding: '3px 8px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span className="badge notif-badge-important" style={{ background: '#f59e0b', color: '#ffffff', fontSize: '0.68rem', padding: '2px 7px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                 <Star size={12} fill="#ffffff" /> IMPORTANT
               </span>
             ) : null}
-            <strong className="notif-title" style={{ fontSize: '0.98rem', color: '#0f172a', fontWeight: '700' }}>{notification.title}</strong>
+            <strong className="notif-title" style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: '700', wordBreak: 'break-word', lineHeight: '1.3' }}>{notification.title}</strong>
             {isScrollEnabled && (
-              <span className="scroll-active-pill" style={{ background: '#e0f2fe', color: '#0284c7', fontSize: '0.68rem', padding: '2px 7px', borderRadius: '12px', fontWeight: '700', border: '1px solid #bae6fd' }}>
+              <span className="scroll-active-pill" style={{ background: '#e0f2fe', color: '#0284c7', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', border: '1px solid #bae6fd' }}>
                 📜 Scroll Mode
               </span>
             )}
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="notif-time" style={{ fontSize: '0.76rem', color: '#64748b', whiteSpace: 'nowrap', fontWeight: '500' }}>{notification.time}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0, marginLeft: 'auto' }}>
+            <span className="notif-time" style={{ fontSize: '0.74rem', color: '#64748b', whiteSpace: 'nowrap', fontWeight: '500' }}>{notification.time}</span>
             
             {/* Scroll Option Button for chosen notification */}
             <button
@@ -249,8 +280,8 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
                 background: isScrollEnabled ? '#0284c7' : '#f1f5f9',
                 border: isScrollEnabled ? '1px solid #0284c7' : '1px solid #cbd5e1',
                 borderRadius: '50%',
-                width: '28px',
-                height: '28px',
+                width: '26px',
+                height: '26px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -261,7 +292,7 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
               }}
               title={isScrollEnabled ? 'Disable Scroll Option for this Notification' : 'Enable Scroll Option for this Notification'}
             >
-              <ChevronsUpDown size={14} />
+              <ChevronsUpDown size={13} />
             </button>
 
             {/* Star Symbol */}
@@ -275,8 +306,8 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
                 background: notification.important ? '#fef3c7' : '#f1f5f9',
                 border: notification.important ? '1px solid #f59e0b' : '1px solid #cbd5e1',
                 borderRadius: '50%',
-                width: '28px',
-                height: '28px',
+                width: '26px',
+                height: '26px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -287,7 +318,7 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
               }}
               title={notification.important ? 'Unmark Important' : 'Mark as Important'}
             >
-              <Star size={14} fill={notification.important ? "#d97706" : "none"} />
+              <Star size={13} fill={notification.important ? "#d97706" : "none"} />
             </button>
 
             {/* Cross Symbol (X) */}
@@ -302,8 +333,8 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
                 background: '#fef2f2',
                 border: '1px solid #fca5a5',
                 borderRadius: '50%',
-                width: '28px',
-                height: '28px',
+                width: '26px',
+                height: '26px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -314,7 +345,7 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
               }}
               title="Delete Notification"
             >
-              <X size={15} />
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -334,7 +365,7 @@ export const NotificationSwipeItem = ({ notification, onDelete, onToggleImportan
             transition: 'all 0.25s ease'
           }}
         >
-          <p className="notif-text" style={{ fontSize: '0.86rem', color: '#334155', margin: 0, lineHeight: '1.5', fontWeight: '400' }}>
+          <p className="notif-text" style={{ fontSize: '0.84rem', color: '#334155', margin: 0, lineHeight: '1.45', fontWeight: '400', wordBreak: 'break-word' }}>
             {notification.text}
           </p>
         </div>

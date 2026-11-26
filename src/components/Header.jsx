@@ -4,9 +4,37 @@ import {
   Bell, 
   CheckCircle2, 
   Trash2,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import { NotificationSwipeItem } from './NotificationSwipeItem';
+
+const DEFAULT_PATIENT_NOTIFS = [
+  {
+    id: 'notif-pat-1',
+    title: 'OP Token Confirmed',
+    text: 'Your OP appointment token #08 with Dr. Duty Medical Officer (Room 04, General OPD) is confirmed and active in live queue.',
+    time: '10m ago',
+    important: true,
+    urgent: false
+  },
+  {
+    id: 'notif-pat-2',
+    title: '108 Emergency Ambulance',
+    text: 'Emergency standby dispatch active for Narasaraopet region. Real-time GPS tracking and live paramedic response ready.',
+    time: '25m ago',
+    important: false,
+    urgent: true
+  },
+  {
+    id: 'notif-pat-3',
+    title: 'ABHA Health Vault Synced',
+    text: 'Your Ayushman Bharat Digital Health ID has been verified. 100% EHR verification active for digital prescriptions & lab reports.',
+    time: '1h ago',
+    important: false,
+    urgent: false
+  }
+];
 
 const TITLE_MAP = {
   'landing': 'Care Navigator Universal Platform',
@@ -33,14 +61,55 @@ export const Header = () => {
     currentScreen, 
     user, 
     navigateTo, 
-    goBack
+    goBack,
+    appointments
   } = useApp();
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   const completionScore = calculateProfileCompletion(user);
   const isComplete = completionScore === 100;
 
-  const [headerNotifications, setHeaderNotifications] = useState([]);
+  const [headerNotifications, setHeaderNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cn_patient_notifications');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_PATIENT_NOTIFS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cn_patient_notifications', JSON.stringify(headerNotifications));
+    } catch {}
+  }, [headerNotifications]);
+
+  // Sync incoming booked appointments into patient notifications if not already added
+  useEffect(() => {
+    if (!Array.isArray(appointments) || appointments.length === 0) return;
+    setHeaderNotifications(prev => {
+      let updated = [...prev];
+      let changed = false;
+      appointments.forEach(apt => {
+        if (!apt || !apt.tokenNumber) return;
+        const notifId = `notif-apt-${apt.id || apt.tokenNumber}`;
+        if (!updated.some(n => n.id === notifId)) {
+          updated.unshift({
+            id: notifId,
+            title: `OP Token #${apt.tokenNumber} Confirmed`,
+            text: `Appointment with ${apt.doctorName || 'Duty Medical Officer'} (${apt.specialty || 'General OPD'}) at ${apt.timeSlot || '10:00 AM'}. UHID: ${apt.uhid || 'Active'}.`,
+            time: 'Just now',
+            important: true,
+            urgent: false
+          });
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [appointments]);
 
   const handleClearAllHeaderNotifs = () => {
     setHeaderNotifications([]);
@@ -110,19 +179,12 @@ export const Header = () => {
 
   return (
     <header className="app-header">
-      {/* Click outside overlay to close notifications */}
+      {/* Click outside overlay to close notifications with responsive backdrop */}
       {showNotifMenu && (
         <div 
+          className="notif-backdrop-overlay"
           onClick={() => setShowNotifMenu(false)} 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 240,
-            background: 'transparent'
-          }}
+          aria-label="Close notification menu"
         />
       )}
 
@@ -159,85 +221,123 @@ export const Header = () => {
         {/* Notification Bell Dropdown */}
         <div style={{ position: 'relative', zIndex: 250 }}>
           <button
-            className="btn-icon"
+            className="btn-icon header-notif-bell-btn"
             onClick={() => setShowNotifMenu(!showNotifMenu)}
             title="App Notifications"
             style={{ position: 'relative' }}
+            aria-label="Open notifications"
           >
             <Bell size={20} color="#0f172a" />
             {headerNotifications.length > 0 && (
               <span 
+                className="notif-bell-badge"
                 style={{ 
                   position: 'absolute', 
-                  top: '4px', 
-                  right: '4px', 
-                  width: '10px', 
-                  height: '10px', 
+                  top: '1px', 
+                  right: '1px', 
+                  minWidth: '16px', 
+                  height: '16px', 
+                  padding: '0 4px',
                   background: '#ef4444', 
-                  borderRadius: '50%',
-                  border: '2px solid #ffffff' 
+                  borderRadius: '999px',
+                  border: '2px solid #ffffff',
+                  color: '#ffffff',
+                  fontSize: '0.64rem',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 5px rgba(239, 68, 68, 0.4)'
                 }} 
-              />
+              >
+                {headerNotifications.length}
+              </span>
             )}
           </button>
 
           {showNotifMenu && (
             <div 
-              className="glass-panel fade-in"
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 10px)',
-                right: 0,
-                width: '340px',
-                maxWidth: '92vw',
-                padding: '16px',
-                borderRadius: '16px',
-                background: '#ffffff',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
-                border: '1px solid #e2e8f0',
-                zIndex: 260
-              }}
+              className="notif-dropdown-menu glass-panel fade-in"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Patient Notifications"
             >
-              {/* Header row with Title and Clear All button with icon (no close notification button) */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <strong style={{ fontSize: '0.92rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Bell size={16} color="#0284c7" /> Notifications
+              {/* Header row with Title, Badge, Clear All, and Close (✕) button */}
+              <div className="notif-dropdown-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                  <div style={{ background: '#e0f2fe', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bell size={16} color="#0284c7" />
+                  </div>
+                  <strong style={{ fontSize: '0.96rem', color: '#0f172a', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                    Notifications
                   </strong>
-                  <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>
+                  <span className="badge badge-emerald" style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
                     {headerNotifications.length > 0 ? `${headerNotifications.length} Active` : 'All Clear'}
                   </span>
                 </div>
 
-                {/* Clear All Notifications Button with Icon */}
-                <button
-                  onClick={handleClearAllHeaderNotifs}
-                  disabled={headerNotifications.length === 0}
-                  style={{
-                    background: headerNotifications.length === 0 ? '#f1f5f9' : '#fee2e2',
-                    border: '1px solid #fca5a5',
-                    color: headerNotifications.length === 0 ? '#94a3b8' : '#dc2626',
-                    borderRadius: '8px',
-                    padding: '4px 10px',
-                    fontSize: '0.72rem',
-                    fontWeight: '700',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    cursor: headerNotifications.length === 0 ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  title="Clear All Notifications"
-                >
-                  <Trash2 size={13} />
-                  <span>Clear All</span>
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  {/* Clear All Notifications Button with Icon */}
+                  <button
+                    onClick={handleClearAllHeaderNotifs}
+                    disabled={headerNotifications.length === 0}
+                    style={{
+                      background: headerNotifications.length === 0 ? '#f1f5f9' : '#fee2e2',
+                      border: '1px solid #fca5a5',
+                      color: headerNotifications.length === 0 ? '#94a3b8' : '#dc2626',
+                      borderRadius: '8px',
+                      padding: '5px 9px',
+                      fontSize: '0.72rem',
+                      fontWeight: '700',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: headerNotifications.length === 0 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="Clear All Notifications"
+                  >
+                    <Trash2 size={13} />
+                    <span>Clear All</span>
+                  </button>
+
+                  {/* Close (X) button */}
+                  <button
+                    onClick={() => setShowNotifMenu(false)}
+                    style={{
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      width: '28px',
+                      height: '28px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#475569',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    title="Close Notifications"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
+
+              {/* Helper tip on mobile for swiping */}
+              {headerNotifications.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f8fafc', borderRadius: '8px', marginBottom: '10px', fontSize: '0.68rem', color: '#64748b', border: '1px solid #f1f5f9' }}>
+                  <span>👉 Swipe Right to Delete</span>
+                  <span>👈 Swipe Left to Star</span>
+                </div>
+              )}
 
               {/* Notification List with Mobile Swipe Support */}
               {headerNotifications.length > 0 ? (
                 <div>
-                  <div style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '2px' }}>
+                  <div className="notif-dropdown-scroll" style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '2px' }}>
                     {headerNotifications.map(n => (
                       <NotificationSwipeItem
                         key={n.id}
@@ -249,9 +349,9 @@ export const Header = () => {
                   </div>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
-                  <CheckCircle2 size={32} color="#10b981" style={{ marginBottom: '8px' }} />
-                  <p style={{ margin: '0 0 2px 0', fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>All Caught Up!</p>
+                <div style={{ textAlign: 'center', padding: '28px 12px', color: '#64748b' }}>
+                  <CheckCircle2 size={36} color="#10b981" style={{ marginBottom: '8px' }} />
+                  <p style={{ margin: '0 0 2px 0', fontWeight: '700', color: '#0f172a', fontSize: '0.92rem' }}>All Caught Up!</p>
                   <span style={{ fontSize: '0.78rem', color: '#64748b' }}>No pending notifications.</span>
                 </div>
               )}
@@ -851,6 +951,70 @@ export const Header = () => {
           }
           .portal-badge-btn {
             padding: 4px 6px !important;
+          }
+        }
+
+        /* Responsive Notification Dropdown & Mobile Sheet Fix */
+        .notif-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 0;
+          width: 360px;
+          max-width: 92vw;
+          padding: 16px;
+          border-radius: 16px;
+          background: #ffffff;
+          box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+          border: 1px solid #e2e8f0;
+          z-index: 1000;
+          box-sizing: border-box;
+        }
+
+        .notif-backdrop-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.45);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          z-index: 990;
+        }
+
+        @media (max-width: 768px) {
+          .notif-dropdown-menu {
+            position: fixed !important;
+            top: 66px !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+            max-width: 440px !important;
+            margin: 0 auto !important;
+            max-height: calc(100dvh - 86px) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.35) !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            padding: 14px 12px !important;
+            animation: notifSheetEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+
+          .notif-dropdown-scroll {
+            max-height: calc(100dvh - 180px) !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding-right: 2px !important;
+          }
+        }
+
+        @keyframes notifSheetEnter {
+          0% {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.98);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
           }
         }
 

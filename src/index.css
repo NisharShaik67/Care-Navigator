@@ -804,7 +804,6 @@ html, body, #root {
   /* Flex Rows Auto-Wrap on Mobile */
   .title-row,
   .section-title-row,
-  .header-right,
   .cta-banner-buttons,
   .edit-form-action-row,
   .modal-footer-btns,
@@ -816,6 +815,15 @@ html, body, #root {
   .rec-footer,
   .sos-status-top {
     flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Keep header icons aligned without vertical breakage on mobile */
+  .header-right {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
     gap: 8px !important;
   }
 
@@ -1239,6 +1247,76 @@ html, body, #root {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. GLOBAL NOTIFICATIONS RESPONSIVENESS & MOBILE SHEET FIX
+   Ensures notifications render centered, visible, and never cut off on mobile
+   -------------------------------------------------------------------------- */
+.notif-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-width: 92vw;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+  border: 1px solid #e2e8f0;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.notif-backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 990;
+  animation: fadeIn 0.18s ease;
+}
+
+@media (max-width: 768px) {
+  .notif-dropdown-menu {
+    position: fixed !important;
+    top: 66px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    max-height: calc(100dvh - 86px) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.35) !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 14px 12px !important;
+    animation: notifSheetEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .notif-dropdown-scroll {
+    max-height: calc(100dvh - 180px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-right: 2px !important;
+  }
+
+  .notif-card-header {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .notif-card-header .notif-title {
+    font-size: 0.90rem !important;
+  }
+
+  .notif-swipe-card {
+    padding: 10px 10px !important;
   }
 }
 
