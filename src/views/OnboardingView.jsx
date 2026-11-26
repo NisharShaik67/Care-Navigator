@@ -502,19 +502,24 @@ export const OnboardingView = () => {
   return (
     <div className="onboarding-container fade-in">
       <div className="onboarding-card-wrapper">
-        {/* Return back to Landing button */}
-        <div className="onboarding-top-bar">
-          <button
-            type="button"
-            onClick={() => navigateTo('landing')}
-            className="btn back-to-landing-btn"
-          >
-            <ArrowLeft size={16} strokeWidth={2.5} />
-            <span>Back to Landing Page</span>
-          </button>
-        </div>
-
         <div className="auth-card glass-panel fade-in">
+          {/* Top header navigation with sleek back button */}
+          <div className="auth-header-bar">
+            <button
+              type="button"
+              onClick={() => navigateTo('landing')}
+              className="auth-back-nav-btn"
+              title="Back to Landing Page"
+              aria-label="Back to Landing Page"
+            >
+              <ArrowLeft size={18} strokeWidth={2.5} />
+            </button>
+            <div className="auth-header-pill">
+              <ShieldCheck size={14} color="#059669" />
+              <span>Care Navigator Portal</span>
+            </div>
+          </div>
+
           <h2 className="modal-title">
             {authMode === 'otp'
               ? (selectedRole === 'Responder'
@@ -921,6 +926,17 @@ export const OnboardingView = () => {
               </span>
             </button>
           </form>
+
+          {/* Return to Landing Page subtle link */}
+          <div className="auth-bottom-nav">
+            <button
+              type="button"
+              onClick={() => navigateTo('landing')}
+              className="auth-bottom-return-btn"
+            >
+              ← Back to Landing Page
+            </button>
+          </div>
         </div>
       </div>
 
@@ -933,49 +949,20 @@ export const OnboardingView = () => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 32px 16px;
-          background: #f8fafc;
+          padding: 24px 16px;
+          background: radial-gradient(circle at 50% 8%, #ecfdf5 0%, #f8fafc 45%, #f1f5f9 100%);
           box-sizing: border-box;
           overflow-x: hidden;
         }
 
         .onboarding-card-wrapper {
           width: 100%;
-          max-width: 500px;
+          max-width: 480px;
           display: flex;
           flex-direction: column;
           align-items: stretch;
-          gap: 12px;
           margin: 0 auto;
           box-sizing: border-box;
-        }
-
-        .onboarding-top-bar {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          box-sizing: border-box;
-        }
-
-        .back-to-landing-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 0.86rem;
-          background: #ffffff;
-          border: 1.5px solid #cbd5e1;
-          color: #1e293b;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-          transition: all 0.2s ease;
-        }
-
-        .back-to-landing-btn:hover {
-          background: #f1f5f9;
         }
 
         .auth-card {
@@ -985,8 +972,51 @@ export const OnboardingView = () => {
           background: #ffffff;
           border: 1px solid var(--border-light, #e2e8f0);
           border-radius: 24px;
-          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+          box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
           box-sizing: border-box;
+          position: relative;
+        }
+
+        .auth-header-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .auth-back-nav-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .auth-back-nav-btn:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+          transform: translateX(-2px);
+        }
+
+        .auth-header-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 20px;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          font-size: 0.76rem;
+          font-weight: 700;
+          color: #065f46;
         }
 
         .modal-title {
@@ -1001,7 +1031,7 @@ export const OnboardingView = () => {
           font-size: 0.88rem;
           color: var(--text-muted, #64748b);
           margin-bottom: 22px;
-          line-height: 1.4;
+          line-height: 1.45;
         }
 
         .form-label {
@@ -1021,6 +1051,8 @@ export const OnboardingView = () => {
           border: 1.5px solid var(--border-light, #e2e8f0);
           border-radius: 12px;
           padding: 12px 16px;
+          min-height: 50px;
+          box-sizing: border-box;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -1074,10 +1106,34 @@ export const OnboardingView = () => {
           width: 100%;
         }
 
+        .auth-bottom-nav {
+          display: flex;
+          justify-content: center;
+          margin-top: 18px;
+        }
+
+        .auth-bottom-return-btn {
+          background: none;
+          border: none;
+          color: #64748b;
+          font-size: 0.84rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 6px 14px;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+        }
+
+        .auth-bottom-return-btn:hover {
+          color: #0284c7;
+          background: #f1f5f9;
+        }
+
         @media (max-width: 640px) {
           .onboarding-container {
-            padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)) !important;
+            padding: max(16px, env(safe-area-inset-top, 16px)) max(12px, env(safe-area-inset-right, 12px)) max(24px, env(safe-area-inset-bottom, 20px)) max(12px, env(safe-area-inset-left, 12px)) !important;
             justify-content: center !important;
+            background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 35%, #ffffff 100%) !important;
           }
 
           .onboarding-card-wrapper {
@@ -1085,39 +1141,67 @@ export const OnboardingView = () => {
           }
 
           .auth-card {
-            padding: 24px 16px !important;
+            padding: 22px 16px !important;
             border-radius: 20px !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+          }
+
+          .auth-header-bar {
+            margin-bottom: 16px !important;
+            padding-bottom: 10px !important;
+          }
+
+          .auth-back-nav-btn {
+            width: 36px !important;
+            height: 36px !important;
           }
 
           .modal-title {
-            font-size: clamp(1.15rem, 4.5vw, 1.25rem) !important;
+            font-size: clamp(1.15rem, 4.8vw, 1.35rem) !important;
+            line-height: 1.3 !important;
           }
 
           .modal-subtitle {
-            font-size: 0.84rem !important;
+            font-size: 0.82rem !important;
             margin-bottom: 16px !important;
+            line-height: 1.4 !important;
+          }
+
+          .input-group {
+            min-height: 48px !important;
+            padding: 10px 14px !important;
+          }
+
+          .input-group input {
+            font-size: 0.95rem !important;
           }
 
           .otp-container {
-            gap: 10px !important;
+            gap: clamp(8px, 2.5vw, 12px) !important;
             margin: 16px 0 !important;
           }
 
           .otp-input {
-            width: 48px !important;
-            height: 54px !important;
+            width: clamp(46px, 14vw, 54px) !important;
+            height: clamp(50px, 15vw, 58px) !important;
             font-size: 1.35rem !important;
+            border-radius: 12px !important;
+          }
+
+          .btn-primary {
+            min-height: 48px !important;
+            font-size: 0.94rem !important;
           }
         }
 
         @media (max-width: 420px) {
           .onboarding-container {
-            padding: max(12px, env(safe-area-inset-top, 0px)) 10px max(24px, env(safe-area-inset-bottom, 0px)) 10px !important;
+            padding: max(10px, env(safe-area-inset-top, 10px)) 8px max(20px, env(safe-area-inset-bottom, 16px)) 8px !important;
           }
 
           .auth-card {
             padding: 18px 12px !important;
-            border-radius: 16px !important;
+            border-radius: 18px !important;
           }
 
           .modal-title {
@@ -1126,42 +1210,7 @@ export const OnboardingView = () => {
 
           .modal-subtitle {
             font-size: 0.80rem !important;
-            margin-bottom: 14px !important;
-          }
-
-          .otp-container {
-            gap: 8px !important;
-          }
-
-          .otp-input {
-            width: 44px !important;
-            height: 50px !important;
-            font-size: 1.25rem !important;
-            border-radius: 12px !important;
-          }
-
-          .input-group {
-            padding: 10px 12px !important;
-          }
-
-          .back-to-landing-btn {
-            padding: 6px 12px !important;
-            font-size: 0.8rem !important;
-          }
-        }
-
-        @media (max-width: 350px) {
-          .onboarding-container {
-            padding: 8px 4px 16px 4px !important;
-          }
-
-          .auth-card {
-            padding: 14px 8px !important;
-            border-radius: 12px !important;
-          }
-
-          .modal-title {
-            font-size: 1rem !important;
+            margin-bottom: 12px !important;
           }
 
           .otp-container {
@@ -1169,10 +1218,40 @@ export const OnboardingView = () => {
           }
 
           .otp-input {
-            width: 38px !important;
-            height: 44px !important;
-            font-size: 1.15rem !important;
+            width: clamp(40px, 13vw, 46px) !important;
+            height: clamp(46px, 14vw, 52px) !important;
+            font-size: 1.25rem !important;
             border-radius: 10px !important;
+          }
+
+          .input-group {
+            padding: 8px 12px !important;
+          }
+        }
+
+        @media (max-width: 350px) {
+          .onboarding-container {
+            padding: 6px 4px 14px 4px !important;
+          }
+
+          .auth-card {
+            padding: 14px 8px !important;
+            border-radius: 14px !important;
+          }
+
+          .modal-title {
+            font-size: 1rem !important;
+          }
+
+          .otp-container {
+            gap: 5px !important;
+          }
+
+          .otp-input {
+            width: 36px !important;
+            height: 42px !important;
+            font-size: 1.1rem !important;
+            border-radius: 8px !important;
           }
         }
       `}</style>
