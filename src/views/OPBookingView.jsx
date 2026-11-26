@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, compressImageToDataUrl } from '../context/AppContext';
 import { 
   Building2, 
   Stethoscope, 
@@ -87,27 +87,34 @@ export const OPBookingView = () => {
     setBookingModalDoc(doc);
   };
 
-  const handleImageUpload = (e, docId) => {
+  const handleImageUpload = async (e, docId) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type || !file.type.startsWith('image/')) {
       alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const newAvatarUrl = uploadEvent.target.result;
-      updateDoctorAvatar(docId, newAvatarUrl);
+    try {
+      const compressedDataUrl = await compressImageToDataUrl(file, 400, 400, 0.85);
+      if (!compressedDataUrl) {
+        alert('Could not process this image. Please choose another.');
+        return;
+      }
+
+      updateDoctorAvatar(docId, compressedDataUrl);
       if (bookingModalDoc && bookingModalDoc.id === docId) {
-        setBookingModalDoc(prev => ({ ...prev, avatar: newAvatarUrl }));
+        setBookingModalDoc(prev => ({ ...prev, avatar: compressedDataUrl }));
       }
       setToastMsg('Doctor photo updated successfully!');
       setTimeout(() => setToastMsg(''), 3500);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    } catch (err) {
+      console.error('Failed to update doctor photo:', err);
+      alert('Error updating photo. Please try again.');
+    } finally {
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleFinalSubmitBooking = (e) => {
@@ -256,19 +263,31 @@ export const OPBookingView = () => {
                       className="doc-avatar-img" 
                     />
                     <span className="live-dot" title="Available Today"></span>
-                    <label 
+                    <button 
+                      type="button"
                       className="photo-upload-overlay" 
                       title="Upload / Change Doctor Picture" 
-                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Upload / Change Doctor Picture"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const fileInput = document.getElementById(`doc-photo-upload-${doc.id}`);
+                        if (fileInput) {
+                          fileInput.value = '';
+                          fileInput.click();
+                        }
+                      }}
                     >
-                      <Camera size={13} color="#ffffff" />
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        style={{ display: 'none' }} 
-                        onChange={(e) => handleImageUpload(e, doc.id)}
-                      />
-                    </label>
+                      <Camera size={14} color="#ffffff" />
+                    </button>
+                    <input 
+                      id={`doc-photo-upload-${doc.id}`}
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }} 
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => handleImageUpload(e, doc.id)}
+                    />
                   </div>
 
                   <div className="doc-details">
@@ -333,19 +352,32 @@ export const OPBookingView = () => {
                     className="mini-doc-img" 
                     style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }}
                   />
-                  <label 
+                  <button 
+                    type="button"
                     className="photo-upload-overlay" 
                     title="Upload / Change Doctor Picture"
-                    style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '22px', height: '22px' }}
+                    aria-label="Upload / Change Doctor Picture"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const fileInput = document.getElementById(`modal-doc-photo-upload-${bookingModalDoc.id}`);
+                      if (fileInput) {
+                        fileInput.value = '';
+                        fileInput.click();
+                      }
+                    }}
+                    style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '24px', height: '24px' }}
                   >
-                    <Camera size={11} color="#ffffff" />
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      style={{ display: 'none' }} 
-                      onChange={(e) => handleImageUpload(e, bookingModalDoc.id)}
-                    />
-                  </label>
+                    <Camera size={12} color="#ffffff" />
+                  </button>
+                  <input 
+                    id={`modal-doc-photo-upload-${bookingModalDoc.id}`}
+                    type="file" 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => handleImageUpload(e, bookingModalDoc.id)}
+                  />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bookingModalDoc.name}</h4>
@@ -796,8 +828,8 @@ export const OPBookingView = () => {
           position: absolute;
           bottom: 2px;
           right: 2px;
-          width: 26px;
-          height: 26px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
           background: #0284c7;
           border: 2px solid #ffffff;
@@ -805,14 +837,18 @@ export const OPBookingView = () => {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           transition: transform 0.2s ease, background 0.2s ease;
-          z-index: 5;
+          z-index: 10;
+          padding: 0;
+          outline: none;
+          touch-action: manipulation;
         }
 
-        .photo-upload-overlay:hover {
+        .photo-upload-overlay:hover,
+        .photo-upload-overlay:active {
           background: #0369a1;
-          transform: scale(1.1);
+          transform: scale(1.15);
         }
 
         .doc-details {

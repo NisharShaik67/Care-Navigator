@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, compressImageToDataUrl } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
   Menu,
@@ -133,7 +133,7 @@ const playLiveBookingChime = () => {
 };
 
 export const DoctorDashboardView = () => {
-  const { user, updateUserProfile, logout, navigateTo, returnToPatientPortal, appointments, bookOPToken } = useApp();
+  const { user, updateUserProfile, logout, navigateTo, returnToPatientPortal, appointments, bookOPToken, updateDoctorAvatar } = useApp();
   const logoClicksRef = useRef({ count: 0, timer: null });
 
   const handleLogoTripleClick = (e) => {
@@ -262,7 +262,7 @@ export const DoctorDashboardView = () => {
     setIsEditingDoctor(false);
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -271,22 +271,31 @@ export const DoctorDashboardView = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setDoctorInfo(prev => ({ ...prev, photo: dataUrl }));
+    try {
+      const compressedDataUrl = await compressImageToDataUrl(file, 400, 400, 0.85);
+      if (!compressedDataUrl) {
+        alert('Could not process this image. Please choose another.');
+        return;
+      }
+
+      setDoctorInfo(prev => ({ ...prev, photo: compressedDataUrl }));
       try {
-        localStorage.setItem('care_navigator_doctor_photo', dataUrl);
+        localStorage.setItem('care_navigator_doctor_photo', compressedDataUrl);
       } catch {}
       if (updateUserProfile) {
-        updateUserProfile({ photo: dataUrl });
+        updateUserProfile({ photo: compressedDataUrl });
+      }
+      if (updateDoctorAvatar) {
+        updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'doc-gen-4', compressedDataUrl);
       }
       setShowPhotoActionModal(false);
       setConsultCompletedAlert('Doctor profile picture updated successfully!');
       setTimeout(() => setConsultCompletedAlert(null), 3000);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    } catch (err) {
+      console.error('Failed to upload doctor photo:', err);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleResetToDefaultPhoto = () => {
@@ -297,6 +306,9 @@ export const DoctorDashboardView = () => {
     } catch {}
     if (updateUserProfile) {
       updateUserProfile({ photo: defaultPhoto });
+    }
+    if (updateDoctorAvatar) {
+      updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'doc-gen-4', defaultPhoto);
     }
     setShowPhotoActionModal(false);
     setConsultCompletedAlert('Reset to official doctor photo.');

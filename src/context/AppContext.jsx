@@ -49,6 +49,48 @@ export const calculateProfileCompletion = (user) => {
   return Math.min(100, score);
 };
 
+// Helper function to compress large camera / device photos to avoid exceeding localStorage quota
+export const compressImageToDataUrl = (file, maxWidth = 400, maxHeight = 400, quality = 0.85) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => {
+        resolve(readerEvent.target?.result || null);
+      };
+      img.src = readerEvent.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+};
+
 const DEFAULT_USER = {
   accountId: 'acc_alex',
   name: 'Alex Johnson',
@@ -1029,7 +1071,7 @@ export const AppProvider = ({ children }) => {
         specialties: specs,
         doctors: (hosp.doctors || []).map(doc => ({
           ...doc,
-          avatar: savedAvatars[doc.id] || DEFAULT_DOCTOR_AVATARS[doc.id] || doc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"
+          avatar: savedAvatars[doc.id] || (doc.isCommonDoctor && (savedAvatars['doc-gen-4'] || savedAvatars['DOCTOR-001'])) || DEFAULT_DOCTOR_AVATARS[doc.id] || doc.avatar || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"
         }))
       };
     });
@@ -1465,6 +1507,30 @@ export const AppProvider = ({ children }) => {
         console.warn('Direct cn_user localStorage error:', e);
       }
 
+      if (updated.role === 'Doctor' && updates.photo) {
+        try {
+          const docId = updated.doctorId || 'doc-gen-4';
+          let savedAvatars = {};
+          const s = localStorage.getItem('cn_doctor_avatars');
+          if (s) savedAvatars = JSON.parse(s);
+          savedAvatars[docId] = updates.photo;
+          savedAvatars['doc-gen-4'] = updates.photo;
+          savedAvatars['DOCTOR-001'] = updates.photo;
+          localStorage.setItem('cn_doctor_avatars', JSON.stringify(savedAvatars));
+          
+          setHospitals(prevHospitals => 
+            prevHospitals.map(hosp => ({
+              ...hosp,
+              doctors: (hosp.doctors || []).map(doc => 
+                (doc.id === docId || doc.isCommonDoctor || doc.id === 'DOCTOR-001' || doc.id === 'doc-gen-4') 
+                  ? { ...doc, avatar: updates.photo } 
+                  : doc
+              )
+            }))
+          );
+        } catch {}
+      }
+
       // Persist to local database and synchronize with Firestore
       try {
         persistUserDataToDb(updated);
@@ -1806,6 +1872,9 @@ export const AppProvider = ({ children }) => {
       const s = localStorage.getItem('cn_doctor_avatars');
       if (s) savedAvatars = JSON.parse(s);
       savedAvatars[docId] = newAvatarUrl;
+      if (docId === 'doc-gen-4') {
+        savedAvatars['DOCTOR-001'] = newAvatarUrl;
+      }
       localStorage.setItem('cn_doctor_avatars', JSON.stringify(savedAvatars));
     } catch (err) {
       console.warn('Failed to save doctor avatar to localStorage:', err);
@@ -1815,10 +1884,25 @@ export const AppProvider = ({ children }) => {
       prevHospitals.map(hosp => ({
         ...hosp,
         doctors: (hosp.doctors || []).map(doc => 
-          doc.id === docId ? { ...doc, avatar: newAvatarUrl } : doc
+          (doc.id === docId || (docId === 'doc-gen-4' && doc.isCommonDoctor) || (docId === 'DOCTOR-001' && doc.isCommonDoctor))
+            ? { ...doc, avatar: newAvatarUrl } 
+            : doc
         )
       }))
     );
+
+    setUser(prevUser => {
+      if (!prevUser || prevUser.role !== 'Doctor') return prevUser;
+      if (prevUser.doctorId === docId || docId === 'doc-gen-4' || docId === 'DOCTOR-001') {
+        const updated = { ...prevUser, photo: newAvatarUrl };
+        try {
+          localStorage.setItem('cn_user', JSON.stringify(updated));
+          localStorage.setItem('care_navigator_doctor_photo', newAvatarUrl);
+        } catch {}
+        return updated;
+      }
+      return prevUser;
+    });
   };
 
   return (
