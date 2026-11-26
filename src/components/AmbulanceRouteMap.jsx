@@ -4,10 +4,19 @@ import {
   Crosshair, 
   ZoomIn, 
   ZoomOut, 
-  Zap
+  Zap,
+  Play,
+  Pause,
+  RotateCcw
 } from 'lucide-react';
 
-export const AmbulanceRouteMap = ({ sosState, onSpeedChange }) => {
+export const AmbulanceRouteMap = ({ 
+  sosState, 
+  onSpeedChange,
+  isLiveTracking = true,
+  onToggleLiveTracking,
+  onRestartSimulation
+}) => {
   const [zoom, setZoom] = useState(1);
   const [simulationSpeed, setSimulationSpeed] = useState(1); // 1x, 2x, 5x
 
@@ -278,34 +287,69 @@ export const AmbulanceRouteMap = ({ sosState, onSpeedChange }) => {
         {/* Map Control Toolbar */}
         <div className="map-controls-bar">
           <button 
+            type="button"
             className="map-ctrl-btn" 
             onClick={() => setZoom(prev => Math.min(prev + 0.25, 1.75))} 
             title="Zoom In"
+            aria-label="Zoom In"
           >
             <ZoomIn size={16} />
           </button>
           <button 
+            type="button"
             className="map-ctrl-btn" 
             onClick={() => setZoom(prev => Math.max(prev - 0.25, 0.75))} 
             title="Zoom Out"
+            aria-label="Zoom Out"
           >
             <ZoomOut size={16} />
           </button>
           <button 
+            type="button"
             className="map-ctrl-btn" 
             onClick={() => setZoom(1)} 
             title="Reset View"
+            aria-label="Reset View"
           >
             <Crosshair size={16} />
           </button>
+          
+          {onToggleLiveTracking && (
+            <button
+              type="button"
+              className={`map-ctrl-btn ${isLiveTracking ? 'active-tracking' : ''}`}
+              onClick={onToggleLiveTracking}
+              title={isLiveTracking ? 'Pause Live Movement' : 'Resume Live Movement'}
+              aria-label={isLiveTracking ? 'Pause Live Movement' : 'Resume Live Movement'}
+            >
+              {isLiveTracking ? <Pause size={14} color="#38bdf8" /> : <Play size={14} color="#10b981" />}
+              <span>{isLiveTracking ? 'Tracking Live' : 'Paused'}</span>
+            </button>
+          )}
+
           <button 
+            type="button"
             className={`map-ctrl-btn speed-btn ${simulationSpeed > 1 ? 'active' : ''}`} 
             onClick={handleSpeedToggle}
-            title="Speed Simulation Toggle"
+            title="Toggle Speed Multiplier"
+            aria-label="Toggle Speed Multiplier"
           >
             <Zap size={14} color={simulationSpeed > 1 ? '#f59e0b' : '#94a3b8'} />
             <span>{simulationSpeed}x Speed</span>
           </button>
+
+          {onRestartSimulation && isArrived && (
+            <button
+              type="button"
+              className="map-ctrl-btn restart-btn"
+              onClick={onRestartSimulation}
+              title="Restart Ambulance Route Simulation"
+              aria-label="Restart Ambulance Route Simulation"
+            >
+              <RotateCcw size={14} color="#f59e0b" />
+              <span>Restart Dispatch</span>
+            </button>
+          )}
         </div>
       </div>
 
