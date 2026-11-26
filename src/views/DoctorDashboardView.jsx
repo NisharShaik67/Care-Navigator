@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationSwipeItem } from '../components/NotificationSwipeItem';
 import {
@@ -20,7 +20,6 @@ import {
   X,
   Phone,
   Trash2,
-  FileSpreadsheet,
   Check,
   Zap,
   MapPin,
@@ -31,9 +30,6 @@ import {
   Upload,
   RotateCcw
 } from 'lucide-react';
-
-// Baseline Doctor Appointments (Default clinical queue is empty for production)
-const BASELINE_DOCTOR_APPOINTMENTS = [];
 
 // Helper to format an OP token into the Doctor appointment structure
 const formatTokenToDoctorAppointment = (token, currentUser = null) => {
@@ -330,7 +326,7 @@ export const DoctorDashboardView = () => {
   const [isEmergencyAccepted, setIsEmergencyAccepted] = useState(false);
 
   // Emergency Alert Data (null when no critical ER emergency)
-  const [emergencyAlert, setEmergencyAlert] = useState(null);
+  const [emergencyAlert] = useState(null);
 
   // Appointments List (Initialized with booked tokens prepended on line 1)
   const [appointmentsList, setAppointmentsList] = useState(() => getInitialDoctorAppointments(appointments));

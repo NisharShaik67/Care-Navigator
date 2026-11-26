@@ -38,7 +38,6 @@ export const Header = () => {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   const completionScore = calculateProfileCompletion(user);
-  const isProfileIncomplete = user?.role === 'Patient' && completionScore < 100;
   const isComplete = completionScore === 100;
 
   const [headerNotifications, setHeaderNotifications] = useState([]);

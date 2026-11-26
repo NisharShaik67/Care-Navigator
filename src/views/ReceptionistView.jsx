@@ -34,9 +34,6 @@ import {
   Zap
 } from 'lucide-react';
 
-// Baseline Queue List (Default queue is empty for clean production state)
-const BASELINE_QUEUE_LIST = [];
-
 const BASELINE_REC_NOTIFS = [];
 
 // Helper to format an OP token into the Receptionist queue structure
@@ -1989,6 +1986,11 @@ export const ReceptionistView = () => {
               <button
                 className="btn-modal-pri bg-red"
                 onClick={() => {
+                  setActiveEmergency({
+                    title: 'Dispatched Emergency Case',
+                    desc: 'Emergency Bay reserved & 108 trauma responder alerted',
+                    eta: '2.5 min avg'
+                  });
                   showToast('Emergency Bay Reserved & Trauma Team Alerted!', 'success');
                   setActiveModal(null);
                 }}
