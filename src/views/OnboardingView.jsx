@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useApp, AADHAAR_DATABASE, extract10DigitPhone } from '../context/AppContext';
+import { useApp, AADHAAR_DATABASE, extract10DigitPhone, getAadhaarLinkedMobile } from '../context/AppContext';
 import { 
   CheckCircle2, 
   Ambulance, 
@@ -102,13 +102,15 @@ export const OnboardingView = () => {
       const cleanNo = aadhaar12 || aadharNumber || digits;
       const saved = lookupAccount ? lookupAccount(cleanNo) : null;
       const aadhaarBase = AADHAAR_DATABASE[cleanNo] || null;
+      const resolvedPhone = saved?.phone || saved?.phoneNumber || aadhaarBase?.phone || phoneNumber || getAadhaarLinkedMobile(cleanNo);
 
       loginWithAccount(cleanNo, 'Patient', {
         fullName: saved?.name || aadhaarBase?.name || fullName || 'Alex Johnson',
         aadhaarAddress: saved?.address || aadhaarBase?.address || aadhaarAddress || 'Door No 4-12, Main Road, Palnadu District, Narasaraopet',
         cityVillage: saved?.cityVillage || aadhaarBase?.city || cityVillage || 'Narasaraopet',
         pinCode: saved?.pincode || aadhaarBase?.pincode || pinCode || '522601',
-        phoneNumber: saved?.phone || phoneNumber || '+91 9876543210',
+        phoneNumber: resolvedPhone,
+        phone: resolvedPhone,
         gender: saved?.gender || aadhaarBase?.gender || gender || 'MALE',
         age: saved?.age || aadhaarBase?.age || age || '28',
         bloodGroup: saved?.bloodGroup || aadhaarBase?.bloodGroup || bloodGroup || 'O+'
@@ -287,7 +289,8 @@ export const OnboardingView = () => {
       if (saved.address) setAadhaarAddress(saved.address);
       if (saved.cityVillage || saved.city) setCityVillage(saved.cityVillage || saved.city);
       if (saved.pincode) setPinCode(saved.pincode);
-      if (saved.phone) setPhoneNumber(saved.phone);
+      if (saved.phone || saved.phoneNumber) setPhoneNumber(saved.phone || saved.phoneNumber);
+      else setPhoneNumber(getAadhaarLinkedMobile(digitsOnly));
       if (saved.age) setAge(saved.age);
       if (saved.bloodGroup) setBloodGroup(saved.bloodGroup);
       if (saved.gender) setGender(saved.gender);
@@ -298,10 +301,12 @@ export const OnboardingView = () => {
         setAadhaarAddress(found.address);
         setCityVillage(found.city);
         setPinCode(found.pincode);
+        setPhoneNumber(found.phone || getAadhaarLinkedMobile(digitsOnly));
         if (found.gender) setGender(found.gender);
         if (found.age) setAge(found.age);
         if (found.bloodGroup) setBloodGroup(found.bloodGroup);
       } else {
+        setPhoneNumber(getAadhaarLinkedMobile(digitsOnly));
         setFullName('');
         setAadhaarAddress('');
         setCityVillage('');
@@ -334,6 +339,10 @@ export const OnboardingView = () => {
   const displayPhone = is10DigitPhone
     ? (cleanInput.startsWith('+91') ? cleanInput : `+91 ${p10}`)
     : '+91 98765 10800';
+
+  const linkedPatientPhone = (is12DigitAadhaar || a12)
+    ? getAadhaarLinkedMobile(a12)
+    : (aadharNumber ? getAadhaarLinkedMobile(aadharNumber) : (phoneNumber || '+91 62814 67661'));
 
   const handleInputChange = (val) => {
     setErrorMsg('');
@@ -383,6 +392,8 @@ export const OnboardingView = () => {
       if (aadhaar12) {
         setSelectedRole('User');
         setAadharNumber(aadhaar12);
+        const resolvedPhone = getAadhaarLinkedMobile(aadhaar12);
+        setPhoneNumber(resolvedPhone);
         handleAadhaarNumberChange(aadhaar12);
         setErrorMsg('');
         setOtp(['', '', '', '']);
@@ -536,10 +547,10 @@ export const OnboardingView = () => {
           <p className="modal-subtitle">
             {authMode === 'otp'
               ? (selectedRole === 'Responder'
-                  ? `Enter the 4-digit OTP sent to driver mobile (${displayPhone}). Arriving automatically in 10 seconds.`
+                  ? `Enter the 4-digit OTP sent to driver mobile (${displayPhone}).`
                   : selectedRole === 'Receptionist'
-                    ? `Enter the 4-digit OTP sent to hospital email (${receptionistGmail || uniqueId}). Arriving automatically in 10 seconds.`
-                    : `Enter the 4-digit OTP sent to Aadhaar-registered mobile (${aadharNumber || uniqueId}). Arriving automatically in 10 seconds.`)
+                    ? `Enter the 4-digit OTP sent to hospital email (${receptionistGmail || uniqueId}).`
+                    : `Enter the 4-digit OTP sent to Aadhaar-registered mobile (${linkedPatientPhone}).`)
               : authMode === 'pin'
                 ? (selectedRole === 'Doctor'
                     ? `Enter your 4-digit security PIN for Doctor ID (${doctorId || uniqueId || 'DOCTOR-001'})`
@@ -732,7 +743,7 @@ export const OnboardingView = () => {
                         ? `Mobile: ${displayPhone} (108 Ambulance Driver)`
                         : selectedRole === 'Receptionist'
                           ? `Email: ${receptionistGmail || uniqueId} (Receptionist)`
-                          : `Aadhaar Card: ${aadharNumber || uniqueId} (Patient)`}
+                          : `Aadhaar: ${aadharNumber || uniqueId} • Linked Mobile: ${linkedPatientPhone}`}
                     </span>
                   </div>
                   <button
@@ -760,16 +771,16 @@ export const OnboardingView = () => {
                   </button>
                 </div>
 
-                {/* 10-Second Auto-OTP Live Status Banner */}
+                {/* Real-time SMS Gateway Live Delivery Banner */}
                 <div style={{
                   padding: '12px 14px',
                   borderRadius: '12px',
-                  marginBottom: '18px',
+                  marginBottom: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  background: otpAutoFilled ? '#ecfdf5' : '#fffbeb',
-                  border: `1.5px solid ${otpAutoFilled ? '#6ee7b7' : '#fde68a'}`,
+                  background: otpAutoFilled ? '#ecfdf5' : '#f0fdf4',
+                  border: `1.5px solid ${otpAutoFilled ? '#6ee7b7' : '#86efac'}`,
                   transition: 'all 0.3s ease'
                 }}>
                   {otpAutoFilled ? (
@@ -777,20 +788,20 @@ export const OnboardingView = () => {
                       <CheckCircle2 size={22} color="#059669" style={{ flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
                         <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '700', color: '#065f46' }}>
-                          OTP Received & Verified!
+                          OTP Verified Successfully!
                         </p>
                         <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#047857' }}>
-                          Code <strong>4819</strong> auto-filled • Launching Portal...
+                          Code <strong>4819</strong> verified • Launching Patient Portal...
                         </p>
                       </div>
                     </>
                   ) : (
                     <>
                       <div style={{
-                        width: '38px',
-                        height: '38px',
+                        width: '36px',
+                        height: '36px',
                         borderRadius: '50%',
-                        background: '#d97706',
+                        background: '#059669',
                         color: '#ffffff',
                         display: 'flex',
                         alignItems: 'center',
@@ -798,21 +809,65 @@ export const OnboardingView = () => {
                         fontWeight: '800',
                         fontSize: '0.95rem',
                         flexShrink: 0,
-                        boxShadow: '0 0 10px rgba(217, 119, 6, 0.3)'
+                        boxShadow: '0 0 10px rgba(5, 150, 105, 0.25)'
                       }}>
-                        {otpTimer}s
+                        <ShieldCheck size={20} color="#ffffff" />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '700', color: '#92400e' }}>
-                          OTP Delivery in Progress
+                        <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '700', color: '#065f46' }}>
+                          SMS OTP Dispatched via UIDAI Gateway
                         </p>
-                        <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#b45309' }}>
-                          Automatic arrival in <strong>{otpTimer} seconds</strong> (or enter code <strong>4819</strong> manually below)
+                        <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#047857' }}>
+                          Sent to linked mobile <strong>{is10DigitPhone ? displayPhone : (selectedRole === 'Receptionist' ? (receptionistGmail || uniqueId) : linkedPatientPhone)}</strong>
                         </p>
                       </div>
                     </>
                   )}
                 </div>
+
+                {/* Simulated Live Incoming SMS Notification */}
+                {!otpAutoFilled && (
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <span style={{ fontSize: '1.05rem', flexShrink: 0 }}>📩</span>
+                      <div style={{ fontSize: '0.79rem', color: '#334155', lineHeight: 1.35 }}>
+                        <strong>SMS (UIDAI):</strong> Your OTP is <strong>4819</strong> for mobile {is10DigitPhone ? displayPhone : linkedPatientPhone}.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtp(['4', '8', '1', '9']);
+                        setOtpAutoFilled(true);
+                      }}
+                      style={{
+                        background: '#0284c7',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                    >
+                      Fill 4819
+                    </button>
+                  </div>
+                )}
 
                 <label className="form-label" style={{ textAlign: 'center', marginBottom: '12px' }}>
                   ENTER 4-DIGIT OTP
@@ -840,9 +895,32 @@ export const OnboardingView = () => {
                 </div>
 
                 <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.82rem', color: '#64748b' }}>
-                  {otpAutoFilled 
-                    ? 'Auto-verified Code: 4819' 
-                    : `Waiting for Gateway (${otpTimer}s remaining)... (Default OTP: 4819)`}
+                  {otpAutoFilled ? (
+                    'Verified Code: 4819'
+                  ) : (
+                    <span>
+                      Didn't receive SMS code?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpTimer(10);
+                          setOtp(['4', '8', '1', '9']);
+                          setOtpAutoFilled(true);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#0284c7',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          padding: 0
+                        }}
+                      >
+                        Resend OTP
+                      </button>
+                    </span>
+                  )}
                 </div>
               </>
             )}
