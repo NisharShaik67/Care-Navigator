@@ -926,17 +926,6 @@ export const OnboardingView = () => {
               </span>
             </button>
           </form>
-
-          {/* Return to Landing Page subtle link */}
-          <div className="auth-bottom-nav">
-            <button
-              type="button"
-              onClick={() => navigateTo('landing')}
-              className="auth-bottom-return-btn"
-            >
-              ← Back to Landing Page
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1104,29 +1093,6 @@ export const OnboardingView = () => {
 
         .btn-block {
           width: 100%;
-        }
-
-        .auth-bottom-nav {
-          display: flex;
-          justify-content: center;
-          margin-top: 18px;
-        }
-
-        .auth-bottom-return-btn {
-          background: none;
-          border: none;
-          color: #64748b;
-          font-size: 0.84rem;
-          font-weight: 600;
-          cursor: pointer;
-          padding: 6px 14px;
-          border-radius: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .auth-bottom-return-btn:hover {
-          color: #0284c7;
-          background: #f1f5f9;
         }
 
         @media (max-width: 640px) {
