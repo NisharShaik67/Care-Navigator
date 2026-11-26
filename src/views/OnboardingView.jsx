@@ -972,7 +972,7 @@ export const OnboardingView = () => {
           justify-content: space-between;
           margin-bottom: 20px;
           padding-bottom: 12px;
-          border-bottom: 1px solid #f1f5f9;
+          border-bottom: none;
         }
 
         .auth-back-nav-btn {

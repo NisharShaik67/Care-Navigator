@@ -355,7 +355,7 @@ export const Header = () => {
           flex-shrink: 0;
           background: #ffffff;
           backdrop-filter: blur(16px);
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: none;
           display: flex;
           align-items: center;
           justify-content: space-between;
