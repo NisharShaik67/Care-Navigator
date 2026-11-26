@@ -180,13 +180,16 @@ export const Navigation = () => {
             height: 18px !important;
           }
           .tab-label {
-            font-size: clamp(0.56rem, 2.2vw, 0.68rem);
-            letter-spacing: -0.2px;
+            font-size: clamp(0.58rem, 2.2vw, 0.68rem);
+            letter-spacing: -0.3px;
             text-align: center;
-            line-height: 1.1;
-            white-space: nowrap;
+            line-height: 1.15;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
             width: 100%;
           }
         }

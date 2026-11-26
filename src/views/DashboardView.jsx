@@ -576,6 +576,19 @@ export const DashboardView = () => {
         }
 
         @media (max-width: 768px) {
+          .services-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            width: 100% !important;
+          }
+
+          .service-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 16px 14px !important;
+          }
+
           .hero-banner {
             flex-direction: row !important;
             flex-wrap: nowrap !important;
