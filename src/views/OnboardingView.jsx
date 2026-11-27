@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useApp, AADHAAR_DATABASE, extract10DigitPhone, getAadhaarLinkedMobile } from '../context/AppContext';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  useApp, 
+  AADHAAR_DATABASE, 
+  extract10DigitPhone, 
+  getAadhaarLinkedMobile,
+  ALL_NARASARAOPET_DOCTORS,
+  findDoctorInRoster 
+} from '../context/AppContext';
 import { 
   CheckCircle2, 
   Ambulance, 
@@ -48,6 +55,75 @@ export const OnboardingView = () => {
   const [doctorId, setDoctorId] = useState('DOCTOR-001');
   const [receptionistGmail, setReceptionistGmail] = useState('reception.narasaraopet@gmail.com');
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Multi-Hospital Doctor Selection State
+  const [docHospitalId, setDocHospitalId] = useState('hosp-area');
+  const [docSelectedDoctorId, setDocSelectedDoctorId] = useState('DOCTOR-001');
+  const [docPhoneOrId, setDocPhoneOrId] = useState('');
+
+  // List of unique authentic hospitals in Narasaraopet
+  const doctorHospitalsList = useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    ALL_NARASARAOPET_DOCTORS.forEach(d => {
+      if (!seen.has(d.hospitalId)) {
+        seen.add(d.hospitalId);
+        list.push({ id: d.hospitalId, name: d.hospital });
+      }
+    });
+    return list;
+  }, []);
+
+  // Doctors practicing in the currently selected hospital
+  const hospitalDoctorsList = useMemo(() => {
+    return ALL_NARASARAOPET_DOCTORS.filter(d => d.hospitalId === docHospitalId);
+  }, [docHospitalId]);
+
+  // Currently resolved active doctor
+  const activeDoctor = useMemo(() => {
+    if (docPhoneOrId && docPhoneOrId.trim()) {
+      const matched = findDoctorInRoster(docPhoneOrId.trim());
+      if (matched) return matched;
+    }
+    return ALL_NARASARAOPET_DOCTORS.find(d => d.id === docSelectedDoctorId) || hospitalDoctorsList[0] || ALL_NARASARAOPET_DOCTORS[0];
+  }, [docPhoneOrId, docSelectedDoctorId, hospitalDoctorsList]);
+
+  const handleHospitalChange = (hId) => {
+    setDocHospitalId(hId);
+    setErrorMsg('');
+    const docsInHosp = ALL_NARASARAOPET_DOCTORS.filter(d => d.hospitalId === hId);
+    if (docsInHosp.length > 0) {
+      setDocSelectedDoctorId(docsInHosp[0].id);
+      setDoctorId(docsInHosp[0].id);
+      setPhoneNumber(docsInHosp[0].phone);
+    }
+    setDocPhoneOrId('');
+  };
+
+  const handleDoctorSelectChange = (docId) => {
+    setDocSelectedDoctorId(docId);
+    setDoctorId(docId);
+    setErrorMsg('');
+    const d = ALL_NARASARAOPET_DOCTORS.find(item => item.id === docId);
+    if (d) {
+      setDocHospitalId(d.hospitalId);
+      setPhoneNumber(d.phone);
+    }
+    setDocPhoneOrId('');
+  };
+
+  const handleDoctorInputSearch = (val) => {
+    setDocPhoneOrId(val);
+    setErrorMsg('');
+    setInputError(false);
+    const matched = findDoctorInRoster(val);
+    if (matched) {
+      setDocHospitalId(matched.hospitalId);
+      setDocSelectedDoctorId(matched.id);
+      setDoctorId(matched.id);
+      setPhoneNumber(matched.phone);
+    }
+  };
 
   // Security PIN state (for Doctor & Admin)
   const [pin, setPin] = useState(['', '', '', '']);
@@ -326,15 +402,18 @@ export const OnboardingView = () => {
   const a12 = !hasPhonePrefix && digitsOnly.length === 12 ? digitsOnly : '';
   const isEmail = cleanInput.includes('@');
   const isAdmin = cleanInput.toLowerCase().startsWith('admin') || cleanInput.toLowerCase() === 'director' || cleanInput.toLowerCase() === 'superadmin';
-  const isDoc = !isEmail && !isAdmin && !a12 && !p10 && (
+
+  // Check if input matches any authentic Narasaraopet doctor
+  const matchedDoctorFromInput = (!isEmail && !isAdmin && !a12) ? findDoctorInRoster(cleanInput, p10) : null;
+  const isDoc = Boolean(matchedDoctorFromInput) || (!isEmail && !isAdmin && !a12 && !p10 && (
     cleanInput.toLowerCase().includes('doc') || 
     cleanInput.toLowerCase().startsWith('dr') || 
     cleanInput.toLowerCase().includes('doctor') || 
     (/[a-zA-Z]/.test(cleanInput))
-  );
+  ));
 
   const is12DigitAadhaar = Boolean(a12);
-  const is10DigitPhone = Boolean(p10);
+  const is10DigitPhone = Boolean(p10) && !isDoc;
 
   const displayPhone = is10DigitPhone
     ? (cleanInput.startsWith('+91') ? cleanInput : `+91 ${p10}`)
@@ -348,6 +427,13 @@ export const OnboardingView = () => {
     setErrorMsg('');
     setInputError(false);
     setUniqueId(val);
+    const matched = findDoctorInRoster(val);
+    if (matched) {
+      setDocHospitalId(matched.hospitalId);
+      setDocSelectedDoctorId(matched.id);
+      setDoctorId(matched.id);
+      setPhoneNumber(matched.phone);
+    }
   };
 
   const handleAuthSubmit = (e) => {
@@ -355,6 +441,20 @@ export const OnboardingView = () => {
     setErrorMsg('');
 
     if (authMode === 'login') {
+      // 1. DOCTOR LOGIN (When Doctor role is selected OR detected as doctor)
+      if (selectedRole === 'Doctor' || isDoc) {
+        const docToUse = (selectedRole === 'Doctor' ? activeDoctor : null) || matchedDoctorFromInput || findDoctorInRoster(uniqueId, p10) || activeDoctor || ALL_NARASARAOPET_DOCTORS[0];
+        setSelectedRole('Doctor');
+        setDoctorId(docToUse.id);
+        setDocHospitalId(docToUse.hospitalId);
+        setDocSelectedDoctorId(docToUse.id);
+        setPhoneNumber(docToUse.phone);
+        setErrorMsg('');
+        setPin(['', '', '', '']); // Pin starts completely blank!
+        setAuthMode('pin');
+        return;
+      }
+
       const clean = uniqueId.trim();
       const digits = clean.replace(/\D/g, '');
       const phonePrefix = clean.startsWith('+') || (clean.startsWith('0') && digits.length === 11);
@@ -362,22 +462,6 @@ export const OnboardingView = () => {
       const aadhaar12 = !phonePrefix && digits.length === 12 ? digits : '';
       const email = clean.includes('@');
       const admin = clean.toLowerCase().startsWith('admin') || clean.toLowerCase() === 'director' || clean.toLowerCase() === 'superadmin';
-      const doc = !email && !admin && !aadhaar12 && !phone10 && (
-        clean.toLowerCase().includes('doc') || 
-        clean.toLowerCase().startsWith('dr') || 
-        clean.toLowerCase().includes('doctor') || 
-        (/[a-zA-Z]/.test(clean))
-      );
-
-      // 1. DOCTOR -> USES SECURITY PIN!
-      if (doc) {
-        setSelectedRole('Doctor');
-        setDoctorId(clean || 'DOCTOR-001');
-        setErrorMsg('');
-        setPin(['', '', '', '']);
-        setAuthMode('pin');
-        return;
-      }
 
       // 2. ADMIN -> USES SECURITY PIN!
       if (admin) {
@@ -463,13 +547,24 @@ export const OnboardingView = () => {
 
       // Doctor PIN Login
       if (selectedRole === 'Doctor') {
-        const docId = (uniqueId || doctorId || 'DOCTOR-001').trim();
-        loginWithAccount(docId, 'Doctor', {
-          name: 'Dr. Raghavendra',
-          specialty: 'General Physician',
-          phone: phoneNumber || '+91 94401 23456', 
-          doctorId: docId,
-          photo: '/doctor_raghavendra.jpg'
+        const docToUse = activeDoctor || findDoctorInRoster(doctorId || uniqueId) || ALL_NARASARAOPET_DOCTORS[0];
+        loginWithAccount(docToUse.id, 'Doctor', {
+          name: docToUse.name,
+          title: docToUse.title,
+          specialty: docToUse.specialty,
+          hospital: docToUse.hospital,
+          hospitalId: docToUse.hospitalId,
+          department: docToUse.department,
+          doctorId: docToUse.id,
+          licenseNo: docToUse.licenseNo,
+          opdRoom: docToUse.opdRoom,
+          shiftHours: docToUse.shiftHours,
+          experience: docToUse.experience,
+          qualifications: docToUse.qualifications,
+          fee: docToUse.fee,
+          phone: docToUse.phone,
+          photo: docToUse.photo,
+          role: 'Doctor'
         });
         navigateTo('doctor-dashboard', true);
         return;
@@ -498,11 +593,11 @@ export const OnboardingView = () => {
       return 'Verify Aadhaar OTP & Launch Patient Portal';
     }
     if (authMode === 'pin') {
-      if (selectedRole === 'Doctor') return 'Verify PIN & Launch Doctor Dashboard';
+      if (selectedRole === 'Doctor') return `Verify PIN & Launch ${activeDoctor?.name || 'Doctor'} Dashboard`;
       if (selectedRole === 'Admin') return 'Verify PIN & Launch Admin Console';
       return 'Verify PIN & Proceed';
     }
-    if (isDoc) return 'Continue with Doctor Security PIN';
+    if (selectedRole === 'Doctor' || isDoc) return `Proceed with ${activeDoctor?.name || 'Doctor'} Security PIN`;
     if (isAdmin) return 'Continue with Admin Security PIN';
     if (is12DigitAadhaar) return 'Continue with Aadhaar SMS OTP';
     if (is10DigitPhone) return 'Continue with Driver SMS OTP';
@@ -542,7 +637,9 @@ export const OnboardingView = () => {
                 ? (selectedRole === 'Doctor'
                     ? 'Doctor Security PIN Verification'
                     : 'Super Admin Security PIN Verification')
-                : 'Sign In'}
+                : selectedRole === 'Doctor'
+                  ? 'Doctor Official Portal Sign In'
+                  : 'Sign In'}
           </h2>
           <p className="modal-subtitle">
             {authMode === 'otp'
@@ -553,10 +650,118 @@ export const OnboardingView = () => {
                     : `Enter the 4-digit OTP sent to Aadhaar-registered mobile (${linkedPatientPhone}).`)
               : authMode === 'pin'
                 ? (selectedRole === 'Doctor'
-                    ? `Enter your 4-digit security PIN for Doctor ID (${doctorId || uniqueId || 'DOCTOR-001'})`
+                    ? `Enter your 4-digit security PIN for ${activeDoctor?.name || 'Doctor'} (${activeDoctor?.hospital || 'Hospital'})`
                     : `Enter your 4-digit security PIN for Super Admin (${uniqueId})`)
-                : 'Enter your Aadhaar Number, Phone, Doctor ID, or Email to sign in.'}
+                : selectedRole === 'Doctor'
+                  ? 'Choose your hospital and doctor name, or enter your registered mobile number to sign in.'
+                  : 'Enter your Aadhaar Number, Phone, Doctor ID, or Email to sign in.'}
           </p>
+
+          {/* Quick Role Switcher Tabs (in Login Mode) */}
+          {authMode === 'login' && (
+            <div className="auth-role-tabs" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '6px',
+              marginBottom: '20px',
+              background: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '14px'
+            }}>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('User'); setErrorMsg(''); setInputError(false); }}
+                style={{
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: selectedRole === 'User' ? '#ffffff' : 'transparent',
+                  color: selectedRole === 'User' ? '#059669' : '#64748b',
+                  boxShadow: selectedRole === 'User' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                <UserCheck size={16} />
+                <span>Patient</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('Doctor'); setErrorMsg(''); setInputError(false); }}
+                style={{
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: selectedRole === 'Doctor' ? '#ffffff' : 'transparent',
+                  color: selectedRole === 'Doctor' ? '#0284c7' : '#64748b',
+                  boxShadow: selectedRole === 'Doctor' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                <Stethoscope size={16} />
+                <span>Doctor</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('Responder'); setErrorMsg(''); setInputError(false); }}
+                style={{
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: selectedRole === 'Responder' ? '#ffffff' : 'transparent',
+                  color: selectedRole === 'Responder' ? '#dc2626' : '#64748b',
+                  boxShadow: selectedRole === 'Responder' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                <Ambulance size={16} />
+                <span>108 Driver</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('Receptionist'); setErrorMsg(''); setInputError(false); }}
+                style={{
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: selectedRole === 'Receptionist' ? '#ffffff' : 'transparent',
+                  color: selectedRole === 'Receptionist' ? '#d97706' : '#64748b',
+                  boxShadow: selectedRole === 'Receptionist' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                <Building2 size={16} />
+                <span>Reception</span>
+              </button>
+            </div>
+          )}
 
           {errorMsg && (
             <div 
@@ -580,8 +785,8 @@ export const OnboardingView = () => {
             </div>
           )}
 
-          {/* Active Detected Role Banner in login mode */}
-          {authMode === 'login' && cleanInput && (
+          {/* Active Detected Role Banner in universal login mode */}
+          {authMode === 'login' && selectedRole !== 'Doctor' && cleanInput && (
             <div className="login-detection-indicator" style={{ marginBottom: '16px' }}>
               {is12DigitAadhaar ? (
                 <div style={{
@@ -647,7 +852,7 @@ export const OnboardingView = () => {
                   <Stethoscope size={20} color="#0284c7" style={{ flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#0369a1', wordBreak: 'break-word', display: 'block', lineHeight: 1.35 }}>
-                      🩺 Doctor Portal Detected (ID: {cleanInput}) • Security PIN
+                      🩺 Doctor Portal Detected: {matchedDoctorFromInput?.name || cleanInput} ({matchedDoctorFromInput?.hospital || 'Hospital'}) • Security PIN
                     </span>
                   </div>
                 </div>
@@ -673,7 +878,174 @@ export const OnboardingView = () => {
           )}
 
           <form onSubmit={handleAuthSubmit} className="auth-form">
-            {authMode === 'login' && (
+            {authMode === 'login' && selectedRole === 'Doctor' && (
+              <>
+                {/* Hospital Selection Dropdown */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '0.84rem' }}>
+                    <Building2 size={16} color="#0284c7" />
+                    <span>Select Hospital / Clinic Facility:</span>
+                  </label>
+                  <select
+                    value={docHospitalId}
+                    onChange={e => handleHospitalChange(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #cbd5e1',
+                      fontSize: '0.88rem',
+                      fontWeight: '700',
+                      color: '#0f172a',
+                      background: '#f8fafc',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {doctorHospitalsList.map(h => (
+                      <option key={h.id} value={h.id}>{h.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Doctor Selection Dropdown */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '0.84rem' }}>
+                    <Stethoscope size={16} color="#0284c7" />
+                    <span>Select Doctor from this Hospital:</span>
+                  </label>
+                  <select
+                    value={docSelectedDoctorId}
+                    onChange={e => handleDoctorSelectChange(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #cbd5e1',
+                      fontSize: '0.88rem',
+                      fontWeight: '700',
+                      color: '#0369a1',
+                      background: '#f0f9ff',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {hospitalDoctorsList.map(doc => (
+                      <option key={doc.id} value={doc.id}>
+                        {doc.name} — {doc.specialty}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Or Search by Mobile / Doctor ID */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '0.82rem' }}>
+                    <CreditCard size={15} color="#64748b" />
+                    <span>Or Enter Doctor Registered Mobile / ID:</span>
+                  </label>
+                  <div className="input-group">
+                    <Stethoscope size={18} color="#0284c7" />
+                    <input
+                      type="text"
+                      value={docPhoneOrId}
+                      onChange={e => handleDoctorInputSearch(e.target.value)}
+                      placeholder="e.g. 9849155601 or DOCTOR-001"
+                      style={{ fontWeight: '600', color: '#0369a1' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Live Recognized Doctor Profile Card */}
+                {activeDoctor && (
+                  <div style={{
+                    padding: '14px 16px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                    border: '1.5px solid #7dd3fc',
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.08)',
+                    marginBottom: '18px',
+                    display: 'flex',
+                    gap: '14px',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {activeDoctor.photo ? (
+                        <img
+                          src={activeDoctor.photo}
+                          alt={activeDoctor.name}
+                          style={{
+                            width: '54px',
+                            height: '54px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '2px solid #0284c7',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '54px',
+                          height: '54px',
+                          borderRadius: '50%',
+                          background: '#0284c7',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700'
+                        }}>
+                          <Stethoscope size={24} />
+                        </div>
+                      )}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-1px',
+                        right: '-1px',
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '50%',
+                        background: '#10b981',
+                        border: '2px solid #ffffff'
+                      }} title="Active Doctor" />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '2px' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: '800', color: '#0c4a6e' }}>
+                          {activeDoctor.name}
+                        </h4>
+                        <span style={{
+                          fontSize: '0.70rem',
+                          fontWeight: '700',
+                          padding: '2px 7px',
+                          borderRadius: '8px',
+                          background: '#0284c7',
+                          color: '#ffffff'
+                        }}>
+                          {activeDoctor.id}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#0369a1', marginBottom: '3px' }}>
+                        {activeDoctor.specialty}
+                      </div>
+
+                      <div style={{ fontSize: '0.78rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                        <Building2 size={13} color="#0284c7" />
+                        <span style={{ fontWeight: '600', color: '#334155' }}>{activeDoctor.hospital}</span>
+                      </div>
+
+                      <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                        {activeDoctor.roomNo} • Mobile: <strong style={{ color: '#0284c7' }}>{activeDoctor.phone}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {authMode === 'login' && selectedRole !== 'Doctor' && (
               <>
                 <label className="form-label">
                   {is12DigitAadhaar
@@ -932,21 +1304,32 @@ export const OnboardingView = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 14px',
+                  padding: '12px 14px',
                   background: selectedRole === 'Doctor' ? '#f0f9ff' : '#faf5ff',
                   border: `1.5px solid ${selectedRole === 'Doctor' ? '#bae6fd' : '#e9d5ff'}`,
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   marginBottom: '18px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                    {selectedRole === 'Doctor' ? (
-                      <Stethoscope size={18} color="#0284c7" style={{ flexShrink: 0 }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                    {selectedRole === 'Doctor' && activeDoctor?.photo ? (
+                      <img
+                        src={activeDoctor.photo}
+                        alt="Doctor"
+                        style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #0284c7', flexShrink: 0 }}
+                      />
+                    ) : selectedRole === 'Doctor' ? (
+                      <Stethoscope size={22} color="#0284c7" style={{ flexShrink: 0 }} />
                     ) : (
-                      <ShieldCheck size={18} color="#9333ea" style={{ flexShrink: 0 }} />
+                      <ShieldCheck size={22} color="#9333ea" style={{ flexShrink: 0 }} />
                     )}
-                    <span style={{ fontSize: '0.85rem', fontWeight: '600', color: selectedRole === 'Doctor' ? '#0369a1' : '#581c87', wordBreak: 'break-word', lineHeight: 1.3 }}>
-                      Logging in as: <strong>{selectedRole === 'Doctor' ? (doctorId || uniqueId || 'DOCTOR-001') : uniqueId}</strong>
-                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '0.90rem', fontWeight: '800', color: selectedRole === 'Doctor' ? '#0369a1' : '#581c87', wordBreak: 'break-word', display: 'block', lineHeight: 1.3 }}>
+                        {selectedRole === 'Doctor' ? (activeDoctor?.name || 'Doctor') : uniqueId}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>
+                        {selectedRole === 'Doctor' ? `${activeDoctor?.specialty} • ${activeDoctor?.hospital}` : 'Super Admin Console'}
+                      </span>
+                    </div>
                   </div>
                   <button
                     type="button"

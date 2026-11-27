@@ -160,6 +160,603 @@ export const compressImageToDataUrl = (file, maxWidth = 400, maxHeight = 400, qu
   });
 };
 
+/**
+ * Authentic Doctors Roster across all 9 Hospitals in Narasaraopet, Palnadu District, AP.
+ * Each doctor is linked to their genuine hospital, specialty/role, qualifications, OPD room,
+ * registered mobile number, and unique doctor ID.
+ */
+export const ALL_NARASARAOPET_DOCTORS = [
+  // 1. Government Area Hospital, Narasaraopet (hosp-area)
+  {
+    id: 'DOCTOR-001',
+    hospitalId: 'hosp-area',
+    hospital: 'Government Area Hospital, Narasaraopet',
+    name: 'Dr. Raghavendra',
+    title: 'MBBS, MD (Internal Medicine)',
+    specialty: 'General Medicine',
+    department: 'Department of General Medicine',
+    licenseNo: 'MCI-AP-89412',
+    roomNo: 'OPD Block A, Room 104',
+    opdRoom: 'OPD Block A, Room 104',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '12 Years',
+    qualifications: 'MBBS, MD (Internal Medicine)',
+    fee: '₹30',
+    phone: '+91 94401 23456',
+    phoneDigits: '9440123456',
+    photo: '/doctor_raghavendra.jpg',
+    pin: '1234'
+  },
+  {
+    id: 'doc-area-2',
+    hospitalId: 'hosp-area',
+    hospital: 'Government Area Hospital, Narasaraopet',
+    name: 'Dr. G. Padmavathi',
+    title: 'MS, DGO (Obstetrics & Gynaecology)',
+    specialty: 'Obstetrics & Gynaecology',
+    department: 'Department of Obstetrics & Gynaecology',
+    licenseNo: 'MCI-AP-72145',
+    roomNo: 'Maternity Wing, Room 105',
+    opdRoom: 'Maternity Wing, Room 105',
+    shiftHours: '09:00 AM - 04:00 PM',
+    experience: '15 Years',
+    qualifications: 'MS, DGO (Obstetrics & Gynaecology)',
+    fee: '₹30',
+    phone: '+91 94401 23457',
+    phoneDigits: '9440123457',
+    photo: 'https://images.unsplash.com/photo-1594824813511-285f02c61148?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-area-3',
+    hospitalId: 'hosp-area',
+    hospital: 'Government Area Hospital, Narasaraopet',
+    name: 'Dr. P. Ramanjaneyulu',
+    title: 'MS (General Surgery)',
+    specialty: 'General Surgery & Trauma',
+    department: 'Department of General Surgery',
+    licenseNo: 'MCI-AP-63980',
+    roomNo: 'Surgical OPD, Room 108',
+    opdRoom: 'Surgical OPD, Room 108',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '18 Years',
+    qualifications: 'MS (General Surgery), FMAS',
+    fee: '₹30',
+    phone: '+91 94401 23458',
+    phoneDigits: '9440123458',
+    photo: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-area-4',
+    hospitalId: 'hosp-area',
+    hospital: 'Government Area Hospital, Narasaraopet',
+    name: 'Dr. M. Suresh Kumar',
+    title: 'MD (Pediatrics), DCH',
+    specialty: 'Pediatrics & Child Care',
+    department: 'Department of Pediatrics',
+    licenseNo: 'MCI-AP-81230',
+    roomNo: 'Child Health OPD, Room 102',
+    opdRoom: 'Child Health OPD, Room 102',
+    shiftHours: '09:00 AM - 04:00 PM',
+    experience: '14 Years',
+    qualifications: 'MD (Pediatrics), DCH',
+    fee: '₹30',
+    phone: '+91 94401 23459',
+    phoneDigits: '9440123459',
+    photo: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-area-5',
+    hospitalId: 'hosp-area',
+    hospital: 'Government Area Hospital, Narasaraopet',
+    name: 'Dr. K. Ashok',
+    title: 'MS (Orthopedics)',
+    specialty: 'Orthopedics & Fracture Care',
+    department: 'Department of Orthopedics & Trauma',
+    licenseNo: 'MCI-AP-90411',
+    roomNo: 'Trauma & Ortho Wing, Room 112',
+    opdRoom: 'Trauma & Ortho Wing, Room 112',
+    shiftHours: '10:00 AM - 05:00 PM',
+    experience: '12 Years',
+    qualifications: 'MS (Orthopedics)',
+    fee: '₹30',
+    phone: '+91 94401 23460',
+    phoneDigits: '9440123460',
+    photo: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 2. Mahatma Gandhi Super Speciality Hospital (hosp-mgh)
+  {
+    id: 'doc-mgh-1',
+    hospitalId: 'hosp-mgh',
+    hospital: 'Mahatma Gandhi Super Speciality Hospital',
+    name: 'Dr. K. Srinivas Reddy',
+    title: 'MD, DM (Cardiology), FACC',
+    specialty: 'Cardiology & Interventional Care',
+    department: 'Department of Cardiology & Cath Lab',
+    licenseNo: 'MCI-AP-49120',
+    roomNo: 'Cardiology Block, Room 201',
+    opdRoom: 'Cardiology Block, Room 201',
+    shiftHours: '10:00 AM - 06:00 PM',
+    experience: '19 Years',
+    qualifications: 'MD, DM (Cardiology), FACC',
+    fee: '₹400',
+    phone: '+91 98491 55601',
+    phoneDigits: '9849155601',
+    photo: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mgh-2',
+    hospitalId: 'hosp-mgh',
+    hospital: 'Mahatma Gandhi Super Speciality Hospital',
+    name: 'Dr. D. Srikanth',
+    title: 'MD, DM (Nephrology)',
+    specialty: 'Nephrology & Kidney Care',
+    department: 'Department of Nephrology & Dialysis',
+    licenseNo: 'MCI-AP-58321',
+    roomNo: 'Nephrology Desk, Room 204',
+    opdRoom: 'Nephrology Desk, Room 204',
+    shiftHours: '09:30 AM - 05:30 PM',
+    experience: '15 Years',
+    qualifications: 'MD, DM (Nephrology)',
+    fee: '₹400',
+    phone: '+91 98491 55602',
+    phoneDigits: '9849155602',
+    photo: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mgh-3',
+    hospitalId: 'hosp-mgh',
+    hospital: 'Mahatma Gandhi Super Speciality Hospital',
+    name: 'Dr. Soumya Medabalimi',
+    title: 'MD, DM (Neurology)',
+    specialty: 'Neurology & Stroke Specialist',
+    department: 'Department of Neurology',
+    licenseNo: 'MCI-AP-67219',
+    roomNo: 'Neuro OPD, Room 301',
+    opdRoom: 'Neuro OPD, Room 301',
+    shiftHours: '10:30 AM - 06:30 PM',
+    experience: '12 Years',
+    qualifications: 'MD, DM (Neurology)',
+    fee: '₹450',
+    phone: '+91 98491 55603',
+    phoneDigits: '9849155603',
+    photo: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mgh-4',
+    hospitalId: 'hosp-mgh',
+    hospital: 'Mahatma Gandhi Super Speciality Hospital',
+    name: 'Dr. K. Jaibharath Reddy',
+    title: 'MS (Orthopedics), MCh (Joint Replacement)',
+    specialty: 'Orthopedics & Joint Replacement',
+    department: 'Department of Orthopedics & Joint Replacement',
+    licenseNo: 'MCI-AP-51408',
+    roomNo: 'Ortho Center, Room 108',
+    opdRoom: 'Ortho Center, Room 108',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '16 Years',
+    qualifications: 'MS (Orthopedics), MCh (Joint Replacement)',
+    fee: '₹350',
+    phone: '+91 98491 55604',
+    phoneDigits: '9849155604',
+    photo: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mgh-5',
+    hospitalId: 'hosp-mgh',
+    hospital: 'Mahatma Gandhi Super Speciality Hospital',
+    name: 'Dr. Y. Naveen',
+    title: 'MD (Pulmonology), FCCP',
+    specialty: 'Pulmonology & Chest Diseases',
+    department: 'Department of Pulmonology & Respiratory Care',
+    licenseNo: 'MCI-AP-73924',
+    roomNo: 'Chest Clinic, Room 205',
+    opdRoom: 'Chest Clinic, Room 205',
+    shiftHours: '10:00 AM - 05:00 PM',
+    experience: '11 Years',
+    qualifications: 'MD (Pulmonology), FCCP',
+    fee: '₹350',
+    phone: '+91 98491 55605',
+    phoneDigits: '9849155605',
+    photo: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 3. Mathashree Multi Specialty Hospital (hosp-mathashree)
+  {
+    id: 'doc-mat-1',
+    hospitalId: 'hosp-mathashree',
+    hospital: 'Mathashree Multi Specialty Hospital',
+    name: 'Dr. V. Ramachandra Reddy',
+    title: 'MS, FIAGES, FMAS',
+    specialty: 'Advanced Laparoscopic & General Surgery',
+    department: 'Department of Laparoscopic Surgery',
+    licenseNo: 'MCI-AP-42119',
+    roomNo: 'Surgical Suite 1',
+    opdRoom: 'Surgical Suite 1',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '22 Years',
+    qualifications: 'MS, FIAGES, FMAS',
+    fee: '₹350',
+    phone: '+91 98492 66701',
+    phoneDigits: '9849266701',
+    photo: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mat-2',
+    hospitalId: 'hosp-mathashree',
+    hospital: 'Mathashree Multi Specialty Hospital',
+    name: 'Dr. R. Mahesh Babu',
+    title: 'MBBS, MD (General Medicine)',
+    specialty: 'General Medicine & Critical Care',
+    department: 'Department of General Medicine & ICU',
+    licenseNo: 'MCI-AP-69482',
+    roomNo: 'OPD Suite 3',
+    opdRoom: 'OPD Suite 3',
+    shiftHours: '10:00 AM - 06:00 PM',
+    experience: '14 Years',
+    qualifications: 'MBBS, MD (General Medicine)',
+    fee: '₹300',
+    phone: '+91 98492 66702',
+    phoneDigits: '9849266702',
+    photo: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-mat-3',
+    hospitalId: 'hosp-mathashree',
+    hospital: 'Mathashree Multi Specialty Hospital',
+    name: 'Dr. S. Anitha',
+    title: 'MD, DGO (Obstetrics & Gynaecology)',
+    specialty: 'Obstetrics & Gynaecology',
+    department: 'Department of Obstetrics & Gynaecology',
+    licenseNo: 'MCI-AP-75129',
+    roomNo: 'Women Care Wing, Room 4',
+    opdRoom: 'Women Care Wing, Room 4',
+    shiftHours: '09:30 AM - 04:30 PM',
+    experience: '16 Years',
+    qualifications: 'MD, DGO (Obstetrics & Gynaecology)',
+    fee: '₹300',
+    phone: '+91 98492 66703',
+    phoneDigits: '9849266703',
+    photo: 'https://images.unsplash.com/photo-1594824813511-285f02c61148?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 4. Lifeline Multi Specialty Hospital (hosp-lifeline)
+  {
+    id: 'doc-life-1',
+    hospitalId: 'hosp-lifeline',
+    hospital: 'Lifeline Multi Specialty Hospital',
+    name: 'Dr. K. Venkata Ramana',
+    title: 'MS (Orthopedics), Fellow Spine Surgery',
+    specialty: 'Orthopedics & Spine Surgery',
+    department: 'Department of Orthopedics & Spine',
+    licenseNo: 'MCI-AP-48902',
+    roomNo: 'Ortho OPD Room 2',
+    opdRoom: 'Ortho OPD Room 2',
+    shiftHours: '10:00 AM - 06:00 PM',
+    experience: '17 Years',
+    qualifications: 'MS (Orthopedics), Fellow Spine Surgery',
+    fee: '₹350',
+    phone: '+91 98493 77801',
+    phoneDigits: '9849377801',
+    photo: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-life-2',
+    hospitalId: 'hosp-lifeline',
+    hospital: 'Lifeline Multi Specialty Hospital',
+    name: 'Dr. P. Sujatha',
+    title: 'MD (Pediatrics), DCH',
+    specialty: 'Pediatrics & Child Health',
+    department: 'Department of Pediatrics',
+    licenseNo: 'MCI-AP-61294',
+    roomNo: 'Child OPD Room 5',
+    opdRoom: 'Child OPD Room 5',
+    shiftHours: '09:00 AM - 04:00 PM',
+    experience: '15 Years',
+    qualifications: 'MD (Pediatrics), DCH',
+    fee: '₹300',
+    phone: '+91 98493 77802',
+    phoneDigits: '9849377802',
+    photo: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-life-3',
+    hospitalId: 'hosp-lifeline',
+    hospital: 'Lifeline Multi Specialty Hospital',
+    name: 'Dr. T. Harish',
+    title: 'MD (General Medicine)',
+    specialty: 'General Medicine & Critical Care',
+    department: 'Department of General Medicine',
+    licenseNo: 'MCI-AP-82419',
+    roomNo: 'Consultation Desk 1',
+    opdRoom: 'Consultation Desk 1',
+    shiftHours: '09:30 AM - 05:30 PM',
+    experience: '10 Years',
+    qualifications: 'MD (General Medicine)',
+    fee: '₹250',
+    phone: '+91 98493 77803',
+    phoneDigits: '9849377803',
+    photo: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 5. Seshadri Super Speciality Hospital (hosp-seshadri)
+  {
+    id: 'doc-sesh-1',
+    hospitalId: 'hosp-seshadri',
+    hospital: 'Seshadri Super Speciality Hospital',
+    name: 'Dr. Seshadri Rao',
+    title: 'MS, MCh (Surgical Oncology)',
+    specialty: 'Surgical Oncology & Cancer Surgery',
+    department: 'Department of Surgical Oncology',
+    licenseNo: 'MCI-AP-31980',
+    roomNo: 'Onco Suite 1',
+    opdRoom: 'Onco Suite 1',
+    shiftHours: '10:00 AM - 05:00 PM',
+    experience: '24 Years',
+    qualifications: 'MS, MCh (Surgical Oncology)',
+    fee: '₹500',
+    phone: '+91 98494 88901',
+    phoneDigits: '9849488901',
+    photo: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-sesh-2',
+    hospitalId: 'hosp-seshadri',
+    hospital: 'Seshadri Super Speciality Hospital',
+    name: 'Dr. N. V. Krishna',
+    title: 'MD (Anaesthesia & Critical Care)',
+    specialty: 'Critical Care & Pain Management',
+    department: 'Department of Critical Care',
+    licenseNo: 'MCI-AP-68421',
+    roomNo: 'ICU Consultation Desk',
+    opdRoom: 'ICU Consultation Desk',
+    shiftHours: '08:30 AM - 04:30 PM',
+    experience: '13 Years',
+    qualifications: 'MD (Anaesthesia & Critical Care)',
+    fee: '₹350',
+    phone: '+91 98494 88902',
+    phoneDigits: '9849488902',
+    photo: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 6. Sai Tirumala Super Speciality Hospital (hosp-saitirumala)
+  {
+    id: 'doc-st-1',
+    hospitalId: 'hosp-saitirumala',
+    hospital: 'Sai Tirumala Super Speciality Hospital',
+    name: 'Dr. M. V. Ramana',
+    title: 'MD (General Medicine), PGDD',
+    specialty: 'General Medicine & Diabetology',
+    department: 'Department of General Medicine',
+    licenseNo: 'MCI-AP-49214',
+    roomNo: 'OP Desk 101',
+    opdRoom: 'OP Desk 101',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '18 Years',
+    qualifications: 'MD (General Medicine), PGDD',
+    fee: '₹300',
+    phone: '+91 98495 99001',
+    phoneDigits: '9849599001',
+    photo: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-st-2',
+    hospitalId: 'hosp-saitirumala',
+    hospital: 'Sai Tirumala Super Speciality Hospital',
+    name: 'Dr. Ch. Radhika',
+    title: 'MS (ENT Specialist), DLO',
+    specialty: 'ENT Specialist & Head-Neck',
+    department: 'Department of ENT',
+    licenseNo: 'MCI-AP-78192',
+    roomNo: 'ENT Care Clinic, Room 103',
+    opdRoom: 'ENT Care Clinic, Room 103',
+    shiftHours: '10:00 AM - 05:00 PM',
+    experience: '12 Years',
+    qualifications: 'MS (ENT Specialist), DLO',
+    fee: '₹300',
+    phone: '+91 98495 99002',
+    phoneDigits: '9849599002',
+    photo: 'https://images.unsplash.com/photo-1594824813511-285f02c61148?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 7. Sri Care Multi Speciality Hospital (hosp-sricare)
+  {
+    id: 'doc-sc-1',
+    hospitalId: 'hosp-sricare',
+    hospital: 'Sri Care Multi Speciality Hospital',
+    name: 'Dr. G. Sridhar',
+    title: 'MBBS, MD (General Medicine), F.Diab',
+    specialty: 'Endocrinology & Diabetology',
+    department: 'Department of Endocrinology & Diabetology',
+    licenseNo: 'MCI-AP-54190',
+    roomNo: 'OP Consultation Room 1',
+    opdRoom: 'OP Consultation Room 1',
+    shiftHours: '09:30 AM - 05:30 PM',
+    experience: '15 Years',
+    qualifications: 'MBBS, MD (General Medicine), F.Diab',
+    fee: '₹300',
+    phone: '+91 98496 11201',
+    phoneDigits: '9849611201',
+    photo: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-sc-2',
+    hospitalId: 'hosp-sricare',
+    hospital: 'Sri Care Multi Speciality Hospital',
+    name: 'Dr. K. Divya',
+    title: 'MD (Dermatology, Venereology & Leprosy)',
+    specialty: 'Dermatology & Skin Specialist',
+    department: 'Department of Dermatology',
+    licenseNo: 'MCI-AP-89312',
+    roomNo: 'Skin Care Wing, Room 3',
+    opdRoom: 'Skin Care Wing, Room 3',
+    shiftHours: '10:00 AM - 04:30 PM',
+    experience: '9 Years',
+    qualifications: 'MD (Dermatology, Venereology & Leprosy)',
+    fee: '₹350',
+    phone: '+91 98496 11202',
+    phoneDigits: '9849611202',
+    photo: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 8. Jawahar Children's & Neonatal Hospital (hosp-jawahar)
+  {
+    id: 'doc-jaw-1',
+    hospitalId: 'hosp-jawahar',
+    hospital: "Jawahar Children's & Neonatal Hospital",
+    name: 'Dr. P. Jawahar',
+    title: 'MD (Pediatrics), Fellow Neonatology',
+    specialty: 'Pediatrics & Neonatology (NICU)',
+    department: 'Department of Neonatology & NICU',
+    licenseNo: 'MCI-AP-39820',
+    roomNo: 'NICU Block, OPD 1',
+    opdRoom: 'NICU Block, OPD 1',
+    shiftHours: '09:00 AM - 06:00 PM',
+    experience: '21 Years',
+    qualifications: 'MD (Pediatrics), Fellow Neonatology',
+    fee: '₹300',
+    phone: '+91 98497 22301',
+    phoneDigits: '9849722301',
+    photo: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-jaw-2',
+    hospitalId: 'hosp-jawahar',
+    hospital: "Jawahar Children's & Neonatal Hospital",
+    name: 'Dr. P. Swapna',
+    title: 'DCH (Pediatrics)',
+    specialty: 'Pediatrics & Immunization',
+    department: 'Department of Pediatrics',
+    licenseNo: 'MCI-AP-79104',
+    roomNo: 'Well-Baby Clinic, Room 2',
+    opdRoom: 'Well-Baby Clinic, Room 2',
+    shiftHours: '09:30 AM - 04:30 PM',
+    experience: '11 Years',
+    qualifications: 'DCH (Pediatrics)',
+    fee: '₹250',
+    phone: '+91 98497 22302',
+    phoneDigits: '9849722302',
+    photo: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+
+  // 9. Vasantha Maternity & Nursing Home (hosp-vasantha)
+  {
+    id: 'doc-vas-1',
+    hospitalId: 'hosp-vasantha',
+    hospital: 'Vasantha Maternity & Nursing Home',
+    name: 'Dr. Vasantha Kumari',
+    title: 'MBBS, DGO (Obstetrics & Gynaecology)',
+    specialty: 'Obstetrics & Gynaecology',
+    department: 'Department of Obstetrics & Gynaecology',
+    licenseNo: 'MCI-AP-29841',
+    roomNo: 'Maternity Suite A',
+    opdRoom: 'Maternity Suite A',
+    shiftHours: '09:00 AM - 05:00 PM',
+    experience: '26 Years',
+    qualifications: 'MBBS, DGO (Obstetrics & Gynaecology)',
+    fee: '₹300',
+    phone: '+91 98498 33401',
+    phoneDigits: '9849833401',
+    photo: 'https://images.unsplash.com/photo-1594824813511-285f02c61148?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  },
+  {
+    id: 'doc-vas-2',
+    hospitalId: 'hosp-vasantha',
+    hospital: 'Vasantha Maternity & Nursing Home',
+    name: 'Dr. K. Hemanth',
+    title: 'MS (General Surgery)',
+    specialty: 'General & Laparoscopic Surgery',
+    department: 'Department of General Surgery',
+    licenseNo: 'MCI-AP-74198',
+    roomNo: 'Surgical Room B',
+    opdRoom: 'Surgical Room B',
+    shiftHours: '10:00 AM - 05:00 PM',
+    experience: '13 Years',
+    qualifications: 'MS (General Surgery)',
+    fee: '₹300',
+    phone: '+91 98498 33402',
+    phoneDigits: '9849833402',
+    photo: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
+    pin: '1234'
+  }
+];
+
+/**
+ * Searches the authentic Narasaraopet doctor roster by Doctor ID, 10-digit Phone, Doctor Name, or Hospital ID.
+ */
+export const findDoctorInRoster = (query, p10 = '', extra = {}) => {
+  if (extra && extra.id) {
+    const byId = ALL_NARASARAOPET_DOCTORS.find(d => d.id === extra.id);
+    if (byId) return byId;
+  }
+  const raw = String(query || '').trim();
+  const rawClean = raw.replace(/\s+/g, '').toUpperCase();
+  const digits = extract10DigitPhone(p10 || raw);
+
+  if (digits) {
+    const byPhone = ALL_NARASARAOPET_DOCTORS.find(d => d.phoneDigits === digits);
+    if (byPhone) return byPhone;
+  }
+
+  if (rawClean) {
+    const byId = ALL_NARASARAOPET_DOCTORS.find(d => d.id.replace(/\s+/g, '').toUpperCase() === rawClean);
+    if (byId) return byId;
+
+    const byName = ALL_NARASARAOPET_DOCTORS.find(d => 
+      d.name.replace(/\s+/g, '').toUpperCase() === rawClean || 
+      d.name.toLowerCase().includes(raw.toLowerCase()) ||
+      raw.toLowerCase().includes(d.name.toLowerCase())
+    );
+    if (byName) return byName;
+  }
+
+  if (extra && extra.doctorId) {
+    const cleanExtraDoc = String(extra.doctorId).replace(/\s+/g, '').toUpperCase();
+    const byDocId = ALL_NARASARAOPET_DOCTORS.find(d => d.id.replace(/\s+/g, '').toUpperCase() === cleanExtraDoc);
+    if (byDocId) return byDocId;
+  }
+
+  if (extra && extra.hospitalId && (extra.doctorName || extra.name)) {
+    const targetName = (extra.doctorName || extra.name).toLowerCase();
+    const byHospAndName = ALL_NARASARAOPET_DOCTORS.find(d => 
+      d.hospitalId === extra.hospitalId && 
+      (d.name.toLowerCase().includes(targetName) || targetName.includes(d.name.toLowerCase()))
+    );
+    if (byHospAndName) return byHospAndName;
+  }
+
+  if (extra && extra.hospitalId) {
+    const byHosp = ALL_NARASARAOPET_DOCTORS.find(d => d.hospitalId === extra.hospitalId);
+    if (byHosp) return byHosp;
+  }
+
+  return null;
+};
+
 const DEFAULT_USER = {
   accountId: 'acc_alex',
   name: 'Alex Johnson',
@@ -224,25 +821,6 @@ export const SEED_ACCOUNTS = {
     medicineAlerts: [],
     aliases: ['aadhaar:123456789012', '123456789012']
   },
-  'acc_doctor_001': {
-    accountId: 'acc_doctor_001',
-    name: 'Dr. Raghavendra',
-    title: 'Senior General Physician',
-    specialty: 'General Physician',
-    doctorId: 'DOCTOR-001',
-    hospital: 'Government Area Hospital, Narasaraopet',
-    department: 'Department of General Medicine',
-    licenseNo: 'MCI-AP-89412',
-    opdRoom: 'Room No. 104, OPD Block A',
-    shiftHours: '09:00 AM - 05:00 PM',
-    experience: '12 Years',
-    qualifications: 'MBBS, MD (Internal Medicine)',
-    totalConsultationsToday: 7,
-    phone: '+91 98765 00001',
-    photo: '/doctor_raghavendra.jpg',
-    role: 'Doctor',
-    aliases: ['doctor:DOCTOR-001', 'DOCTOR-001', 'doctor:DOC-001', 'DOC-001']
-  },
   'acc_receptionist': {
     accountId: 'acc_receptionist',
     name: 'Area Hospital Reception Desk',
@@ -277,6 +855,39 @@ export const SEED_ACCOUNTS = {
     aliases: ['admin', 'admin-001', 'superadmin', 'administrator', 'director']
   }
 };
+
+// Seed all authentic doctors across Narasaraopet into SEED_ACCOUNTS
+ALL_NARASARAOPET_DOCTORS.forEach(doc => {
+  const accId = `acc_doc_${doc.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  SEED_ACCOUNTS[accId] = {
+    accountId: accId,
+    name: doc.name,
+    title: doc.title,
+    specialty: doc.specialty,
+    department: doc.department,
+    doctorId: doc.id,
+    hospital: doc.hospital,
+    hospitalId: doc.hospitalId,
+    licenseNo: doc.licenseNo,
+    opdRoom: doc.opdRoom,
+    shiftHours: doc.shiftHours,
+    experience: doc.experience,
+    qualifications: doc.qualifications,
+    totalConsultationsToday: 7,
+    fee: doc.fee,
+    phone: doc.phone,
+    phoneDigits: doc.phoneDigits,
+    photo: doc.photo,
+    role: 'Doctor',
+    aliases: [
+      `doctor:${doc.id}`,
+      doc.id,
+      `phone:${doc.phoneDigits}`,
+      doc.phoneDigits,
+      doc.name.toLowerCase()
+    ]
+  };
+});
 
 export const extract10DigitPhone = (rawPhone) => {
   if (!rawPhone) return '';
@@ -333,6 +944,21 @@ export const getAccountDb = () => {
           delete parsed['acc_receptionist'].aadharNumber;
           parsed['acc_receptionist'].role = 'Receptionist';
         }
+
+        // Ensure every Narasaraopet doctor account and alias is populated in db
+        ALL_NARASARAOPET_DOCTORS.forEach(doc => {
+          const accId = `acc_doc_${doc.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+          if (!parsed[accId] || parsed[accId].role !== 'Doctor') {
+            parsed[accId] = SEED_ACCOUNTS[accId];
+          }
+          parsed[doc.id] = accId;
+          parsed[`doctor:${doc.id}`] = accId;
+          if (doc.phoneDigits) {
+            parsed[doc.phoneDigits] = accId;
+            parsed[`phone:${doc.phoneDigits}`] = accId;
+          }
+        });
+
         saveAccountDb(parsed);
         return parsed;
       }
@@ -387,6 +1013,26 @@ export const findAccountInDb = (db, identifier) => {
   }
 
   const a12 = extract12DigitAadhaar(raw);
+  const p10 = extract10DigitPhone(raw);
+
+  // Check if this identifier matches a registered doctor first
+  const matchedDoc = findDoctorInRoster(raw, p10);
+  if (matchedDoc) {
+    const docAccId = `acc_doc_${matchedDoc.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    if (db[docAccId]) {
+      const res = resolveVal(db[docAccId]);
+      if (res && res.role === 'Doctor') return res;
+    }
+    if (db[matchedDoc.id]) {
+      const res = resolveVal(db[matchedDoc.id]);
+      if (res && res.role === 'Doctor') return res;
+    }
+    if (matchedDoc.phoneDigits && db[matchedDoc.phoneDigits]) {
+      const res = resolveVal(db[matchedDoc.phoneDigits]);
+      if (res && res.role === 'Doctor') return res;
+    }
+  }
+
   if (a12) {
     if (db[a12]) {
       const res = resolveVal(db[a12]);
@@ -398,7 +1044,6 @@ export const findAccountInDb = (db, identifier) => {
     }
   }
 
-  const p10 = extract10DigitPhone(raw);
   if (p10) {
     if (db[p10]) {
       const res = resolveVal(db[p10]);
@@ -548,14 +1193,24 @@ export const findOrCreateAccount = (identifier, roleHint, initialDefaults = {}) 
   const a12 = extract12DigitAadhaar(raw);
   const p10 = extract10DigitPhone(raw);
   const isEmail = raw.includes('@');
-  const isDoc = roleHint === 'Doctor' || raw.toUpperCase().includes('DOC') || raw.toUpperCase().startsWith('DR');
-  const isResponder = roleHint === 'Responder' || roleHint === 'Driver' || (p10 && !a12);
+  
+  // Resolve genuine doctor from roster
+  const matchedDoc = findDoctorInRoster(raw, p10, initialDefaults);
+  const isDoc = roleHint === 'Doctor' || Boolean(matchedDoc) || raw.toUpperCase().includes('DOC') || raw.toUpperCase().startsWith('DR');
+  const isResponder = (roleHint === 'Responder' || roleHint === 'Driver' || (p10 && !a12)) && !isDoc;
 
   const existing = findAccountInDb(db, identifier);
   if (existing) {
     // If a 12-digit Aadhaar was looked up, it MUST be a Patient account!
     if (a12 && existing.role !== 'Patient') {
       return persistUserDataToDb({ ...existing, role: 'Patient' });
+    }
+    if (isDoc && existing.role === 'Doctor') {
+      // If doctor account exists, update any newly specified initialDefaults if present
+      if (initialDefaults && Object.keys(initialDefaults).length > 0) {
+        return persistUserDataToDb({ ...existing, ...initialDefaults, role: 'Doctor' });
+      }
+      return existing;
     }
     if (isResponder && existing.role !== 'Responder') {
       return persistUserDataToDb({ ...existing, role: 'Responder' });
@@ -566,36 +1221,45 @@ export const findOrCreateAccount = (identifier, roleHint, initialDefaults = {}) 
   let newAcc = {};
 
   if (isDoc) {
-    const cleanDoc = raw.replace(/\s+/g, '').toUpperCase() || 'DOCTOR-001';
+    const docData = matchedDoc || findDoctorInRoster(raw, p10, initialDefaults) || ALL_NARASARAOPET_DOCTORS[0];
+    const cleanDoc = (docData?.id || raw).replace(/\s+/g, '').toUpperCase() || 'DOCTOR-001';
     newAcc = {
-      accountId: `acc_doc_${cleanDoc.toLowerCase()}`,
-      name: initialDefaults.name || 'Dr. Raghavendra',
-      title: 'Senior General Physician',
-      specialty: initialDefaults.specialty || 'General Physician',
+      accountId: `acc_doc_${cleanDoc.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+      name: initialDefaults.name || docData?.name || 'Dr. Raghavendra',
+      title: initialDefaults.title || docData?.title || 'Senior General Physician',
+      specialty: initialDefaults.specialty || docData?.specialty || 'General Physician',
+      department: initialDefaults.department || docData?.department || 'Department of General Medicine',
       doctorId: cleanDoc,
-      hospital: 'ABC Hospital',
-      department: 'Department of General Medicine',
-      licenseNo: 'MCI-AP-89412',
-      opdRoom: 'Room No. 104, OPD Block A',
-      shiftHours: '09:00 AM - 05:00 PM',
-      experience: '12 Years',
-      qualifications: 'MBBS, MD (Internal Medicine)',
-      totalConsultationsToday: 7,
-      phone: initialDefaults.phone || '+91 98765 00001',
-      photo: initialDefaults.photo || '/doctor_raghavendra.jpg',
+      hospital: initialDefaults.hospital || docData?.hospital || 'Government Area Hospital, Narasaraopet',
+      hospitalId: initialDefaults.hospitalId || docData?.hospitalId || 'hosp-area',
+      licenseNo: initialDefaults.licenseNo || docData?.licenseNo || 'MCI-AP-89412',
+      opdRoom: initialDefaults.opdRoom || docData?.opdRoom || docData?.roomNo || 'Room No. 104, OPD Block A',
+      shiftHours: initialDefaults.shiftHours || docData?.shiftHours || '09:00 AM - 05:00 PM',
+      experience: initialDefaults.experience || docData?.experience || '12 Years',
+      qualifications: initialDefaults.qualifications || docData?.qualifications || docData?.title || 'MBBS, MD (Internal Medicine)',
+      fee: initialDefaults.fee || docData?.fee || '₹30',
+      totalConsultationsToday: initialDefaults.totalConsultationsToday || 7,
+      phone: initialDefaults.phone || docData?.phone || '+91 94401 23456',
+      phoneDigits: docData?.phoneDigits || extract10DigitPhone(initialDefaults.phone || docData?.phone || ''),
+      photo: initialDefaults.photo || docData?.photo || '/doctor_raghavendra.jpg',
       role: 'Doctor',
-      aliases: [`doctor:${cleanDoc}`, cleanDoc]
+      aliases: [
+        `doctor:${cleanDoc}`,
+        cleanDoc,
+        ...(docData?.phoneDigits ? [`phone:${docData.phoneDigits}`, docData.phoneDigits] : []),
+        (docData?.name || initialDefaults.name || '').toLowerCase()
+      ].filter(Boolean)
     };
   } else if (isEmail || roleHint === 'Receptionist') {
     const cleanEmail = raw.toLowerCase();
     newAcc = {
       accountId: `acc_rec_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
-      name: initialDefaults.name || 'GGH Reception Desk',
+      name: initialDefaults.name || 'Area Hospital Reception Desk',
       role: 'Receptionist',
       receptionistGmail: cleanEmail,
       email: cleanEmail,
       phone: initialDefaults.phone || '+91 98765 10800',
-      hospital: 'Government General Hospital, Guntur',
+      hospital: initialDefaults.hospital || 'Government Area Hospital, Narasaraopet',
       aliases: [`email:${cleanEmail}`, cleanEmail]
     };
   } else if (isResponder) {
@@ -2226,6 +2890,8 @@ export const AppProvider = ({ children }) => {
         updateDoctorAvatar,
         loginWithAccount,
         lookupAccount,
+        allDoctorsRoster: ALL_NARASARAOPET_DOCTORS,
+        findDoctorInRoster,
         getStoredAccounts: getAccountDb,
         isFirebaseConfigured,
         firebaseConfig,

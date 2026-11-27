@@ -226,14 +226,21 @@ export const DoctorDashboardView = () => {
     setDoctorInfo(prev => ({
       ...prev,
       name: user.name || prev.name,
+      title: user.title || user.qualifications || prev.title,
       specialty: user.specialty || prev.specialty,
       hospital: user.hospital || prev.hospital,
+      department: user.department || prev.department,
       doctorId: user.doctorId || prev.doctorId,
+      licenseNo: user.licenseNo || prev.licenseNo,
+      opdRoom: user.opdRoom || prev.opdRoom,
+      shiftHours: user.shiftHours || prev.shiftHours,
+      experience: user.experience || prev.experience,
+      qualifications: user.qualifications || user.title || prev.qualifications,
       photo: user.photo !== undefined ? user.photo : prev.photo
     }));
-    setTempDoctorName(user.name || 'Dr. Raghavendra');
+    setTempDoctorName(user.name || 'Doctor');
     setTempSpecialty(user.specialty || 'General Physician');
-    setTempHospital(user.hospital || 'ABC Hospital');
+    setTempHospital(user.hospital || 'Hospital');
     setTempDoctorId(user.doctorId || 'DOCTOR-001');
   }, [user]);
 
@@ -575,7 +582,7 @@ export const DoctorDashboardView = () => {
   const handleAcceptEmergency = () => {
     setIsEmergencyAccepted(true);
     setShowEmergencyModal(false);
-    setConsultCompletedAlert(`✓ Emergency Accepted! Dr. Raghavendra assigned to Patient ${emergencyAlert?.patientName || 'Emergency Patient'} at ${emergencyAlert?.location || 'ER Desk'}.`);
+    setConsultCompletedAlert(`✓ Emergency Accepted! ${doctorInfo.name || 'Doctor'} assigned to Patient ${emergencyAlert?.patientName || 'Emergency Patient'} at ${emergencyAlert?.location || 'ER Desk'}.`);
     setTimeout(() => setConsultCompletedAlert(null), 5000);
   };
 
@@ -837,7 +844,7 @@ export const DoctorDashboardView = () => {
 
                     <div className="emergency-alert-body">
                       <h3 className="emergency-text" style={{ color: isEmergencyAccepted ? '#065f46' : undefined }}>
-                        {isEmergencyAccepted ? `Dr. Raghavendra Assigned • ${emergencyAlert.patientName}` : `${emergencyAlert.count} patient requires attention`}
+                        {isEmergencyAccepted ? `${doctorInfo.name || 'Doctor'} Assigned • ${emergencyAlert.patientName}` : `${emergencyAlert.count} patient requires attention`}
                       </h3>
                       <p className="emergency-subtext" style={{ color: isEmergencyAccepted ? '#166534' : undefined }}>
                         Patient: <strong>{emergencyAlert.patientName}</strong> ({emergencyAlert.gender}, {emergencyAlert.age} yrs) • {emergencyAlert.condition} • <strong>{emergencyAlert.location}</strong>
@@ -855,7 +862,7 @@ export const DoctorDashboardView = () => {
                       </button>
                       {isEmergencyAccepted && (
                         <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#15803d', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Check size={16} color="#16a34a" /> Assigned to Dr. Raghavendra
+                          <Check size={16} color="#16a34a" /> Assigned to {doctorInfo.name || 'Doctor'}
                         </span>
                       )}
                     </div>
@@ -1027,7 +1034,7 @@ export const DoctorDashboardView = () => {
               <div className="tab-pane fade-in">
                 <div className="pane-header">
                   <h2>Today's OPD Doctor Schedule</h2>
-                  <p>ABC Hospital • General Medicine OPD Block A (09:00 AM - 05:00 PM)</p>
+                  <p>{doctorInfo.hospital || 'Hospital'} • {doctorInfo.department || doctorInfo.specialty || 'General Medicine'} {doctorInfo.opdRoom ? `(${doctorInfo.opdRoom})` : ''} ({doctorInfo.shiftHours || '09:00 AM - 05:00 PM'})</p>
                 </div>
 
                 {appointmentsList.length > 0 ? (
@@ -1635,7 +1642,7 @@ export const DoctorDashboardView = () => {
                 className="form-txt-input"
                 value={tempHospital}
                 onChange={(e) => setTempHospital(e.target.value)}
-                placeholder="e.g. ABC Hospital"
+                placeholder="e.g. Government Area Hospital, Narasaraopet"
                 required
               />
 
@@ -1849,7 +1856,7 @@ export const DoctorDashboardView = () => {
                 )}
                 <div>
                   <h4>{doctorInfo.name}</h4>
-                  <p>General Physician • ABC Hospital</p>
+                  <p>{doctorInfo.specialty || 'General Physician'} • {doctorInfo.hospital || 'Hospital'}</p>
                 </div>
               </div>
 
