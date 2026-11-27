@@ -18,7 +18,7 @@ import {
 export const OPBookingView = () => {
   const { hospitals, user, bookOPToken, updateDoctorAvatar } = useApp();
 
-  const [selectedHospitalId, setSelectedHospitalId] = useState(() => hospitals?.[0]?.id || 'hosp-4');
+  const [selectedHospitalId, setSelectedHospitalId] = useState(() => hospitals?.[0]?.id || 'hosp-area');
   const [toastMsg, setToastMsg] = useState('');
 
   // Dynamically derive current selected hospital from hospitals state

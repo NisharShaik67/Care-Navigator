@@ -12,53 +12,56 @@ app.use(express.json());
 
 const HOSPITALS = [
   {
-    id: 'hosp-1',
-    name: 'Government General Hospital (GGH)',
-    location: 'Collectorate Road, Guntur',
-    distance: '2.4 km',
+    id: 'hosp-area',
+    name: 'Government Area Hospital, Narasaraopet',
+    location: 'Palnadu Road, Arundelpet, Narasaraopet',
+    distance: '0.8 km',
     emergencyBeds: 14,
-    icuBeds: 5,
-    ventilators: 3,
-    opQueueCount: 42,
-    phone: '0863 2234567',
-    rating: 4.6,
-    specialties: ['Cardiology', 'Trauma & Emergency', 'Orthopedics', 'Pediatrics', 'Neurology'],
-    doctors: [
-      { id: 'doc-1', name: 'Dr. K. Srinivas Rao', title: 'MD, DM (Cardiology)', experience: '18 yrs', roomNo: 'OP Block-2, Room 104' },
-      { id: 'doc-2', name: 'Dr. M. Lakshmi Prasanna', title: 'MS (General Surgery)', experience: '14 yrs', roomNo: 'OP Block-1, Room 202' }
-    ]
-  },
-  {
-    id: 'hosp-2',
-    name: 'Narasaraopet Area Hospital',
-    location: 'Palnadu Road, Narasaraopet',
-    distance: '1.1 km',
-    emergencyBeds: 8,
-    icuBeds: 2,
-    ventilators: 1,
-    opQueueCount: 18,
+    icuBeds: 4,
+    ventilators: 2,
+    opQueueCount: 16,
     phone: '08647 220108',
-    rating: 4.4,
-    specialties: ['General Medicine', 'Pediatrics', 'Obstetrics & Gynaecology', 'Emergency'],
+    rating: 4.6,
+    specialties: ['General Checkup', 'General Medicine', 'General Surgery', 'Obstetrics & Gynaecology', 'Pediatrics'],
     doctors: [
-      { id: 'doc-3', name: 'Dr. S. Meenakshi', title: 'MS (Orthopedics)', experience: '12 yrs', roomNo: 'Room 12' },
-      { id: 'doc-4', name: 'Dr. R. V. Ramana', title: 'MD (Pediatrics)', experience: '16 yrs', roomNo: 'Room 05' }
+      { id: 'DOCTOR-001', name: 'Dr. Raghavendra', title: 'MBBS, MD (Internal Medicine)', specialty: 'General Medicine', experience: '12 yrs', roomNo: 'Room 104' },
+      { id: 'doc-area-2', name: 'Dr. G. Padmavathi', title: 'MS, DGO (Obstetrics & Gynaecology)', specialty: 'Obstetrics & Gynaecology', experience: '15 yrs', roomNo: 'Room 105' },
+      { id: 'doc-area-3', name: 'Dr. P. Ramanjaneyulu', title: 'MS (General Surgery)', specialty: 'General Surgery & Trauma', experience: '18 yrs', roomNo: 'Room 108' }
     ]
   },
   {
-    id: 'hosp-3',
-    name: 'Ramesh Hospitals & Cardiac Center',
-    location: 'Ring Road, Guntur',
-    distance: '4.8 km',
-    emergencyBeds: 22,
-    icuBeds: 9,
-    ventilators: 6,
-    opQueueCount: 29,
-    phone: '0863 2377777',
-    rating: 4.8,
-    specialties: ['Cardiac Care', 'Critical Care', 'Nephrology', 'Neurology'],
+    id: 'hosp-mgh',
+    name: 'Mahatma Gandhi Super Speciality Hospital',
+    location: 'Panasathota, Opp. Bus Stand Backside, Narasaraopet',
+    distance: '1.2 km',
+    emergencyBeds: 20,
+    icuBeds: 8,
+    ventilators: 4,
+    opQueueCount: 24,
+    phone: '08647 223456',
+    rating: 4.9,
+    specialties: ['Cardiology', 'Nephrology', 'Neurology', 'Orthopedics', 'Pulmonology'],
     doctors: [
-      { id: 'doc-5', name: 'Dr. P. Ramesh Babu', title: 'MD, DM (Cardiology)', experience: '25 yrs', roomNo: 'Tower A, Floor 3' }
+      { id: 'doc-mgh-1', name: 'Dr. K. Srinivas Reddy', title: 'MD, DM (Cardiology)', specialty: 'Cardiology', experience: '19 yrs', roomNo: 'Room 201' },
+      { id: 'doc-mgh-2', name: 'Dr. D. Srikanth', title: 'MD, DM (Nephrology)', specialty: 'Nephrology', experience: '15 yrs', roomNo: 'Room 204' },
+      { id: 'doc-mgh-3', name: 'Dr. Soumya Medabalimi', title: 'MD, DM (Neurology)', specialty: 'Neurology', experience: '12 yrs', roomNo: 'Room 301' }
+    ]
+  },
+  {
+    id: 'hosp-mathashree',
+    name: 'Mathashree Multi Specialty Hospital',
+    location: 'Near RTC Bus Stand, Opp. Petrol Bunk, Narasaraopet',
+    distance: '0.6 km',
+    emergencyBeds: 12,
+    icuBeds: 4,
+    ventilators: 2,
+    opQueueCount: 14,
+    phone: '08647 222333',
+    rating: 4.7,
+    specialties: ['Advanced Laparoscopy', 'General Surgery', 'General Medicine', 'Critical Care'],
+    doctors: [
+      { id: 'doc-mat-1', name: 'Dr. V. Ramachandra Reddy', title: 'MS, FIAGES', specialty: 'Advanced Laparoscopic Surgery', experience: '22 yrs', roomNo: 'Suite 1' },
+      { id: 'doc-mat-2', name: 'Dr. R. Mahesh Babu', title: 'MBBS, MD', specialty: 'General Medicine & Critical Care', experience: '14 yrs', roomNo: 'Suite 3' }
     ]
   }
 ];

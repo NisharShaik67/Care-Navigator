@@ -203,7 +203,7 @@ export const DoctorDashboardView = () => {
       title: user?.title || 'Senior General Physician',
       specialty: user?.specialty || 'General Physician',
       doctorId: user?.doctorId || 'DOCTOR-001',
-      hospital: user?.hospital || 'ABC Hospital',
+      hospital: user?.hospital || 'Government Area Hospital, Narasaraopet',
       department: user?.department || 'Department of General Medicine',
       licenseNo: user?.licenseNo || 'MCI-AP-89412',
       opdRoom: user?.opdRoom || 'Room No. 104, OPD Block A',
@@ -286,7 +286,7 @@ export const DoctorDashboardView = () => {
         updateUserProfile({ photo: compressedDataUrl });
       }
       if (updateDoctorAvatar) {
-        updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'doc-gen-4', compressedDataUrl);
+        updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'DOCTOR-001', compressedDataUrl);
       }
       setShowPhotoActionModal(false);
       setConsultCompletedAlert('Doctor profile picture updated successfully!');
@@ -308,7 +308,7 @@ export const DoctorDashboardView = () => {
       updateUserProfile({ photo: defaultPhoto });
     }
     if (updateDoctorAvatar) {
-      updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'doc-gen-4', defaultPhoto);
+      updateDoctorAvatar(doctorInfo.doctorId || user?.doctorId || 'DOCTOR-001', defaultPhoto);
     }
     setShowPhotoActionModal(false);
     setConsultCompletedAlert('Reset to official doctor photo.');

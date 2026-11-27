@@ -43,10 +43,10 @@ const getHospitalIcuData = (hosp) => {
     totalBeds: totalIcuBeds,
     ventilators: ventilators,
     oxygenStatus: '100% Liquid Medical Oxygen (LMO) Online (15,000L Bulk Tank)',
-    intensivist: hosp?.intensivist || 'Dr. K. Srinivas Rao, MD (Critical Care & Anesthesia)',
+    intensivist: hosp?.intensivist || 'Dr. N. V. Krishna, MD (Critical Care & Intensivist)',
     nurseRatio: '1:1 Dedicated for Ventilated • 1:2 Stepdown',
     specialties: ['Cardiac CCU', 'Trauma TICU', 'Surgical SICU', 'Neonatal NICU', 'CRRT Bedside Hemodialysis', '24/7 ABG Lab'],
-    directHelpline: hosp?.phone || '0863 2234567',
+    directHelpline: hosp?.phone || '08647 220108',
     beds: beds.slice(0, Math.max(4, totalIcuBeds))
   };
 };
