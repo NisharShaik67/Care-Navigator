@@ -50,7 +50,7 @@ export const OnboardingView = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
 
   // Security PIN state (for Doctor & Admin)
-  const [pin, setPin] = useState(['1', '2', '3', '4']);
+  const [pin, setPin] = useState(['', '', '', '']);
   const pinInputRefs = useRef([]);
 
   // OTP state (for Patient, Ambulance Driver, Receptionist)
@@ -374,7 +374,7 @@ export const OnboardingView = () => {
         setSelectedRole('Doctor');
         setDoctorId(clean || 'DOCTOR-001');
         setErrorMsg('');
-        setPin(['1', '2', '3', '4']);
+        setPin(['', '', '', '']);
         setAuthMode('pin');
         return;
       }
@@ -383,7 +383,7 @@ export const OnboardingView = () => {
       if (admin) {
         setSelectedRole('Admin');
         setErrorMsg('');
-        setPin(['1', '2', '3', '4']);
+        setPin(['', '', '', '']);
         setAuthMode('pin');
         return;
       }
@@ -953,7 +953,7 @@ export const OnboardingView = () => {
                     onClick={() => {
                       setAuthMode('login');
                       setErrorMsg('');
-                      setPin(['1', '2', '3', '4']);
+                      setPin(['', '', '', '']);
                     }}
                     style={{
                       background: 'transparent',
@@ -992,7 +992,7 @@ export const OnboardingView = () => {
                 </div>
 
                 <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.82rem', color: '#64748b' }}>
-                  Default Security PIN: <strong>1234</strong>
+                  Enter your 4-digit security PIN to authorize and sign in
                 </div>
               </>
             )}
