@@ -1125,6 +1125,77 @@ export const DoctorDashboardView = () => {
 
           </div>
 
+          {/* BOTTOM NAVIGATION BAR FOR MOBILE VIEW ONLY */}
+          <nav className="doctor-bottom-nav" aria-label="Doctor Mobile Navigation">
+            <button
+              type="button"
+              className={`doctor-bottom-tab-item ${activeTab === 'home' ? 'active' : ''}`}
+              onClick={() => setActiveTab('home')}
+              title="Home Dashboard"
+              aria-label="Home"
+            >
+              <div className="tab-icon-wrap">
+                <Stethoscope size={20} />
+              </div>
+              <span className="tab-label">Home</span>
+            </button>
+
+            <button
+              type="button"
+              className={`doctor-bottom-tab-item ${activeTab === 'patients' ? 'active' : ''}`}
+              onClick={() => setActiveTab('patients')}
+              title="Patient Register"
+              aria-label="Patients"
+            >
+              <div className="tab-icon-wrap">
+                <Users size={20} />
+              </div>
+              <span className="tab-label">Patients</span>
+            </button>
+
+            <button
+              type="button"
+              className={`doctor-bottom-tab-item ${activeTab === 'schedule' ? 'active' : ''}`}
+              onClick={() => setActiveTab('schedule')}
+              title="Shift Schedule"
+              aria-label="Schedule"
+            >
+              <div className="tab-icon-wrap">
+                <Calendar size={20} />
+                {stats.todayAppointments > 0 && (
+                  <span className="bottom-tab-badge">{stats.todayAppointments}</span>
+                )}
+              </div>
+              <span className="tab-label">Schedule</span>
+            </button>
+
+            <button
+              type="button"
+              className={`doctor-bottom-tab-item ${activeTab === 'records' ? 'active' : ''}`}
+              onClick={() => setActiveTab('records')}
+              title="EHR Records"
+              aria-label="Records"
+            >
+              <div className="tab-icon-wrap">
+                <FileText size={20} />
+              </div>
+              <span className="tab-label">Records</span>
+            </button>
+
+            <button
+              type="button"
+              className={`doctor-bottom-tab-item ${activeTab === 'more' ? 'active' : ''}`}
+              onClick={() => setActiveTab('more')}
+              title="More Options"
+              aria-label="More"
+            >
+              <div className="tab-icon-wrap">
+                <MoreHorizontal size={20} />
+              </div>
+              <span className="tab-label">More</span>
+            </button>
+          </nav>
+
         </div>
       </div>
 
@@ -2014,32 +2085,160 @@ export const DoctorDashboardView = () => {
           color: #ffffff;
         }
 
-        @media (max-width: 900px) {
-          .header-nav-tab span {
-            display: none;
-          }
-          .header-nav-tab {
-            padding: 8px 10px;
-          }
+        /* Doctor Bottom Navigation Bar: Hidden by default on Desktop */
+        .doctor-bottom-nav {
+          display: none;
         }
 
-        @media (max-width: 640px) {
+        @media (min-width: 769px) {
+          /* Desktop View: Keep top header nav tabs visible, hide bottom nav */
           .header-nav-tabs {
-            gap: 4px;
-            padding: 3px 6px;
+            display: flex !important;
           }
-          .header-nav-tab {
-            padding: 6px 8px;
-          }
-          .header-nav-tab span {
-            display: none;
+          .doctor-bottom-nav {
+            display: none !important;
           }
         }
 
         @media (max-width: 768px) {
+          /* 1. Mobile View: HIDE top header tabs completely */
+          .header-nav-tabs {
+            display: none !important;
+          }
+
+          /* 2. Top Header adjustments for clean mobile layout */
           .dark-navy-header {
-            min-height: 72px;
-            padding: 10px 16px;
+            min-height: 64px !important;
+            padding: 10px 14px !important;
+            justify-content: space-between !important;
+          }
+
+          .header-left {
+            gap: 10px !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+
+          .app-brand {
+            gap: 10px !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+
+          .app-name {
+            font-size: 1.05rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.2 !important;
+          }
+
+          .gov-tag {
+            font-size: 0.58rem !important;
+            white-space: nowrap !important;
+            letter-spacing: 0.04em !important;
+          }
+
+          /* 3. Mobile View: SHOW fixed Bottom Navigation Bar */
+          .doctor-bottom-nav {
+            display: flex !important;
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 64px !important;
+            background: #ffffff !important;
+            border-top: 1px solid #e2e8f0 !important;
+            box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.08) !important;
+            z-index: 500 !important;
+            align-items: center !important;
+            justify-content: space-around !important;
+            padding: 0 4px max(6px, env(safe-area-inset-bottom, 0px)) !important;
+            box-sizing: border-box !important;
+          }
+
+          .doctor-bottom-tab-item {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            color: #64748b;
+            cursor: pointer;
+            flex: 1;
+            padding: 6px 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+          }
+
+          .doctor-bottom-tab-item .tab-icon-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+          }
+
+          .doctor-bottom-tab-item .tab-label {
+            font-size: 0.70rem;
+            font-weight: 600;
+            line-height: 1.1;
+          }
+
+          .doctor-bottom-tab-item:hover {
+            color: #0284c7;
+          }
+
+          .doctor-bottom-tab-item.active {
+            color: #0284c7;
+          }
+
+          .doctor-bottom-tab-item.active .tab-label {
+            font-weight: 800;
+            color: #0284c7;
+          }
+
+          .doctor-bottom-tab-item.active .tab-icon-wrap {
+            transform: translateY(-2px);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          .doctor-bottom-tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 16px;
+            height: 3px;
+            background: #0284c7;
+            border-radius: 99px;
+          }
+
+          .doctor-bottom-tab-item .bottom-tab-badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.60rem;
+            font-weight: 800;
+            border-radius: 999px;
+            padding: 0 4px;
+            min-width: 15px;
+            height: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #ffffff;
+            line-height: 1;
+          }
+
+          /* 4. Bottom padding for scroll container so content is never hidden behind bottom bar */
+          .app-scroll-body {
+            padding-bottom: 84px !important;
           }
         }
 

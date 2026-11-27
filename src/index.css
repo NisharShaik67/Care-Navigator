@@ -906,7 +906,8 @@ html, body, #root {
   /* Fixed Navigation Bottom Bar Mobile Safe Area Padding */
   .app-navigation,
   .responder-bottom-nav,
-  .reception-bottom-nav {
+  .reception-bottom-nav,
+  .doctor-bottom-nav {
     height: 60px !important;
     padding: 0 4px max(6px, env(safe-area-inset-bottom, 0px)) !important;
     position: fixed !important;
